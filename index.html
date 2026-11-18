@@ -89,7 +89,7 @@
     <section class="panel commodity"><div class="card-heading"><span class="glyph">◉</span><h2>Cobre (HG)</h2></div><div class="card-caption">Futuro continuo COMEX · USD/lb</div><div class="quote-slot" id="q-copper"><div class="tv-fallback">Cargando cotización…</div></div></section>
   </div>
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V1.0</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V2.0</span></footer>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los símbolos COMEX GC1!, SI1! y HG1!, además de DXY y VIX, no pueden mostrarse en este dominio mediante widgets externos. Se ofrecen enlaces a sus páginas originales. Las cotizaciones y los gráficos disponibles son widgets oficiales de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
@@ -122,17 +122,111 @@ copper:{url:'https://www.tradingview.com/symbols/COMEX-HG1!/',short:'HG1!',detai
 };
 function restrictedCard(key,id){const item=OFFSITE[key],node=document.getElementById(id);if(!node||!item)return;node.innerHTML='<div class="provider-mini"><span>Sin licencia de incrustación</span><a href="'+item.url+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir '+item.short+' en su proveedor">Ver gráfico ↗</a></div>';}
 
+
+/* Own SVG renderer. XAUS permits direct browser use without an API key.
+   The provider labels XAU/XAG indicative references; NEVER label as GC/SI futures. */
+const DATA_API="https://xaus.com/api/v1/chart";
+const PERIODS={"1d":"5m","5d":"30m","1mo":"1d","3mo":"1d","6mo":"1d","1y":"1d"};
+const DATA_SYMBOLS={gold:"xau",silver:"silver",dxy:"dxy",eur:"eurusd"};
+let nativeData={},nativePeriod="1mo",nativeRequest=0;
+const maxAgeMinutes=10;
+function marketValidate(json,symbol){
+ if(!json||json.symbol!==symbol||!Array.isArray(json.points))throw Error("Símbolo distinto o respuesta inválida");
+ const pts=json.points.filter(p=>Number.isFinite(Number(p.t))&&Number.isFinite(Number(p.c))&&Number(p.c)>0)
+ .map(p=>({t:Number(p.t),c:Number(p.c)})).filter(p=>p.t>1577836800&&p.t<Date.now()/1000+86400).sort((a,b)=>a.t-b.t);
+ const uniq=pts.filter((p,i)=>!i||p.t!==pts[i-1].t);
+ if(uniq.length<3)throw Error("Menos de 3 observaciones verificables");
+ return {points:uniq,asOf:json.data_state?.as_of||null,state:json.data_state?.status||"desconocido",label:json.label||symbol};
+}
+function marketKey(t){
+ if(nativePeriod==="1d")return String(Math.floor(t/300));
+ if(nativePeriod==="5d")return String(Math.floor(t/1800));
+ return new Date(t*1000).toISOString().slice(0,10);
+}
+function alignMarket(){
+ const gold=new Map((nativeData.gold?.points||[]).map(p=>[marketKey(p.t),p]));
+ const silver=new Map((nativeData.silver?.points||[]).map(p=>[marketKey(p.t),p]));
+ return [...gold.keys()].filter(k=>silver.has(k)).sort().map(k=>({t:gold.get(k).t,g:gold.get(k).c,s:silver.get(k).c}));
+}
+function quoteNative(id,pts,dec,color,label){
+ const node=document.getElementById(id);if(!node)return;
+ if(!pts||pts.length<3){node.innerHTML='<div class="native-error">Dato no disponible</div>';return;}
+ const one=pts[0].c,cur=pts.at(-1).c,delta=(cur/one-1)*100,nums=pts.map(p=>p.c),mi=Math.min(...nums),di=Math.max(.00001,Math.max(...nums)-mi);
+ const points=nums.map((n,i)=>(i*100/(nums.length-1)).toFixed(2)+","+(20-(n-mi)/di*17).toFixed(2)).join(" ");
+ const sign=delta>=0?"+":"",cl=delta>=0?"native-positive":"native-negative";
+ node.innerHTML='<div class="native-card"><span class="native-num">'+fmt(cur,dec)+'</span><span class="native-meta"><span class="'+cl+'">'+sign+fmt(delta,2)+' % · período</span><span>'+label+'</span></span><svg class="native-spark" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+points+'" fill="none" stroke="'+color+'" stroke-width="1.7" vector-effect="non-scaling-stroke"/></svg></div>';
+ const observed=pts.at(-1)?.t;
+ node.title="Última barra: "+(observed?new Date(observed*1000).toLocaleString("es-ES",{timeZone:"Europe/Madrid"}):"—")+". Referencia indicativa XAUS, no ejecución.";
+}
+function nativeChart(id,lines,dates,unit,sub){
+ const host=document.getElementById(id);if(!host)return;
+ const n=dates.length;
+ if(n<3||lines.some(s=>s.points.length!==n)){host.innerHTML='<div class="native-error">No hay datos suficientes y coincidentes para dibujar este gráfico.<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Ver futuro oro ↗</a></div>';return;}
+ const W=850,H=240,L=55,R=17,T=14,B=28,values=lines.flatMap(s=>s.points);
+ let mn=Math.min(...values),mx=Math.max(...values),spread=Math.max(.001,mx-mn);mn-=spread*.18;mx+=spread*.18;
+ const X=i=>L+(W-L-R)*i/(n-1),Y=z=>T+(mx-z)/(mx-mn)*(H-T-B);
+ let svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Gráfico de '+(unit==="%"?"rendimiento comparado":"ratio oro plata")+'">';
+ for(let j=0;j<5;j++){const val=mn+(mx-mn)*j/4,py=Y(val);svg+='<path d="M'+L+','+py.toFixed(2)+'H'+(W-R)+'" stroke="#294453" stroke-width=".8"/><text x="'+(L-9)+'" y="'+(py+4).toFixed(2)+'" text-anchor="end" fill="#8199aa" font-size="11">'+fmt(val,2)+unit+'</text>';}
+ for(let j=0;j<5;j++){const idx=Math.round((n-1)*j/4),px=X(idx),d=new Date(dates[idx]*1000),label=d.toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"});svg+='<text x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="#8199aa" font-size="11">'+label+'</text>';}
+ for(const s of lines){const path=s.points.map((p,i)=>(i?"L":"M")+X(i).toFixed(2)+","+Y(p).toFixed(2)).join(" ");svg+='<path d="'+path+'" fill="none" stroke="'+s.color+'" stroke-width="2.7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/><circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s.points.at(-1)).toFixed(1)+'" r="3.8" fill="'+s.color+'"/>';}
+ svg+='<line id="cross-'+id+'" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#7899ac" stroke-dasharray="4,4" opacity="0"/></svg>';
+ let legend='<div class="native-legend">';
+ for(const s of lines)legend+='<span><i class="native-dot" style="background:'+s.color+'"></i>'+s.label+' <strong>'+fmt(s.points.at(-1),2)+unit+'</strong></span>';
+ legend+='</div>';
+ host.innerHTML='<div class="native-canvas">'+legend+'<div class="native-series">'+svg+'<div class="native-tip"></div></div><div class="native-note">'+sub+'</div></div>';
+ const frame=host.querySelector(".native-series"),shape=frame.querySelector("svg"),tip=frame.querySelector(".native-tip"),cross=frame.querySelector("line[id^=cross]");
+ frame.addEventListener("pointermove",ev=>{
+   const rect=shape.getBoundingClientRect();if(!rect.width)return;
+   const local=(ev.clientX-rect.left)/rect.width*W;
+   const idx=Math.max(0,Math.min(n-1,Math.round((local-L)/(W-L-R)*(n-1))));
+   const d=new Date(dates[idx]*1000),periodLabel=nativePeriod==="1d"||nativePeriod==="5d"?d.toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("es-ES");
+   tip.textContent=periodLabel+" · "+lines.map(s=>s.label+": "+fmt(s.points[idx],2)+unit).join(" | ");
+   tip.style.display="block";const loc=(ev.clientX-rect.left);tip.style.left=Math.max(12,Math.min(rect.width-12,loc))+"px";tip.style.transform=loc>rect.width/2?"translateX(-100%)":"none";
+   cross.setAttribute("x1",X(idx));cross.setAttribute("x2",X(idx));cross.setAttribute("opacity","1");
+ });
+ frame.addEventListener("pointerleave",()=>{tip.style.display="none";cross.setAttribute("opacity","0");});
+}
+function renderNative(){
+ const ids={gold:"q-gold",silver:"q-silver",dxy:"q-dxy",eur:"q-eur"};
+ const colors={gold:"#f4ba3c",silver:"#d7e3ef",dxy:"#38c9e5",eur:"#78a8e1"};
+ for(const key in ids)quoteNative(ids[key],nativeData[key]?.points,key==="eur"?5:key==="silver"?3:2,colors[key],"XAUS");
+ const paired=alignMarket();
+ const link='<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Futuro GC ↗</a> · <a href="https://www.investing.com/commodities/silver-streaming-chart" target="_blank" rel="noopener noreferrer">Futuro SI ↗</a>';
+ if(paired.length>=3){
+   nativeChart("chart-main",[{label:"Oro",color:"#f4ba3c",points:paired.map(x=>(x.g/paired[0].g-1)*100)},{label:"Plata",color:"#d7e3ef",points:paired.map(x=>(x.s/paired[0].s-1)*100)}],paired.map(x=>x.t),"%",'<span>Rendimiento normalizado, base 0 % · Serie indicativa XAUS · No GC/SI</span><span>'+link+'</span>');
+   const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
+   nativeChart("chart-ratio",[{label:"XAU / XAG",color:"#38c9e5",points:ratios.map(x=>x.c)}],ratios.map(x=>x.t),"",'<span>Ratio calculada con dos series de referencia del mismo proveedor.</span>');
+   quoteNative("q-ratio",ratios,2,"#38c9e5","Calculada");
+ }else{
+   document.getElementById("chart-main").innerHTML='<div class="native-error">No se dispone de oro y plata con fechas coincidentes.<span>'+link+'</span></div>';
+   document.getElementById("chart-ratio").innerHTML='<div class="native-error">Ratio temporal no disponible: faltan datos comparables.</div>';
+   document.getElementById("q-ratio").innerHTML='<div class="native-error">No disponible</div>';
+ }
+ const dates=Object.values(nativeData).map(x=>x.asOf).filter(Boolean).sort(),stamp=dates.at(-1);
+ document.getElementById("market-stamp").textContent="Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
+}
+async function fetchNative(period){
+ const token=++nativeRequest;nativePeriod=period;nativeData={};
+ document.querySelectorAll("#market-ranges button").forEach(x=>x.classList.toggle("active",x.dataset.period===period));
+ document.getElementById("chart-main").innerHTML='<div class="native-error">Cargando series de mercado en tu navegador…</div>';
+ document.getElementById("chart-ratio").innerHTML='<div class="native-error">Esperando datos comparables…</div>';
+ const interval=PERIODS[period]||"1d";
+ await Promise.all(Object.keys(DATA_SYMBOLS).map(async key=>{
+   try{
+     const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range:period,interval}).toString();
+     const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(16000)});
+     if(!res.ok)throw Error("HTTP "+res.status);
+     const entry=marketValidate(await res.json(),DATA_SYMBOLS[key]);
+     if(token===nativeRequest)nativeData[key]=entry;
+   }catch(e){console.warn("Serie "+key+" no validada; no se inventa dato.",e);}
+ }));
+ if(token===nativeRequest)renderNative();
+}
 function bootMarket(){
-  for(const [k,s] of Object.entries(MARKET)){
-    const key={gold:'q-gold',silver:'q-silver',ratio:'q-ratio',dxy:'q-dxy',eur:'q-eur',vix:'q-vix',brent:'q-brent',copper:'q-copper'}[k];
-    if(OFFSITE[k]) restrictedCard(k,key); else quote(key,s);
-  }
-  bootMain();advanced('chart-ratio',MARKET.ratio,[], '12M','3');
+ restrictedCard("vix","q-vix");restrictedCard("copper","q-copper");quote("q-brent",MARKET.brent);
+ fetchNative("1mo");
 }
-function bootMain(){
-const host=document.getElementById('chart-main');
-host.innerHTML='<div class="external-futures"><div class="note">Los futuros COMEX GC1!/SI1! no están autorizados en widgets gratuitos de terceros. Acceso directo a gráficos de futuros, sin sustituirlos por spot ni mostrar precios ficticios.</div><div class="external-options"><div class="external-item"><strong>◆ Oro · Futuro GC</strong><p>Investing.com · cotización derivada, actualización frecuente</p><a class="provider-link" href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Ver gráfico GC ↗</a></div><div class="external-item"><strong>◆ Plata · Futuro SI</strong><p>Investing.com · cotización derivada, actualización frecuente</p><a class="provider-link" href="https://www.investing.com/commodities/silver-streaming-chart" target="_blank" rel="noopener noreferrer">Ver gráfico SI ↗</a></div></div><div class="external-foot"><span>Para cotización oficial CME en directo se requiere acceso autorizado.</span><a href="https://www.tradingview.com/symbols/COMEX-GC1!/" target="_blank" rel="noopener noreferrer">TradingView GC (≥10 min) ↗</a><a href="https://www.tradingview.com/symbols/COMEX-SI1!/" target="_blank" rel="noopener noreferrer">SI (≥10 min) ↗</a></div></div>';
-}
+
 function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[]}){const left=45,right=14,top=13,bottom=27,plotW=width-left-right,plotH=height-top-bottom;const all=series.flatMap(s=>s.values.filter(Number.isFinite));if(!all.length)return '<div style="display:grid;place-items:center;height:100%;color:#95a9b8;font-size:12px">Sin datos verificados</div>';
 const mn=yMin??Math.min(...all),mx=yMax??Math.max(...all);const range=Math.max(mx-mn,.03);const lower=yMin??mn-range*.16,upper=yMax??mx+range*.17;const y=val=>top+((upper-val)/(upper-lower))*plotH;const n=Math.max(...series.map(s=>s.values.length),2);const x=i=>left+i*plotW/(n-1);let out=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">`;
 for(let t=0;t<5;t++){const val=lower+(upper-lower)*t/4;const pos=y(val);out+=`<line class="grid" x1="${left}" y1="${pos}" x2="${width-right}" y2="${pos}"/><text class="axis-text" x="${left-7}" y="${pos+3}" text-anchor="end">${fmt(val,2)}%</text>`;}
@@ -151,7 +245,7 @@ function renderReals(){const rows=getRows().filter(r=>Number.isFinite(r.DGS10)&&
 function renderPolicy(){let a=v(macro,'DFEDTARU'),b=v(macro,'ECBDFR');const latestF=last(a),latestB=last(b);$('#fed-value').textContent=latestF?fmt(latestF.value)+' %':'—';$('#ecb-value').textContent=latestB?fmt(latestB.value)+' %':'—';const dates=[...new Set([...a,...b].map(r=>r.date))].sort();if(!dates.length)return;const aligned=arr=>{let n=null;const lookup=new Map(arr.map(d=>[d.date,d.value]));return dates.map(date=>{if(lookup.has(date))n=lookup.get(date);return n});};$('#policy-graph').innerHTML=svgPlot({series:[{values:aligned(a),color:'#f4ba3c'},{values:aligned(b),color:'#38c9e5'}],xLabels:dates.map((x,i)=>i%Math.max(1,Math.round(dates.length/3))===0?x.slice(5):''),palette:['stroke-gold','stroke-cyan'],width:290,height:280});}
 function renderMacro(){if(!macro?.series)return;const all=getRows();const max=all.at(-1)?.date||macro.updated||'—';$('#stamp').textContent='Macro: '+prettyDate(max);renderCurve();renderReals();renderPolicy();}
 async function bootMacro(){try{const inline=document.getElementById('initial-macro');if(inline){const seed=JSON.parse(inline.textContent);if(seed?.series){macro=seed;renderMacro();}}}catch(ex){console.warn('Instantánea integrada no válida',ex)}try{const r=await fetch('data/series.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const obj=await r.json();if(!obj.series||!obj.source)throw Error('formato');macro=obj;renderMacro();}catch(e){if(!macro)$('#stamp').textContent='Macro: no disponible';console.warn('Se utiliza la última instantánea oficial disponible.',e)}}
-function init(){bootMarket();bootMacro();$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+function init(){bootMarket();bootMacro();$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
