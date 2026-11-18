@@ -4,6 +4,12 @@ Web: https://cgam-coder.github.io/metals-terminal/
 
 Terminal personal estático (HTML/CSS/JS/SVG), con selector global de diez periodos **1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A** junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
+## Corrección de carga de la ratio XAU/XAG ampliada — 18/11/2026
+
+Cuando se cambia el intervalo dentro de «Ampliar» para la ratio spot XAU/XAG, el panel deja de depender de las respuestas ajenas de DXY y EUR/USD: se actualiza en cuanto terminan las solicitudes de **oro XAU y plata XAG** (ambas de XAUS) y hay fechas comunes suficientes. Cada consulta XAUS dispone de un plazo máximo de 16 segundos, incluido el procesamiento del cuerpo. Si falla una de las dos fuentes, o no hay al menos tres fechas comunes verificadas, el cuadro presenta una explicación explícita, no un indicador de «Consultando» indefinido.
+
+Se mantienen el selector global sincronizado, el criterio de fechas comparables, la fuente XAUS y las restricciones originales: no hay precios de relleno, nuevos servicios ni trabajos automáticos. Una demora de DXY/EUR/USD ya no bloquea el gráfico de la ratio ampliada.
+
 ## Selección de temporalidad en gráficos ampliados
 
 La ventana «Ampliar» de todos los gráficos incorpora los diez intervalos de la cabecera (**1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A, 5A**). Ambos controles representan **la misma temporalidad global**: cambiarla dentro del gráfico ampliado actualiza también la selección de la página principal y la URL, sin cerrar la ventana. Al volver a abrir cualquier gráfico, se conserva el último periodo seleccionado.
