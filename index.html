@@ -190,14 +190,14 @@
   <section class="panel policy-panel">
     <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><div class="macro-range" data-macro="policy"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
-    <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div>
+    <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div><div id="policy-dates" class="macro-caption"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
     <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="macro-range" data-macro="reals"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
-    <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div>
+    <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div><div id="real-dates" class="macro-caption"></div>
   </section>
   <div class="commodities-grid" aria-label="Otras materias primas">
     <section class="panel commodity commodity-native"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><a href="https://trading-commodity.com/download/bz/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></section>
@@ -626,8 +626,19 @@ function macroWindowRows(rows,what){
  return rows.filter(x=>x.date>=start);
 }
 function macroLabels(rows,what){
- const w=macroWindows[what];
- return rows.map((r,i)=>i%Math.max(1,Math.round(rows.length/4))===0?(w==="5A"?r.date.slice(2,7):r.date.slice(5)):"");
+ const window=macroWindows[what]||"1M";
+ return rows.map(r=>{
+   if(window==="5A")return r.date.slice(0,7);
+   if(window==="1A")return r.date.slice(2,7);
+   return r.date.slice(5);
+ });
+}
+function macroCoverageNotice(rows,what){
+ if(!rows.length)return "Sin observaciones";
+ const first=rows[0].date,last=rows.at(-1).date,want=windowStart(last,macroWindows[what]||"1M");
+ const desired=Date.parse(last+"T00:00:00Z")-Date.parse(want+"T00:00:00Z");
+ const available=Date.parse(last+"T00:00:00Z")-Date.parse(first+"T00:00:00Z");
+ return (available<desired*.55?"Cobertura parcial: ":"Datos: ")+prettyDate(first)+" – "+prettyDate(last)+(rows.length===1?" · una única observación":"");
 }
 function renderCurve(){
  const all=getRows().filter(r=>[r.DGS2,r.DGS10,r.DGS30].every(Number.isFinite));
@@ -636,11 +647,11 @@ function renderCurve(){
  $('#yield-stamp').textContent='Tesoro EE. UU. · Último dato: '+prettyDate(now.date);
  $('#legend-today').textContent=curveHistorical?'Treasury 10Y':'Último · '+prettyDate(now.date);
  $('#legend-before').textContent=curveHistorical?'Treasury 2Y':'Inicio · '+prettyDate(then.date);
- $('#curve-caption').textContent=curveHistorical?'Evolución nominal 2Y, 10Y y 30Y · '+macroWindows.curve:'Curva por vencimiento · comparación con '+macroWindows.curve;
+ $('#curve-caption').textContent=(curveHistorical?'Histórico 2Y/10Y/30Y':'Curva por vencimientos')+' · '+macroWindows.curve+' · '+macroCoverageNotice(rows,'curve');
  if(!curveHistorical){
-   $('#curve-graph').innerHTML=svgPlot({series:[{values:[now.DGS2,now.DGS10,now.DGS30],color:'#38c9e5'},{values:[then.DGS2,then.DGS10,then.DGS30],color:'#f4ba3c'}],xLabels:['2Y','10Y','30Y'],palette:['stroke-cyan','stroke-gold'],width:390,height:222});
+   $('#curve-graph').innerHTML=svgPlot({series:[{values:[now.DGS2,now.DGS10,now.DGS30],color:'#38c9e5'},{values:[then.DGS2,then.DGS10,then.DGS30],color:'#f4ba3c'}],xLabels:['2Y','10Y','30Y'],palette:['stroke-cyan','stroke-gold'],width:390,height:222,xValues:[2,10,30]});
  }else{
-   $('#curve-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DGS10),color:'#38c9e5'},{values:rows.map(r=>r.DGS2),color:'#f4ba3c'},{values:rows.map(r=>r.DGS30),color:'#d7e3ef'}],xLabels:macroLabels(rows,"curve"),palette:['stroke-cyan','stroke-gold','stroke-silver'],width:390,height:222});
+   $('#curve-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DGS10),color:'#38c9e5'},{values:rows.map(r=>r.DGS2),color:'#f4ba3c'},{values:rows.map(r=>r.DGS30),color:'#d7e3ef'}],xLabels:macroLabels(rows,"curve"),palette:['stroke-cyan','stroke-gold','stroke-silver'],width:390,height:222,dates:rows.map(r=>r.date)});
  }
  const spread=now.DGS10-now.DGS2;
  $('#yield-stats').innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?'var(--green)':'var(--red)')+'">'+(spread>0?'+':'')+fmt(spread)+' pp</div>';
@@ -650,7 +661,8 @@ function renderReals(){
  const rows=macroWindowRows(all,"reals"),now=rows.at(-1);
  if(!now){$('#real-graph').innerHTML='<div class="native-error">No hay TIPS y Treasury de la misma fecha para este periodo.</div>';return;}
  $('#tips-value').textContent=fmt(now.DFII10)+' %';$('#breakeven-value').textContent=fmt(now.DGS10-now.DFII10)+' %';
- $('#real-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DFII10),color:'#b88aff'},{values:rows.map(r=>r.DGS10-r.DFII10),color:'#f4ba3c'}],xLabels:macroLabels(rows,"reals"),palette:['stroke-purple','stroke-gold'],width:830,height:180});
+ if(document.getElementById('real-dates'))$('#real-dates').textContent=macroWindows.reals+' · '+macroCoverageNotice(rows,'reals');
+ $('#real-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DFII10),color:'#b88aff'},{values:rows.map(r=>r.DGS10-r.DFII10),color:'#f4ba3c'}],xLabels:macroLabels(rows,"reals"),palette:['stroke-purple','stroke-gold'],width:830,height:180,dates:rows.map(r=>r.date)});
 }
 function renderPolicy(){
  const fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
@@ -662,11 +674,12 @@ function renderPolicy(){
  const start=windowStart(end,macroWindows.policy);
  const dates=[...new Set([...fed,...ecb].filter(r=>r.date>=start&&r.date<=end).map(r=>r.date))].sort();
  if(!dates.length)dates.push(end);
- const xDates=[start,...dates.filter(d=>d>start)];
+ const xDates=[...new Set([start,...dates.filter(d=>d>start),end])].sort();
  const align=arr=>{let lastVal=null;const map=new Map(arr.map(r=>[r.date,r.value]));for(const r of arr)if(r.date<=start&&Number.isFinite(r.value))lastVal=r.value;return xDates.map(d=>{if(map.has(d))lastVal=map.get(d);return lastVal;});};
  const aa=align(fed),bb=align(ecb);
  if(aa.some(z=>!Number.isFinite(z))||bb.some(z=>!Number.isFinite(z))){$('#policy-graph').innerHTML='<div class="native-error">Histórico oficial incompleto para el periodo.</div>';return;}
- $('#policy-graph').innerHTML=svgPlot({series:[{values:aa,color:'#f4ba3c'},{values:bb,color:'#38c9e5'}],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:['stroke-gold','stroke-cyan'],width:290,height:280,step:true});
+ $('#policy-graph').innerHTML=svgPlot({series:[{values:aa,color:'#f4ba3c'},{values:bb,color:'#38c9e5'}],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:['stroke-gold','stroke-cyan'],width:290,height:280,step:true,dates:xDates});
+ if(document.getElementById('policy-dates'))$('#policy-dates').textContent=macroWindows.policy+' · '+macroCoverageNotice(xDates.map(date=>({date})),'policy');
 }
 function renderMacro(){
  if(!macro?.series)return;
