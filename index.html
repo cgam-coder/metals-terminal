@@ -1364,7 +1364,8 @@ function renderMacro(){
  const lastDate=dates.at(-1),loaded=macroOfficialKeys.size;
  const archived=macroArchiveKeys.size;
  const verified=MACRO_SERIES.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
- $("#stamp").textContent="Macro: "+(loaded===6?"FRED directo · 5A":archived===6?(loaded?"FRED directo + histórico publicado · 5A":"FRED histórico publicado · 5A"):verified?"FRED parcial · "+verified+"/6":"respaldo corto")+" · "+prettyDate(lastDate||macro.updated);
+ const source=loaded===6?"FRED directo":archived===6?(loaded?"FRED directo + archivo":"FRED archivo verificado"):verified?"FRED parcial "+verified+"/6":"respaldo corto";
+ $("#stamp").textContent="Macro "+macroWindows.curve+" · "+source+" · "+prettyDate(lastDate||macro.updated);
  renderCurve();renderReals();renderPolicy();
 }
 function parseFredCsv(key,raw){
