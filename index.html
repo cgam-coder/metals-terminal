@@ -1160,10 +1160,10 @@ const macroArchiveKeys=new Set();
 const macroLastError=new Map();
 function macroSourceLabel(keys){
  const direct=keys.filter(k=>macroOfficialKeys.has(k)).length;
- const published=keys.filter(k=>macroArchiveKeys.has(k)).length;
+ const verified=keys.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
  if(direct===keys.length)return "FRED directo";
- if(direct+published===keys.length)return direct?"FRED directo + histórico publicado":"FRED · histórico publicado";
- if(direct||published)return "FRED "+(direct+published)+"/"+keys.length+" · respaldo parcial";
+ if(verified===keys.length)return direct?"FRED directo + histórico publicado":"FRED · histórico publicado";
+ if(verified)return "FRED "+verified+"/"+keys.length+" · respaldo parcial";
  return "instantánea corta de emergencia";
 }
 function macroLastDate(keys){
@@ -1363,7 +1363,8 @@ function renderMacro(){
  const dates=MACRO_SERIES.map(k=>v(macro,k).at(-1)?.date).filter(Boolean).sort();
  const lastDate=dates.at(-1),loaded=macroOfficialKeys.size;
  const archived=macroArchiveKeys.size;
- $("#stamp").textContent="Macro: "+(loaded===6?"FRED directo · 5A":archived===6?"FRED histórico publicado · 5A":loaded||archived?"FRED parcial · "+(loaded+archived)+"/6":"respaldo corto")+" · "+prettyDate(lastDate||macro.updated);
+ const verified=MACRO_SERIES.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
+ $("#stamp").textContent="Macro: "+(loaded===6?"FRED directo · 5A":archived===6?(loaded?"FRED directo + histórico publicado · 5A":"FRED histórico publicado · 5A"):verified?"FRED parcial · "+verified+"/6":"respaldo corto")+" · "+prettyDate(lastDate||macro.updated);
  renderCurve();renderReals();renderPolicy();
 }
 function parseFredCsv(key,raw){
