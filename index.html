@@ -30,6 +30,11 @@
 .external-foot a{color:#acd4eb}
 @media(max-width:700px){.external-options{gap:7px}.external-item{padding:10px}.external-item strong{font-size:13px}.provider-mini{font-size:9px}}
 
+
+.native-range{display:flex;gap:3px;flex-wrap:wrap}.native-range button{border:1px solid #355062;border-radius:5px;background:#11212b;color:#c9d6e0;padding:4px 7px;font-size:10px}.native-range button.active,.native-range button:hover{background:#9e761f;color:#fff;border-color:#d0a345}
+.native-card{height:100%;display:flex;flex-direction:column;gap:1px;padding:0 3px}.native-num{font-size:23px;font-weight:760;color:#eef4f8;letter-spacing:-.5px}.native-meta{display:flex;justify-content:space-between;font-size:10px;color:#9cabb9}.native-positive{color:#4cdb9d}.native-negative{color:#fa858b}.native-spark{width:100%;height:22px;display:block;margin-top:auto}
+.native-canvas{display:flex;flex-direction:column;height:100%;gap:4px;padding:3px}.native-canvas .native-caption{font-size:10px;color:#9bb0c1}.native-canvas .native-series{flex:1;min-height:0;position:relative}.native-canvas svg{display:block;width:100%;height:100%}.native-canvas .native-tip{position:absolute;display:none;top:9px;left:30%;background:#06151eea;border:1px solid #55788a;border-radius:6px;padding:7px 9px;z-index:5;font-size:11px;pointer-events:none;white-space:nowrap}.native-canvas .native-legend{display:flex;flex-wrap:wrap;gap:15px;align-items:center;color:#cdd8df;font-size:11px}.native-canvas .native-legend span{display:inline-flex;gap:6px;align-items:center}.native-dot{width:12px;height:3px;border-radius:2px;display:inline-block}.native-canvas .native-note{display:flex;justify-content:space-between;gap:12px;color:#8ba2b3;font-size:10px;flex-wrap:wrap}.native-note a{color:#91c8ed;text-decoration:none}.native-error{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;gap:12px;color:#cbb17a;font-size:12px;line-height:1.5;text-align:center;padding:14px}.native-error a{color:#a3d5f4}
+@media(max-width:1100px){.native-num{font-size:19px}.native-range button{font-size:9px;padding:3px 4px}}
 </style>
 </head>
 <body>
@@ -37,16 +42,16 @@
 <header class="header">
   <div class="brand"><div class="brand-icon" aria-hidden="true"><svg width="39" height="36" viewBox="0 0 48 44"><path d="M13 3h15l5 12H8zM3 19h15l5 12H-2zM25 19h15l5 12H20zM14 29h16l5 12H9z" fill="#F1B93F" stroke="#f7d98b" stroke-width="1" transform="translate(4 0)"/></svg></div><div><div class="brand-title">METALS <em>TERMINAL</em></div><div class="subtitle">Oro y Plata · Datos contrastados · Sin suscripciones</div></div></div>
   <div class="header-space"></div>
-  <div class="status"><i class="dot"></i><span>Cotizaciones · TradingView (posible retraso)</span></div>
+  <div class="status"><i class="dot"></i><span>Mercado · consulta únicamente al abrir</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
   <button class="outline-button header-action" id="refresh" title="Recargar datos publicados"><span>↻</span> Recargar</button>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
-  <article class="ticker-card gold"><div class="card-heading"><span class="glyph">◆</span><h2>Oro (GC)</h2></div><div class="card-caption">Futuro continuo COMEX · USD/oz</div><div class="quote-slot" id="q-gold"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card silver"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata (SI)</h2></div><div class="card-caption">Futuro continuo COMEX · USD/oz</div><div class="quote-slot" id="q-silver"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio spot TVC · No es GC/SI</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">Índice dólar · TVC</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card gold"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · XAU/USD</h2></div><div class="card-caption">Spot indicativo · no futuro GC</div><div class="quote-slot" id="q-gold"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card silver"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · XAG/USD</h2></div><div class="card-caption">Spot indicativo · no futuro SI</div><div class="quote-slot" id="q-silver"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio XAU/XAG · fuente única</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">USD Index · datos XAUS</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--silver)">€</span><h2>EUR/USD</h2></div><div class="card-caption">Tipo de cambio</div><div class="quote-slot" id="q-eur"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2></div><div class="card-caption">Volatilidad implícita · TVC</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
 </section>
@@ -60,12 +65,12 @@
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro y Plata (futuros) — Evolución comparada</h2><div class="main-title-extra">GC1! y SI1! · comparar en escala porcentual</div></div><a class="link-small" href="https://www.investing.com/charts/real-time-futures-charts" target="_blank" rel="noopener noreferrer">Abrir gráficos ↗</a></div>
-    <div class="tv-chart" id="chart-main"><div class="tv-loader">Conectando gráfico interactivo de futuros…</div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Oro y Plata — Evolución comparada</h2><div class="main-title-extra">XAU/USD y XAG/USD · referencias spot; NO futuros COMEX</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button></div></div>
+    <div class="tv-chart" id="chart-main"><div class="tv-loader">Cargando series XAU/XAG bajo demanda…</div></div>
   </section>
   <section class="panel ratio-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot · TVC:GOLDSILVER</div></div><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
-    <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Conectando gráfico de ratio…</div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
+    <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
     <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><span title="Series no equivalentes: Fed es techo del rango; BCE es facilidad de depósito" class="small-tag">Fed / BCE</span></div>
@@ -88,7 +93,7 @@
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los símbolos COMEX GC1!, SI1! y HG1!, además de DXY y VIX, no pueden mostrarse en este dominio mediante widgets externos. Se ofrecen enlaces a sus páginas originales. Las cotizaciones y los gráficos disponibles son widgets oficiales de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
-<p>El gráfico principal utiliza <code>COMEX:GC1!</code> y <code>COMEX:SI1!</code>; la ratio utiliza <code>TVC:GOLDSILVER</code>, que es una ratio basada en fuentes spot diferentes de los futuros. No se mezclan para cálculos.</p>
+<p>Los gráficos principales se dibujan con SVG propio sobre series etiquetadas <code>XAU/USD</code> y <code>XAG/USD</code> de <a href="https://xaus.com/api/" target="_blank" rel="noopener noreferrer">XAUS</a>, API pública que permite CORS y uso personal gratuito. <strong>No son futuros COMEX</strong>, y los futuros GC/SI conservan enlaces externos independientes. La ratio se calcula con ambas series del mismo proveedor cuando coinciden fechas. El navegador solo solicita datos al abrir o cambiar el periodo; no hay actualización automática.</p>
 <p>Los tipos nominales y reales proceden del <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">Tesoro de EE. UU.</a>; el breakeven se calcula como Treasury 10Y − TIPS 10Y, con compensaciones de inflación y primas de riesgo, no como predicción precisa de IPC.</p>
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El archivo <code>data/series.json</code> es una instantánea que se descarga al abrir la página; solo cambia cuando se ejecuta manualmente su actualización y se publica. No hay tareas programadas de GitHub. Sin conexión o sin publicación, el panel conserva la instantánea oficial integrada con fecha visible. El HTML no usa claves API, no ejecuta operaciones y no recopila datos personales.</p>
