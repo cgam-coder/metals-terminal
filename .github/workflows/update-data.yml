@@ -1,8 +1,6 @@
 name: Actualizar datos macro oficiales
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '15 06 * * 1-5'
 permissions:
   contents: write
 concurrency:
