@@ -18,7 +18,7 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 
 ## Indicadores
 
-**Mercado (gráficos nativos SVG):** XAU/USD, XAG/USD, su ratio calculada con observaciones coincidentes, DXY y EUR/USD usan la API de XAUS, gratuita para proyectos personales y con CORS autorizado. Los rangos 1D, 1S, 1M, 3M, 6M y 1A se consultan exclusivamente al entrar o al seleccionarlos. **No son futuros GC/SI, ni datos oficiales COMEX.** Los enlaces a futuros GC/SI siguen visibles; VIX y cobre HG mantienen enlace externo al no disponerse de feed gratuito autorizado para su gráfico en esta versión. Brent conserva un widget independiente, sujeto a las restricciones de TradingView.
+**Mercado (gráficos nativos SVG):** XAU/USD, XAG/USD, su ratio calculada con observaciones coincidentes, DXY y EUR/USD usan la API de XAUS, gratuita para proyectos personales y con CORS autorizado. Los rangos 1D, 1S, 1M, 3M, 6M y 1A se consultan exclusivamente al entrar o al seleccionarlos. **No son futuros GC/SI, ni datos oficiales COMEX.** Los enlaces a futuros GC/SI siguen visibles; VIX utiliza el histórico de cierres diarios publicado por Cboe y consultado desde el navegador (no VIX en tiempo real). Cobre HG mantiene enlace externo al no disponerse de una fuente gratuita de futuros integrada en esta versión. Brent conserva un widget independiente, sujeto a las restricciones de TradingView.
 
 **Macro (JSON y renderizado SVG propio):** Treasury 2Y, 10Y, 30Y, spread 10Y−2Y; tipo real TIPS 10Y y breakeven 10Y, Fed límite superior del rango objetivo, BCE tasa de depósito. El breakeven no es una expectativa de inflación pura (incluye primas). Fuente histórica: series oficiales replicadas por FRED; instantánea inicial del Tesoro estadounidense 2–17 noviembre 2026, cotejada con publicaciones del Tesoro.
 
@@ -38,6 +38,7 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 - Fed target upper: https://fred.stlouisfed.org/series/DFEDTARU
 - BCE deposit: https://fred.stlouisfed.org/series/ECBDFR
 - API de mercado XAUS (uso personal gratuito, CORS): https://xaus.com/api/
+- Histórico VIX (Cboe, cierres diarios): https://www.cboe.com/tradable-products/vix/vix-historical-data/
 - TradingView widget docs: https://www.tradingview.com/widget-docs/
 
 ## Estructura
