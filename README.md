@@ -1,11 +1,11 @@
-# Metals Terminal · Oro y Plata · V1.0
+# Metals Terminal · Oro y Plata · V2.0 (gráficos propios)
 
 Primera versión operativa de una web estática y gratuita, construida siguiendo la maqueta acordada. **No requiere Cloudflare, registro en nuevas APIs ni servidores de pago.**
 
 ## Abrir ahora
 
 1. Descarga el ZIP y descomprímelo.
-2. Abre `index.html` en Chrome o Edge. Con conexión a Internet deberían renderizarse los widgets oficiales de TradingView. Los gráficos macro usan `data/series.json`; en algunos navegadores `fetch` de un archivo local no funciona por CORS, por lo que conviene usar la opción de servidor local.
+2. Abre `index.html` en Chrome o Edge. Con conexión a Internet el navegador consultará la API pública XAUS para dibujar sus propios gráficos de referencias XAU/USD, XAG/USD, DXY y EUR/USD. Los datos macro usan `data/series.json`; en algunos navegadores `fetch` de un archivo local no funciona por CORS, por lo que conviene usar la opción de servidor local.
 3. Método recomendado: desde la carpeta `metals_terminal`, ejecuta `python -m http.server 8000` y visita `http://localhost:8000/`.
 
 ## Publicar a 0 € en GitHub Pages
@@ -18,17 +18,17 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 
 ## Indicadores
 
-**Mercado (widgets de TradingView):** futuro continuo oro GC1!, plata SI1!, ratio spot GOLDSILVER, DXY TVC, EURUSD FX, VIX TVC, Brent ICEEUR BRN1!, cobre HG1!. Los widgets gratuitos pueden mostrar datos retrasados y pueden no cargar en navegadores con bloqueo de terceros. Las cifras son servidas por el propio proveedor; **no se emplean para cálculos programáticos**.
+**Mercado (gráficos nativos SVG):** XAU/USD, XAG/USD, su ratio calculada con observaciones coincidentes, DXY y EUR/USD usan la API de XAUS, gratuita para proyectos personales y con CORS autorizado. Los rangos 1D, 1S, 1M, 3M, 6M y 1A se consultan exclusivamente al entrar o al seleccionarlos. **No son futuros GC/SI, ni datos oficiales COMEX.** Los enlaces a futuros GC/SI siguen visibles; VIX y cobre HG mantienen enlace externo al no disponerse de feed gratuito autorizado para su gráfico en esta versión. Brent conserva un widget independiente, sujeto a las restricciones de TradingView.
 
 **Macro (JSON y renderizado SVG propio):** Treasury 2Y, 10Y, 30Y, spread 10Y−2Y; tipo real TIPS 10Y y breakeven 10Y, Fed límite superior del rango objetivo, BCE tasa de depósito. El breakeven no es una expectativa de inflación pura (incluye primas). Fuente histórica: series oficiales replicadas por FRED; instantánea inicial del Tesoro estadounidense 2–17 noviembre 2026, cotejada con publicaciones del Tesoro.
 
 ## Límites conocidos
 
-- No se promete **tiempo real de COMEX** sin licencia. El widget indica el precio que proporciona TradingView y su retraso. Las cotizaciones de futuros que aparecen en la web no son datos reutilizables mediante API.
-- El símbolo **TVC:GOLDSILVER es ratio spot**, no el cociente de los futuros GC1!/SI1!, por lo que se etiqueta expresamente.
-- La representación comparada de GC/SI utiliza el widget de TradingView y la opción `compareSymbols`; si el proveedor no admite comparación en la cuenta/navegador, se puede añadir plata desde su propia interfaz.
+- **No se suministran cotizaciones COMEX numéricas en la página.** Los gráficos propios son **referencias de mercado XAU/USD y XAG/USD**, no GC1!/SI1!. Las páginas de futuros externos se enlazan sin transcribir sus datos.
+- La ratio es **XAU/XAG del mismo proveedor y fechas emparejadas**, no la ratio de los futuros GC/SI.
+- La comparación oro/plata normaliza cada serie al 0 % del comienzo del periodo. Cambiar el periodo provoca una consulta, no una actualización continua. Sin datos fiables se muestran errores, nunca curvas ficticias.
 - Los tipos Fed superior y BCE depósito son series de instrumentos **no idénticos**. Se presentan con etiquetas precisas.
-- Los datos solo se actualizan por scripts de GitHub si se publica el repositorio y se configura Actions. La instantánea incluida tiene fecha 17/11/2026.
+- Las cotizaciones se consultan al entrar o cambiar el periodo y **no se vuelcan a GitHub**. Los datos macro del archivo solo se renuevan si se lanza su actualización manual. La instantánea inicial tiene fecha 17/11/2026.
 - No contiene noticias, IA, señales de inversión ni información ajena al alcance acordado.
 
 ## Fuentes
@@ -37,6 +37,7 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 - U.S. Treasury real: https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_real_yield_curve&field_tdr_date_value_month=202611
 - Fed target upper: https://fred.stlouisfed.org/series/DFEDTARU
 - BCE deposit: https://fred.stlouisfed.org/series/ECBDFR
+- API de mercado XAUS (uso personal gratuito, CORS): https://xaus.com/api/
 - TradingView widget docs: https://www.tradingview.com/widget-docs/
 
 ## Estructura
@@ -49,7 +50,7 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 
 ## Referencia estética
 
-`REFERENCIA_VISUAL_ACORDADA.png` conserva la última maqueta elegida. La disposición de bloques, paleta, curva, datos macro, futuros y gráficos se ha reproducido en HTML/CSS. Los widgets de mercado, al ser de un tercero, no pueden reproducir exactamente todos los detalles de la maqueta dentro de su área.
+`REFERENCIA_VISUAL_ACORDADA.png` conserva la última maqueta elegida. La disposición de bloques, paleta, curva, datos macro, futuros y gráficos se ha reproducido en HTML/CSS. Los gráficos de oro, plata y ratio son SVG nativos, y conservan el lenguaje visual de la maqueta sin depender de la incrustación de gráficos de TradingView.
 
 ## Pruebas reproducibles
 
@@ -58,3 +59,9 @@ El proyecto se ha verificado localmente con Node.js para los cálculos del front
 Para un repositorio público GitHub Pages puede alojar la web sin coste adicional en GitHub Free. Es necesario elegir explícitamente **Settings → Pages → Source: GitHub Actions**; la configuración inicial de Pages necesita efectuarse desde la cuenta de GitHub. El workflow de despliegue se puede ejecutar también desde Actions → Publicar Metals Terminal → Run workflow.
 
 Este repositorio incluye `.nojekyll` para servir archivos estáticos literalmente. No contiene credenciales. No introducir secrets, tokens ni cuentas de NagameAlert.
+## Modo de consulta por apertura
+
+- **0 workflows programados** y cero gasto adicional previsto en servicios.
+- Al abrir la web, el navegador solicita las series de mercado seleccionadas a `https://xaus.com/api/v1/chart` y muestra su último dato, fecha y procedencia.
+- Cambiar el periodo repite únicamente las consultas de ese periodo. Cerrar la pestaña detiene toda actividad del terminal.
+- El proveedor limita y cachea los datos. «Consulta en apertura» no equivale a tick-by-tick ni a tiempo real oficial de futuros.
