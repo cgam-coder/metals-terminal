@@ -373,8 +373,8 @@
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro y Plata — Evolución comparada</h2><div class="main-title-extra">XAU/USD y XAG/USD · referencias spot; NO futuros COMEX</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button><button data-period="5y">5A</button></div></div>
-    <div class="tv-chart" id="chart-main"><div class="tv-loader">Cargando series XAU/XAG bajo demanda…</div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button><button data-period="5y">5A</button></div></div>
+    <div class="tv-chart" id="chart-main"><div class="native-spinner">Cargando cierres comparables GC, SI y HG…</div></div>
   </section>
   <section class="panel ratio-panel">
     <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><button class="ratio-view-toggle" id="ratio-view-toggle" title="Alternar valor absoluto y variación porcentual">Vista: ratio</button><button class="market-inspect" data-inspect="ratio" title="Ampliar ratio oro-plata">Ampliar ↗</button><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
@@ -401,8 +401,8 @@
   <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
-<p>Los símbolos de futuros COMEX GC1!, SI1! y HG1! no se pueden incrustar aquí mediante los widgets gratuitos probados. Los gráficos propios de XAU/XAG, DXY y EUR/USD se calculan con XAUS (no son futuros COMEX); el VIX utiliza cierres diarios de Cboe. Algunos módulos conservan widgets externos de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
-<p>El gráfico comparativo y su ratio utilizan XAU/USD y XAG/USD indicativos, no futuros. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los futuros GC, SI, HG y BZ tienen cobertura pública limitada a 15 sesiones: se indica cuando un periodo solicitado no está disponible. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
+<p>Los futuros GC, SI y HG se comparan mediante gráficos SVG propios de sus cierres publicados, no por widgets COMEX en directo. XAU/XAG spot se utiliza únicamente en la ratio inferior; DXY y EUR/USD usan XAUS y el VIX utiliza cierres diarios de Cboe. Algunos módulos conservan widgets externos de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
+<p>El gráfico comparativo principal utiliza los cierres de futuros GC, SI y HG con fechas coincidentes y base 0 %. La ratio inferior sigue calculándose con spot XAU/XAG y se etiqueta por separado. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los futuros GC, SI, HG y BZ tienen cobertura pública limitada a 15 sesiones: se indica cuando un periodo solicitado no está disponible. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
 <p>Los tipos nominales y reales proceden del <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">Tesoro de EE. UU.</a>; el breakeven se calcula como Treasury 10Y − TIPS 10Y, con compensaciones de inflación y primas de riesgo, no como predicción precisa de IPC.</p>
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El VIX muestra únicamente el <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data/" target="_blank" rel="noopener noreferrer">cierre diario Cboe</a>; no contiene datos en vivo del índice. Se consulta cuando abres el terminal, sin cron.</p>
@@ -632,6 +632,7 @@ function verifiedFallbackFutures(){
      }
    }
    renderFuturesCards();
+   renderFuturesComparison();
  }catch(e){console.warn("Respaldo de futuros no disponible",e);}
 }
 async function loadFuturesCards(){
@@ -647,6 +648,7 @@ async function loadFuturesCards(){
      futuresCache[key]=fresh;
      futuresFreshness[key]="Último "+fresh.at(-1).date;
      drawFuturesCloseTile(key,fresh,futuresFreshness[key]);
+     if(key==="gold"||key==="silver"||key==="copper")renderFuturesComparison();
    }catch(e){
      console.warn("Actualización de "+conf.code+" no disponible; conservando cierre verificado",e);
      if(!futuresCache[key]?.length){
@@ -669,23 +671,73 @@ function renderBrowserQuotes(){
    drawFuturesCloseTile(key,points,"XAUS · referencia");
  }
 }
+
+/* Three-series front-month FUTURES comparison. No spot substitution, no synthetic extrapolation.
+   A shared calendar date is mandatory before return calculations; note that continuous
+   front-month contracts may contain contract-roll effects and are not return indices. */
+const COMPARISON_FUTURES=[
+  {key:"gold",name:"Oro GC",color:"#f4ba3c"},
+  {key:"silver",name:"Plata SI",color:"#d7e3ef"},
+  {key:"copper",name:"Cobre HG",color:"#db9569"}
+];
+function renderFuturesComparison(){
+ const host=document.getElementById("chart-main");
+ if(!host)return;
+ const label=DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod;
+ const sourceLinks='<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
+ if(COMPARISON_FUTURES.some(meta=>(futuresCache[meta.key]||[]).length<2)){
+   host.innerHTML='<div class="native-error">No hay cierres de los tres contratos suficientes para calcular rendimientos comparables. No se utilizan precios spot ni curvas inventadas.<span>Fuentes: '+sourceLinks+'</span></div>';
+   return;
+ }
+ if(nativePeriod==="1d"){
+   host.innerHTML='<div class="native-error">La vista 1D requiere precios intradía de los futuros GC, SI y HG. Esta fuente gratuita publica únicamente cierres diarios; no se simula una curva intradía.<span>Últimas sesiones consultables: '+sourceLinks+'</span></div>';
+   return;
+ }
+ const maps=COMPARISON_FUTURES.map(meta=>new Map(futuresCache[meta.key].filter(p=>p.date&&Number.isFinite(p.c)&&p.c>0).map(p=>[p.date,p])));
+ const shared=[...maps[0].keys()].filter(date=>maps.slice(1).every(m=>m.has(date))).sort();
+ if(shared.length<3){
+   host.innerHTML='<div class="native-error">Los tres futuros no comparten suficientes fechas de cierre verificadas. No se mezclan fechas ni se imputan precios.<span>Fuentes: '+sourceLinks+'</span></div>';
+   return;
+ }
+ const lastDate=shared.at(-1);
+ const limit=DISPLAY_PERIOD_DAYS[nativePeriod]||31;
+ const earliest=Date.parse(lastDate+"T00:00:00Z")-limit*86400000;
+ const selected=shared.filter(date=>Date.parse(date+"T00:00:00Z")>=earliest);
+ if(selected.length<3){
+   host.innerHTML='<div class="native-error">No hay al menos tres sesiones comunes dentro de '+label+'. Selecciona un periodo mayor para estudiar cierres de futuros comparables.</div>';
+   return;
+ }
+ const dates=selected.map(date=>maps[0].get(date).t);
+ const normalized=COMPARISON_FUTURES.map((meta,index)=>{
+   const m=maps[index],base=m.get(selected[0]).c;
+   return {label:meta.name,color:meta.color,points:selected.map(date=>(m.get(date).c/base-1)*100)};
+ });
+ const spanDays=(Date.parse(lastDate+"T00:00:00Z")-Date.parse(selected[0]+"T00:00:00Z"))/86400000;
+ const incomplete=spanDays<limit*.7;
+ const warning=incomplete?'<strong style="color:#ecc17a">Histórico incompleto para '+label+': '+selected.length+' sesiones comunes en '+Math.round(spanDays)+' días; no cubre el periodo seleccionado.</strong>':
+   '<span>'+selected.length+' cierres diarios coincidentes · '+label+'.</span>';
+ const oldest=selected[0];
+ const method='Comparación de rentabilidades desde '+oldest+' (base 0 %). Futuros de contrato próximo, cierres diarios, no cotización intradía; posibles efectos de cambios de contrato.';
+ const summary=warning+' <span>'+method+' Fuentes: '+sourceLinks+'</span>';
+ nativeChart("chart-main",normalized,dates,"%",summary);
+ host.setAttribute("data-market-instrument","GC-SI-HG-front-month");
+ host.setAttribute("data-covered-from",oldest);
+ host.setAttribute("data-covered-to",lastDate);
+ host.setAttribute("data-observations",String(selected.length));
+}
 function renderNative(){
  renderBrowserQuotes();
  renderFuturesCards();
  renderVixCard();
+ renderFuturesComparison();
  const paired=alignMarket();
- const link='<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Futuro GC ↗</a> · <a href="https://www.investing.com/commodities/silver-streaming-chart" target="_blank" rel="noopener noreferrer">Futuro SI ↗</a>';
  if(paired.length>=3){
-   nativeChart("chart-main",[{label:"Oro",color:"#f4ba3c",points:paired.map(x=>(x.g/paired[0].g-1)*100)},{label:"Plata",color:"#d7e3ef",points:paired.map(x=>(x.s/paired[0].s-1)*100)}],paired.map(x=>x.t),"%",'<span>Rendimiento normalizado, base 0 % · Serie indicativa XAUS · No GC/SI</span><span>'+link+'</span>');
    const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
    const change=ratioDisplay==="percent";
    const vals=change?ratios.map(r=>(r.c/ratios[0].c-1)*100):ratios.map(r=>r.c);
-   nativeChart("chart-ratio",[{label:change?"Variación de ratio":"XAU / XAG",color:"#38c9e5",points:vals}],ratios.map(x=>x.t),change?"%":"",'<span>'+(change?"Variación porcentual desde el inicio del periodo.":"Ratio XAU/XAG absoluta; eje vertical adaptado al rango.")+' · Ratio calculada con ambas series del mismo proveedor.</span>');
-
+   nativeChart("chart-ratio",[{label:change?"Variación de ratio":"XAU / XAG",color:"#38c9e5",points:vals}],ratios.map(x=>x.t),change?"%":"",'<span>Ratio SPOT XAU/XAG de la misma fuente y fechas comparables · NO cociente de futuros GC/SI.</span>');
  }else{
-   document.getElementById("chart-main").innerHTML='<div class="native-error">No se dispone de oro y plata con fechas coincidentes.<span>'+link+'</span></div>';
-   document.getElementById("chart-ratio").innerHTML='<div class="native-error">Ratio temporal no disponible: faltan datos comparables.</div>';
-
+   document.getElementById("chart-ratio").innerHTML='<div class="native-error">Ratio spot no disponible: faltan datos XAU/XAG con fechas coincidentes.</div>';
  }
  const dates=Object.values(nativeData).map(x=>x.asOf).filter(Boolean).sort(),stamp=dates.at(-1);
  document.getElementById("market-stamp").textContent="Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
@@ -696,7 +748,7 @@ async function fetchNative(period){
  renderFuturesCards();
  renderVixCard();
  document.querySelectorAll("#market-ranges button").forEach(x=>x.classList.toggle("active",x.dataset.period===period));
- document.getElementById("chart-main").innerHTML='<div class="native-error">Cargando series de mercado en tu navegador…</div>';
+ renderFuturesComparison();
  document.getElementById("chart-ratio").innerHTML='<div class="native-error">Esperando datos comparables…</div>';
  const interval=PERIODS[period]||"1d";
  await Promise.all(Object.keys(DATA_SYMBOLS).map(async key=>{
