@@ -470,6 +470,58 @@
  .macro-period-bar{line-height:1.4}
 }
 
+
+/* V3.7 - cohesive market and macro chart presentation across desktop/mobile. */
+.native-canvas{display:flex;flex-direction:column;height:100%;min-height:0;gap:7px;padding:6px 7px}
+.native-canvas .native-series{position:relative;flex:1 1 auto;min-height:135px;overflow:hidden;background:linear-gradient(180deg,#0c202b,#091721);border:1px solid #284659;border-radius:7px}
+.native-canvas svg[data-market-svg]{display:block;width:100%;height:100%;overflow:hidden;touch-action:pan-y}
+.native-canvas .native-axis{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;font-weight:520;fill:#b6c9d7}
+.native-canvas .native-grid{stroke:#3b596d;stroke-width:.75;stroke-opacity:.6}
+.native-canvas .native-legend{display:flex;gap:9px;align-items:center;flex-wrap:wrap;color:#dbe7ef;font-size:11px;line-height:1.4}
+.native-canvas .native-legend span{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.native-canvas .native-legend strong{font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.native-canvas .native-note{color:#a0bacb;font-size:10px;line-height:1.5;flex:0 0 auto}
+.native-canvas .native-note strong{color:#e4c57e}
+.native-canvas .native-tip{position:absolute;z-index:4;display:none;top:6px;left:6px;
+ max-width:calc(100% - 12px);padding:6px 9px;background:#061823f2;
+ border:1px solid #6890a9;border-radius:7px;color:#eaf8ff;
+ font-size:11px;line-height:1.4;white-space:normal;pointer-events:none;box-shadow:0 6px 19px #0007}
+.native-canvas .native-tip.visible{display:block}
+.native-canvas .market-crosshair{stroke:#9fc8dd;stroke-width:1;stroke-dasharray:4 4;opacity:0;vector-effect:non-scaling-stroke}
+.market-inspect{border:1px solid #3b5c6e;border-radius:6px;background:#102635;color:#bce3f9;
+ font-size:10px;line-height:1.1;padding:5px 6px;white-space:nowrap;cursor:pointer}
+.market-inspect:hover,.market-inspect:focus-visible{border-color:#91c1da;color:#fff}
+.top-grid .ticker-card .card-heading{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.top-grid .ticker-card .card-heading h2{flex:1 1 auto;min-width:0}
+.top-grid .ticker-card .market-inspect{order:1;margin-left:auto}
+.top-grid .ticker-card .metal-source-link{order:2}
+.top-grid .ticker-card .metal-marker{font:11px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#bed0de}
+.top-grid .ticker-card .metal-hover{display:block;opacity:0;max-width:calc(100% - 12px);white-space:normal;
+ font-size:11px;padding:5px 7px;transition:opacity .12s}
+.top-grid .ticker-card .metal-hover.visible{opacity:1}
+.top-grid .ticker-card .metal-spark-outer svg[data-market-tile-svg]{overflow:hidden;touch-action:pan-y}
+.top-grid .ticker-card .metal-spark-outer .market-axis{font:10px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#acc3d3}
+.top-grid .ticker-card .metal-spark-outer .market-grid{stroke:#3d5b6e;stroke-width:.65;stroke-opacity:.45}
+.detail-chart .native-canvas{height:100%;min-height:0}
+.detail-chart .native-canvas .native-series{min-height:190px}
+.detail-chart .native-canvas .native-axis{font-size:12px}
+.main-panel .native-canvas .native-series,.ratio-panel .native-canvas .native-series{min-height:140px}
+@media(max-width:880px){
+ .dashboard .main-panel{min-height:410px;height:auto}
+ .dashboard .ratio-panel{min-height:345px;height:auto}
+ .main-panel .native-canvas .native-series{min-height:225px}
+ .ratio-panel .native-canvas .native-series{min-height:195px}
+ .top-grid .ticker-card .metal-spark-outer{min-height:81px}
+ .top-grid .ticker-card .card-heading h2{font-size:14px}
+}
+@media(max-width:520px){
+ .top-grid .ticker-card .market-inspect{font-size:9px;padding:4px 5px}
+ .top-grid .ticker-card .metal-source-link{font-size:9px}
+ .main-panel .native-canvas .native-series{min-height:215px}
+ .ratio-panel .native-canvas .native-series{min-height:185px}
+ .top-grid .ticker-card .metal-marker{font-size:10.5px}
+}
+
 </style>
 </head>
 <body>
@@ -483,12 +535,12 @@
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
-  <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
-  <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
-  <article class="ticker-card metal-feature copper-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></article>
-  <article class="ticker-card metal-feature brent-feature"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></article>
-  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">Índice dólar · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-dxy"><div class="metal-wait">Leyendo serie DXY…</div></div></article>
-  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:#8db8ff">€</span><h2>EUR/USD</h2></div><div class="card-caption">Divisas · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-eur"><div class="metal-wait">Leyendo EUR/USD…</div></div></article>
+  <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><button class="market-inspect" data-inspect="gold" title="Ampliar oro GC">Ampliar ↗</button><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
+  <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><button class="market-inspect" data-inspect="silver" title="Ampliar plata SI">Ampliar ↗</button><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
+  <article class="ticker-card metal-feature copper-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><button class="market-inspect" data-inspect="copper" title="Ampliar cobre HG">Ampliar ↗</button><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></article>
+  <article class="ticker-card metal-feature brent-feature"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><button class="market-inspect" data-inspect="brent" title="Ampliar Brent BZ">Ampliar ↗</button><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></article>
+  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2><button class="market-inspect" data-inspect="dxy" title="Ampliar índice dólar DXY">Ampliar ↗</button></div><div class="card-caption">Índice dólar · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-dxy"><div class="metal-wait">Leyendo serie DXY…</div></div></article>
+  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:#8db8ff">€</span><h2>EUR/USD</h2><button class="market-inspect" data-inspect="eur" title="Ampliar EUR/USD">Ampliar ↗</button></div><div class="card-caption">Divisas · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-eur"><div class="metal-wait">Leyendo EUR/USD…</div></div></article>
   <article class="ticker-card risk metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX oficial de Cboe">Ampliar ↗</button></div><div class="card-caption">Cboe · índice VIX · último cierre</div><div class="quote-slot metal-futures-slot" id="q-vix"><div class="metal-wait">Leyendo histórico Cboe…</div></div></article>
 </section>
 <main class="dashboard">
@@ -501,7 +553,7 @@
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div><button class="market-inspect" data-inspect="futures" title="Ampliar comparación de futuros">Ampliar ↗</button></div>
     <div class="tv-chart" id="chart-main"><div class="native-spinner">Cargando cierres comparables GC, SI y HG…</div></div>
   </section>
   <section class="panel ratio-panel">
