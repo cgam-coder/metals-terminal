@@ -677,7 +677,7 @@ if(new URLSearchParams(location.search).has("datasetqa")){
 const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'TVC:DXY',eur:'FX:EURUSD',vix:'TVC:VIX',brent:'TVC:UKOIL',copper:'COMEX:HG1!'};
 const sources={q:'https://www.tradingview.com/widget-docs/',rates:'https://home.treasury.gov/resource-center/data-chart-center/interest-rates'};
 let macro=null;let curveHistorical=true;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
-const $=s=>document.querySelector(s),$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 // Only one chart may retain its inspected point across interactions.
 let activeChartInspector=null;
 function activateChartInspector(chart,clear){
