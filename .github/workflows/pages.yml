@@ -34,6 +34,7 @@ jobs:
           mkdir -p _site/data
           cp index.html _site/index.html
           cp data/series.json _site/data/series.json
+          cp data/vix-history.json _site/data/vix-history.json
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
