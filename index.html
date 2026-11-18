@@ -1703,15 +1703,22 @@ async function loadCboeVix(){
 
 function getRequestedGlobalPeriod(){
  try{
-  const query=new URLSearchParams(location.search).get("period");
-  return query&&Object.hasOwn(DISPLAY_PERIOD_LABEL,query)?query:"1mo";
- }catch(e){return "1mo";}
+  const query=new URLSearchParams(location.search);
+  if(query.get("period")==="custom"){
+   customRange=validateCustomDates(query.get("from"),query.get("to"));
+   return "custom";
+  }
+  const period=query.get("period");
+  return period&&Object.hasOwn(DISPLAY_PERIOD_LABEL,period)?period:"1mo";
+ }catch(e){console.warn("Fechas de URL no válidas; se utiliza 1M",e);return "1mo";}
 }
 function persistGlobalPeriod(period){
  try{
   const url=new URL(location.href);
   url.searchParams.set("period",period);
-  url.searchParams.delete("_refresh"); // One-shot forced refresh; don't replay on the next visit.
+  if(period==="custom"&&customRange){url.searchParams.set("from",customRange.from);url.searchParams.set("to",customRange.to);}
+  else{url.searchParams.delete("from");url.searchParams.delete("to");}
+  url.searchParams.delete("_refresh");
   history.replaceState(null,"",url.pathname+url.search+url.hash);
  }catch(e){console.warn("No se pudo guardar el periodo en la URL",e);}
 }
@@ -1888,7 +1895,7 @@ function windowStart(end,window){
  return dt.toISOString().slice(0,10);
 }
 function syncMacroToMaster(period){
- const range=DISPLAY_PERIOD_LABEL[period]||"1M";
+ const range=activePeriodLabel();
  for(const key of Object.keys(macroWindows))macroWindows[key]=range;
  detailWindow=range;
  document.querySelectorAll("#global-timeframes button,#detail-timeframes button").forEach(button=>{
@@ -1896,6 +1903,7 @@ function syncMacroToMaster(period){
   button.classList.toggle("active",active);
   button.setAttribute("aria-pressed",active?"true":"false");
  });
+ syncCustomDateForms();
  if(macro?.series)renderMacro();
 }
 function macroWindowRows(rows,what){
@@ -2187,7 +2195,7 @@ async function bootMacro(){
 }
 
 function openMarketDetail(kind){
- detailKind=kind;detailWindow=DISPLAY_PERIOD_LABEL[nativePeriod]||"1M";
+ detailKind=kind;detailWindow=activePeriodLabel();
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
  const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
@@ -2197,6 +2205,7 @@ function openMarketDetail(kind){
   button.classList.toggle("active",active);
   button.setAttribute("aria-pressed",active?"true":"false");
  });
+ syncCustomDateForms();
  drawMarketDetail();
 }
 function closeMarketDetail(){
@@ -2304,7 +2313,11 @@ $('#detail-timeframes').addEventListener('click',event=>{
  const b=event.target.closest('button[data-detail-period]');
  if(b&&b.dataset.detailPeriod!==nativePeriod)fetchNative(b.dataset.detailPeriod);
 });
-$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+document.querySelectorAll(".custom-date-form").forEach(form=>{
+ form.addEventListener("submit",event=>{event.preventDefault();applyCustomDates(form);});
+ form.querySelector("[data-reset-dates]").addEventListener("click",()=>fetchNative("1mo"));
+});
+$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);if(nativePeriod==="custom"&&customRange){url.searchParams.set("from",customRange.from);url.searchParams.set("to",customRange.to);}url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
