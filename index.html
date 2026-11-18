@@ -386,6 +386,19 @@
 
 .detail-timeframes{flex:0 0 auto;align-self:stretch;justify-content:center;gap:4px;flex-wrap:wrap;padding:5px}
 .detail-timeframes button{flex:0 1 auto;min-height:32px;min-width:42px}
+.custom-date-form{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:5px 8px;background:#0c1e2a;border:1px solid #355569;border-radius:8px;min-width:0}
+#header-dates{flex:1 1 100%;justify-content:flex-end}
+#detail-dates{flex:0 0 auto;align-self:stretch;justify-content:center}
+.custom-date-form.active{border-color:#9b803e}
+.date-range-caption{color:#e5c785;font-size:11px;font-weight:650;white-space:nowrap}
+.custom-date-form label{display:flex;align-items:center;gap:5px;color:#bed1df;font-size:11px}
+.custom-date-form input[type=date]{color-scheme:dark;background:#091923;color:#ecf4fa;border:1px solid #476477;border-radius:6px;padding:6px;font:inherit;font-size:12px;min-width:0;max-width:147px}
+.custom-date-form button{font:600 11px system-ui,sans-serif;border-radius:6px;min-height:30px;padding:6px 10px;cursor:pointer}
+.date-apply{background:#956f17;color:#fff;border:1px solid #b59242}
+.date-reset{background:#122735;color:#c3d6e4;border:1px solid #486679}
+.date-feedback{flex:0 1 100%;color:#a9c8d8;text-align:right;font-size:10px;line-height:1.35;min-height:0}
+.custom-date-form[data-error] .date-feedback{color:#ffd09a}
+@media(max-width:740px){#header-dates,#detail-dates{justify-content:center}.custom-date-form label{flex:1 1 42%;justify-content:space-between}.custom-date-form input[type=date]{width:75%;max-width:none}.custom-date-form button{flex:1 1 35%}.date-feedback{text-align:center}}
 @media(max-width:780px){
  .detail-timeframes{justify-content:space-between;gap:3px;padding:4px}
  .detail-timeframes button{flex:1 1 16%;min-width:0;padding:8px 3px}
@@ -565,7 +578,7 @@
   <div class="header-space"></div>
   <div class="status"><i class="dot"></i><span>Mercado · datos bajo demanda</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
-  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button></div>
+  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button><form id="header-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><span class="date-range-caption">Fechas</span><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button><span class="date-feedback" role="status" aria-live="polite"></span></form></div>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <nav class="mobile-jump-nav" aria-label="Secciones del terminal">
@@ -616,6 +629,7 @@
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
   <div id="detail-timeframes" class="global-timeframes detail-timeframes" role="group" aria-label="Intervalo del gráfico ampliado"><button type="button" data-detail-period="1d" class="" aria-pressed="false">1D</button><button type="button" data-detail-period="3d" class="" aria-pressed="false">3D</button><button type="button" data-detail-period="5d" class="" aria-pressed="false">1S</button><button type="button" data-detail-period="2w" class="" aria-pressed="false">2S</button><button type="button" data-detail-period="1mo" class="active" aria-pressed="true">1M</button><button type="button" data-detail-period="3mo" class="" aria-pressed="false">3M</button><button type="button" data-detail-period="6mo" class="" aria-pressed="false">6M</button><button type="button" data-detail-period="1y" class="" aria-pressed="false">1A</button><button type="button" data-detail-period="2y" class="" aria-pressed="false">2A</button><button type="button" data-detail-period="5y" class="" aria-pressed="false">5A</button></div>
+  <form id="detail-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><span class="date-range-caption">Fechas</span><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button><span class="date-feedback" role="status" aria-live="polite"></span></form>
   <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
@@ -903,6 +917,47 @@ const FUTURES_PUBLIC={
 const FUTURE_KEYS=["gold","silver","brent","copper"];
 const DISPLAY_PERIOD_DAYS={"1d":1,"3d":3,"5d":7,"2w":14,"1mo":31,"3mo":95,"6mo":190,"1y":370,"2y":740,"5y":1850};
 const DISPLAY_PERIOD_LABEL={"1d":"1D","3d":"3D","5d":"1S","2w":"2S","1mo":"1M","3mo":"3M","6mo":"6M","1y":"1A","2y":"2A","5y":"5A"};
+// Shared custom historical range; providers continue to supply actual dated observations.
+let customRange=null;
+const isoDay=z=>new Date(z*1000).toISOString().slice(0,10);
+function minCustomDay(){const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-5);return d.toISOString().slice(0,10);}
+function maxCustomDay(){return new Date().toISOString().slice(0,10);}
+function validIsoDay(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value||""))return false;const d=new Date(value+"T00:00:00Z");return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;}
+function validateCustomDates(from,to){
+ if(!validIsoDay(from)||!validIsoDay(to))throw Error("Selecciona dos fechas válidas.");
+ if(from>to)throw Error("La fecha inicial debe ser anterior o igual a la final.");
+ if(from<minCustomDay()||to>maxCustomDay())throw Error("Selecciona fechas dentro de los últimos cinco años, sin días futuros.");
+ return {from,to};
+}
+function withinActiveDates(z){
+ if(!customRange)return true;
+ const date=typeof z==="string"?z:typeof z==="number"?isoDay(z):z?.date||(Number.isFinite(z?.t)?isoDay(z.t):"");
+ return date>=customRange.from&&date<=customRange.to;
+}
+function activePeriodLabel(){return nativePeriod==="custom"&&customRange?customRange.from+" – "+customRange.to:(DISPLAY_PERIOD_LABEL[nativePeriod]||"1M");}
+function syncCustomDateForms(){
+ const active=nativePeriod==="custom"&&!!customRange;
+ document.querySelectorAll(".custom-date-form").forEach(form=>{
+  form.classList.toggle("active",active);form.removeAttribute("data-error");
+  for(const input of form.querySelectorAll('input[type="date"]')){input.min=minCustomDay();input.max=maxCustomDay();input.value=active?customRange[input.name]:"";}
+  form.querySelector(".date-feedback").textContent=active?"Rango activo: "+customRange.from+" a "+customRange.to:"Hasta cinco años. Datos según fuente y sesiones reales.";
+ });
+}
+function customXausSettings(){
+ const age=Math.ceil((Date.now()-Date.parse(customRange.from+"T00:00:00Z"))/86400000);
+ if(age>690)return {range:"5y",interval:"1wk"};
+ if(age>330)return {range:"2y",interval:"1d"};
+ if(age>165)return {range:"1y",interval:"1d"};
+ if(age>75)return {range:"6mo",interval:"1d"};
+ if(age>22)return {range:"3mo",interval:"1d"};
+ if(age>5)return {range:"1mo",interval:"1d"};
+ return {range:"5d",interval:"30m"};
+}
+function applyCustomDates(form){
+ const from=form.querySelector('[name="from"]').value,to=form.querySelector('[name="to"]').value;
+ try{customRange=validateCustomDates(from,to);fetchNative("custom");}
+ catch(e){form.setAttribute("data-error","true");form.querySelector(".date-feedback").textContent=String(e.message||e);}
+}
 function periodCutoff(referenceSeconds,period){
  const date=new Date(referenceSeconds*1000);
  switch(period){
@@ -954,11 +1009,19 @@ function decodeFuturesCloseTable(markup,code){
 function pickPeriodRows(all,period,kind){
  const sorted=(all||[]).filter(z=>z&&Number.isFinite(z.t)&&Number.isFinite(z.c)&&z.c>0).sort((a,b)=>a.t-b.t);
  if(!sorted.length)return [];
+ if(period==="custom"&&customRange)return sorted.filter(withinActiveDates);
  const cutoff=periodCutoff(sorted.at(-1).t,period);
  // Never pull earlier observations into the chosen window to draw a curve.
  return sorted.filter(z=>z.t>=cutoff);
 }
 function metricCoversWindow(all,period,kind){
+ if(period==="custom"&&customRange){
+  const selected=all.filter(withinActiveDates);
+  if(!selected.length)return false;
+  const slack=kind==="reference"&&customXausSettings().interval==="1wk"?8:4;
+  const first=isoDay(selected[0].t),last=isoDay(selected.at(-1).t);
+  return (Date.parse(first)-Date.parse(customRange.from))/86400000<=slack&&(Date.parse(customRange.to)-Date.parse(last))/86400000<=slack;
+ }
  const days=DISPLAY_PERIOD_DAYS[period]||31;
  if(period==="3d")return all.filter(z=>z.t>=periodCutoff(all.at(-1).t,period)).length>=2;
  const span=all.length>1?(all.at(-1).t-all[0].t)/86400:0;
