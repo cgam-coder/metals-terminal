@@ -4,6 +4,12 @@ Web: https://cgam-coder.github.io/metals-terminal/
 
 Terminal personal estático (HTML/CSS/JS/SVG), con selector global de diez periodos **1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A** junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
+## Selección de temporalidad en gráficos ampliados
+
+La ventana «Ampliar» de todos los gráficos incorpora los diez intervalos de la cabecera (**1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A, 5A**). Ambos controles representan **la misma temporalidad global**: cambiarla dentro del gráfico ampliado actualiza también la selección de la página principal y la URL, sin cerrar la ventana. Al volver a abrir cualquier gráfico, se conserva el último periodo seleccionado.
+
+Los paneles basados en cierres ya descargados (futuros, VIX y series macro FRED) cambian con los datos disponibles y respetan las limitaciones de cobertura. Las referencias XAUS (DXY, EUR/USD y ratio spot) muestran un mensaje de consulta hasta recibir los puntos correspondientes al nuevo intervalo, evitando presentar el periodo anterior como si fuera el nuevo. En 1D los futuros y el VIX no inventan una curva intradía.
+
 ## Histórico real de cinco años: 18 de noviembre de 2026
 
 El terminal consulta directamente desde el navegador el dataset Commodity Prices de Aethereal, gratuito para investigación y educación: https://dataset.aethereal.top/datasets/commodity-prices
