@@ -405,7 +405,7 @@
 <body>
 <div class="site">
 <header class="header">
-  <div class="brand"><div class="brand-icon" aria-hidden="true"><svg width="39" height="36" viewBox="0 0 48 44"><path d="M13 3h15l5 12H8zM3 19h15l5 12H-2zM25 19h15l5 12H20zM14 29h16l5 12H9z" fill="#F1B93F" stroke="#f7d98b" stroke-width="1" transform="translate(4 0)"/></svg></div><div><div class="brand-title">METALS <em>TERMINAL</em></div><div class="subtitle">Oro y Plata · Datos contrastados · Sin suscripciones</div></div></div>
+  <div class="brand"><div class="brand-icon" aria-hidden="true"><svg width="39" height="36" viewBox="0 0 48 44"><path d="M13 3h15l5 12H8zM3 19h15l5 12H-2zM25 19h15l5 12H20zM14 29h16l5 12H9z" fill="#F1B93F" stroke="#f7d98b" stroke-width="1" transform="translate(4 0)"/></svg></div><div><div class="brand-title">METALS <em>TERMINAL</em></div><div class="subtitle">Oro · Plata · Cobre · Datos contrastados</div></div></div>
   <div class="header-space"></div>
   <div class="status"><i class="dot"></i><span>Mercado · consulta únicamente al abrir</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
@@ -452,7 +452,7 @@
   </section>
 
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V3.0</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V3.5</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><span id="detail-period" class="small-tag">1M</span><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1251,10 +1251,10 @@ function renderCurve(){
  }
  $("#yield-stamp").textContent="Treasury · "+source+" · último "+prettyDate(now.date);
  macroPeriodSummary("curve-range-summary",period,[
-   rows.length+" cierres",
-   "Δ 2Y "+deltaMarkup(deltaPp(now.DGS2,then.DGS2)),
-   "Δ 10Y "+deltaMarkup(deltaPp(now.DGS10,then.DGS10)),
-   "Δ 30Y "+deltaMarkup(deltaPp(now.DGS30,then.DGS30))
+   rows.length+(rows.length===1?" cierre":" cierres"),
+   "Δ 2Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS2,then.DGS2):null),
+   "Δ 10Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS10,then.DGS10):null),
+   "Δ 30Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS30,then.DGS30):null)
  ]);
  $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
  $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
@@ -1295,9 +1295,9 @@ function renderReals(){
  $("#real-dates").textContent=period+" · "+source+" · "+macroCoverageNotice(rows,"reals");
  const firstReal=rows[0],breakeven=r=>r.DGS10-r.DFII10;
  macroPeriodSummary("real-range-summary",period,[
-   rows.length+" cierres",
-   "Δ TIPS "+deltaMarkup(deltaPp(now.DFII10,firstReal.DFII10)),
-   "Δ implícita "+deltaMarkup(deltaPp(breakeven(now),breakeven(firstReal)))
+   rows.length+(rows.length===1?" cierre":" cierres"),
+   "Δ TIPS "+deltaMarkup(rows.length>1?deltaPp(now.DFII10,firstReal.DFII10):null),
+   "Δ implícita "+deltaMarkup(rows.length>1?deltaPp(breakeven(now),breakeven(firstReal)):null)
  ]);
  if(rows.length<2){
    $("#real-graph").innerHTML=macroGraphMessage("Un único cierre TIPS/Treasury ("+prettyDate(now.date)+"). No existe una evolución temporal en "+period+".",source);
