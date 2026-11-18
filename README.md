@@ -1,4 +1,4 @@
-# Metals Terminal V3.4 — Histórico de cinco años
+# Metals Terminal V3.7 — Histórico de cinco años
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
@@ -97,6 +97,19 @@ Fuentes:
 - TIPS 10Y: https://fred.stlouisfed.org/series/DFII10
 - Fed rango objetivo superior: https://fred.stlouisfed.org/series/DFEDTARU
 - BCE facilidad de depósito: https://fred.stlouisfed.org/series/ECBDFR
+
+## Visualización unificada V3.7 — Todos los gráficos
+
+Además de Treasury, TIPS y Fed/BCE, las **siete tarjetas superiores** (GC, SI, HG, BZ, DXY, EUR/USD y VIX), el **comparativo de futuros** y la **ratio spot XAU/XAG** utilizan ahora geometría SVG calculada con el tamaño real del contenedor.
+
+- Las fechas del eje horizontal siguen la distancia temporal real; etiquetas adaptadas a 1D–5A, sin estirar los textos.
+- Se mantienen ejes verticales y líneas más legibles en móvil. Las tarjetas pequeñas simplifican las etiquetas para evitar solapamientos.
+- Para series largas con más de 360 observaciones se representan **cierres semanales reales**; siguen calculándose máximos, mínimos, porcentajes y demás estadísticas con todos los datos originales y conservándose la procedencia.
+- Se incorporan botones **Ampliar** en los siete instrumentos y en el comparativo, además del existente para la ratio. La vista ampliada permite tocar la curva y consultar fecha y valor exactos de cada punto representado.
+- Ante un cambio de anchura del dispositivo, los SVG se recalculan con las series ya cargadas, sin volver a consultar ni generar datos.
+- Se mantiene un **único selector global** para todo el terminal, sin rangos temporales independientes en cada gráfico.
+
+Limitación: algunos cierres proceden de fuentes indicativas (DXY/EUR/USD, ratio spot) y otros de futuros próximos (GC/SI/HG/BZ). La mejora de presentación no cambia su naturaleza, antigüedad, ni disponibilidad intradía.
 
 ## Coste y seguridad
 
