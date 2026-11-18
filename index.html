@@ -978,8 +978,8 @@ function customXausSettings(){
 }
 function applyCustomDates(form){
  const from=form.querySelector('[name="from"]').value,to=form.querySelector('[name="to"]').value;
- try{customRange=validateCustomDates(from,to);fetchNative("custom");}
- catch(e){form.setAttribute("data-error","true");form.querySelector(".date-feedback").textContent=String(e.message||e);}
+ try{customRange=validateCustomDates(from,to);fetchNative("custom");return true;}
+ catch(e){form.setAttribute("data-error","true");form.querySelector(".date-feedback").textContent=String(e.message||e);return false;}
 }
 function periodCutoff(referenceSeconds,period){
  const date=new Date(referenceSeconds*1000);
@@ -2372,12 +2372,8 @@ $('#detail-timeframes').addEventListener('click',event=>{
 document.querySelectorAll(".custom-date-form").forEach(form=>{
  form.addEventListener("submit",event=>{
   event.preventDefault();
-  const from=form.querySelector('[name="from"]').value,to=form.querySelector('[name="to"]').value;
-  if(!validIsoDay(from)||!validIsoDay(to)||from>to||from<minCustomDay()||to>maxCustomDay()){
-   applyCustomDates(form);return;
-  }
-  applyCustomDates(form);
-  form.closest(".period-picker").open=false;
+  // An invalid range keeps the dropdown open with its validation message.
+  if(applyCustomDates(form))form.closest(".period-picker").open=false;
  });
  form.querySelector("[data-reset-dates]").addEventListener("click",()=>{
   form.closest(".period-picker").open=false;fetchNative("1mo");
@@ -2402,7 +2398,12 @@ document.addEventListener("pointerdown",event=>{
  });
 });
 document.addEventListener("keydown",event=>{
- if(event.key==="Escape")document.querySelectorAll(".period-picker[open]").forEach(picker=>picker.open=false);
+ if(event.key!=="Escape")return;
+ const opened=[...document.querySelectorAll(".period-picker[open]")];
+ if(!opened.length)return;
+ // In the expanded graph Escape closes the calendar, not the chart itself.
+ event.stopPropagation();
+ opened.forEach(picker=>picker.open=false);
 });
 $('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);if(nativePeriod==="custom"&&customRange){url.searchParams.set("from",customRange.from);url.searchParams.set("to",customRange.to);}url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
