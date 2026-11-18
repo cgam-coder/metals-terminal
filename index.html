@@ -459,6 +459,17 @@
  .curve-panel .legend>span{font-size:10px}
 }
 
+
+/* Let mobile cards grow when heading, legend or data source wraps. Plot height
+   remains genuinely usable; never crop 5Y axes to satisfy a fixed card height. */
+@media(max-width:880px){
+ .dashboard .curve-panel,.dashboard .real-panel,.dashboard .policy-panel{height:auto!important}
+ .dashboard .curve-panel .chart-container{height:220px;min-height:220px;flex:0 0 220px;max-height:none}
+ .dashboard .real-panel .chart-container{height:225px;min-height:225px;flex:0 0 225px;max-height:none}
+ .dashboard .policy-panel .chart-container{height:225px;min-height:225px;flex:0 0 225px;max-height:none}
+ .macro-period-bar{line-height:1.4}
+}
+
 </style>
 </head>
 <body>
