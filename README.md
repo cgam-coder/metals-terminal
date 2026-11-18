@@ -10,6 +10,14 @@ Cuando se cambia el intervalo dentro de «Ampliar» para la ratio spot XAU/XAG, 
 
 Se mantienen el selector global sincronizado, el criterio de fechas comparables, la fuente XAUS y las restricciones originales: no hay precios de relleno, nuevos servicios ni trabajos automáticos. Una demora de DXY/EUR/USD ya no bloquea el gráfico de la ratio ampliada.
 
+## Corrección de referencias DXY/EUR/USD y VIX — 18/11/2026
+
+Los gráficos ampliados de **DXY** y **EUR/USD** ya no esperan al cierre de todas las solicitudes de XAUS para abandonar «Consultando». Cada serie actualiza su propio panel al recibir una respuesta validada o un error, con el plazo máximo de 16 segundos ya establecido para XAUS. Se mantiene la sincronización con el selector global y se evita mostrar los datos del intervalo anterior como actuales.
+
+El **VIX** ya no depende únicamente del respaldo reciente de 35 cierres (30/09–17/11/2026). Se ha incorporado `data/vix-history.json`, una copia fechada de **1.262 cierres diarios de Cboe redistribuidos por datasets/finance-vix**, del 28/10/2021 al 22/09/2026 (su [archivo público](https://github.com/datasets/finance-vix/blob/main/data/vix-daily.csv) declara licencia ODC-PDDL-1.0; esto no acredita por sí solo las condiciones de licencia del origen Cboe). El respaldo reciente, también etiquetado Cboe, aporta 35 cierres hasta el 17/11/2026. La combinación usa fechas únicas y conserva el hueco **23–29/09/2026** sin rellenar precios.
+
+Con los datos actuales, las ventanas muestran 22 cierres para 1M, 254 para 1A, 511 para 2A y 1.283 para 5A. La fuente primaria [Cboe VIX History](https://www.cboe.com/tradable-products/vix/vix-historical-data/) se sigue intentando consultar directamente; si CORS o red impiden la descarga, permanece el archivo propio con fechas y procedencia explícitas. Las vistas señalan cobertura insuficiente o ausencias conocidas, nunca trazan un periodo largo a partir de 35 puntos como si cubrieran años completos.
+
 ## Selección de temporalidad en gráficos ampliados
 
 La ventana «Ampliar» de todos los gráficos incorpora los diez intervalos de la cabecera (**1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A, 5A**). Ambos controles representan **la misma temporalidad global**: cambiarla dentro del gráfico ampliado actualiza también la selección de la página principal y la URL, sin cerrar la ventana. Al volver a abrir cualquier gráfico, se conserva el último periodo seleccionado.
