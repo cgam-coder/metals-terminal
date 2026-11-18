@@ -10,7 +10,7 @@ Primera versión operativa de una web estática y gratuita, construida siguiendo
 
 ## Publicar a 0 € en GitHub Pages
 
-Crea un repositorio **público** dedicado a Metals Terminal (separado de NagameAlert), sube el contenido de esta carpeta preservando `.github/workflows/update-data.yml`, y en Settings → Pages selecciona Deploy from branch → main → /(root). El terminal será accesible desde `https://TU-USUARIO.github.io/NOMBRE-REPO/`.
+El repositorio público es `cgam-coder/metals-terminal`. En **Settings → Pages → Build and deployment → Source** selecciona **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica la web y vuelve a desplegarla después de cada actualización diaria. URL prevista: `https://cgam-coder.github.io/metals-terminal/`.
 
 La acción `Actualizar datos macro oficiales` se ejecuta de lunes a viernes a las 06:15 UTC (el dato macro puede aún no ser el último cierre de EE. UU. a esa hora; se capturará al día siguiente). Se puede ejecutar manualmente desde la pestaña Actions. Los cron de GitHub Actions no están garantizados al minuto, pueden retrasarse o desactivarse según el uso del repositorio. Requiere permisos de escritura adecuados para `GITHUB_TOKEN`.
 
@@ -44,7 +44,8 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 - `index.html`: diseño e interacciones en un único HTML, sin frameworks.
 - `data/series.json`: instantánea de series oficiales.
 - `scripts/update_data.py`: actualización reproducible sin claves, usando solo Python estándar.
-- `.github/workflows/update-data.yml`: programación gratuita si se publica en GitHub.
+- `.github/workflows/update-data.yml`: actualización macro automática gratuita.
+- `.github/workflows/pages.yml`: despliegue desde GitHub Actions tras cambios o actualización macro.
 
 ## Referencia estética
 
@@ -54,6 +55,6 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 
 El proyecto se ha verificado localmente con Node.js para los cálculos del frontend y Python para la sintaxis del actualizador. Las pruebas de integración con cotizaciones externas y la primera ejecución real del cron deben validarse después de la publicación: no se afirma que estén superadas.
 
-Para un repositorio público GitHub Pages puede alojar la web sin coste adicional en GitHub Free. Es necesario elegir explícitamente **Settings → Pages → Deploy from a branch → main / (root)** y activar/ejecutar el workflow en Actions.
+Para un repositorio público GitHub Pages puede alojar la web sin coste adicional en GitHub Free. Es necesario elegir explícitamente **Settings → Pages → Source: GitHub Actions**; la configuración inicial de Pages necesita efectuarse desde la cuenta de GitHub. El workflow de despliegue se puede ejecutar también desde Actions → Publicar Metals Terminal → Run workflow.
 
 Este repositorio incluye `.nojekyll` para servir archivos estáticos literalmente. No contiene credenciales. No introducir secrets, tokens ni cuentas de NagameAlert.
