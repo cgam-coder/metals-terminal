@@ -1985,6 +1985,11 @@ function drawMarketDetail(){
    return;
  }
  host.classList.remove("macro-focus-chart");
+ if(nativePeriod==="1d"&&["vix","gold","silver","copper","brent"].includes(detailKind)){
+   host.innerHTML='<div class="native-error">Solo hay cierres diarios para '+(FUTURES_PUBLIC[detailKind]?.code||"VIX")+'. La vista 1D no dispone de observaciones intradía contrastadas. Consulta la fecha del último cierre en la tarjeta o selecciona 3D/1S.</div>';
+   foot.textContent="No se convierten dos cierres de días distintos en una falsa curva intradía.";
+   return;
+ }
  if(detailKind==="futures"){
    const src=marketChartCache.get("chart-main");
    if(!src){host.innerHTML='<div class="native-error">La comparación de futuros aún no contiene suficientes datos verificables.</div>';return;}
