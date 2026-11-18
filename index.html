@@ -373,6 +373,17 @@
 }
 .top-grid .ticker-card .metal-timestamp > span:first-child{white-space:nowrap}
 
+
+/* Ten timeframes in one responsive header, without any in-chart time buttons. */
+.global-market-controls{min-width:0;flex-wrap:wrap;flex-shrink:1}
+.global-timeframes{flex-wrap:wrap;max-width:100%;justify-content:flex-end}
+.global-timeframes button{min-width:30px;padding:6px 7px}
+@media(max-width:620px){
+ .global-market-controls{width:100%;justify-content:flex-end}
+ .global-timeframes{flex:1 1 100%;justify-content:space-between}
+ .global-timeframes button{flex:1 1 35px;min-width:32px}
+}
+
 </style>
 </head>
 <body>
@@ -382,7 +393,7 @@
   <div class="header-space"></div>
   <div class="status"><i class="dot"></i><span>Mercado · consulta únicamente al abrir</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
-  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="5d">1S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="1y">1A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button></div>
+  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button></div>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
@@ -521,7 +532,8 @@ function restrictedCard(key,id){const item=OFFSITE[key],node=document.getElement
 /* Own SVG renderer. XAUS permits direct browser use without an API key.
    The provider labels XAU/XAG indicative references; NEVER label as GC/SI futures. */
 const DATA_API="https://xaus.com/api/v1/chart";
-const PERIODS={"1d":"5m","5d":"30m","1mo":"1d","3mo":"1d","6mo":"1d","1y":"1d","5y":"1wk"};
+const PERIODS={"1d":"5m","3d":"30m","5d":"30m","2w":"1d","1mo":"1d","3mo":"1d","6mo":"1d","1y":"1d","2y":"1d","5y":"1wk"};
+const XAUS_REQUEST_RANGE={"1d":"1d","3d":"5d","5d":"5d","2w":"1mo","1mo":"1mo","3mo":"3mo","6mo":"6mo","1y":"1y","2y":"2y","5y":"5y"};
 const DATA_SYMBOLS={gold:"xau",silver:"silver",dxy:"dxy",eur:"eurusd"};
 let nativeData={},nativePeriod="1mo",nativeRequest=0,ratioDisplay="absolute";
 const maxAgeMinutes=10;
@@ -535,7 +547,7 @@ function marketValidate(json,symbol){
 }
 function marketKey(t){
  if(nativePeriod==="1d")return String(Math.floor(t/300));
- if(nativePeriod==="5d")return String(Math.floor(t/1800));
+ if(nativePeriod==="5d"||nativePeriod==="3d")return String(Math.floor(t/1800));
  return new Date(t*1000).toISOString().slice(0,10);
 }
 function alignMarket(){
@@ -556,7 +568,7 @@ function quoteNative(id,pts,dec,color,label){
 function nativeChart(id,lines,dates,unit,sub){
  const host=document.getElementById(id);if(!host)return;
  const n=dates.length;
- if(n<3||lines.some(s=>s.points.length!==n)){host.innerHTML='<div class="native-error">No hay datos suficientes y coincidentes para dibujar este gráfico.<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Ver futuro oro ↗</a></div>';return;}
+ if(n<2||lines.some(s=>s.points.length!==n)){host.innerHTML='<div class="native-error">No hay datos suficientes y coincidentes para dibujar este gráfico.<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Ver futuro oro ↗</a></div>';return;}
  const W=850,H=240,L=55,R=17,T=14,B=28,values=lines.flatMap(s=>s.points);
  let mn=Math.min(...values),mx=Math.max(...values),spread=Math.max(.001,mx-mn);mn-=spread*.18;mx+=spread*.18;
  const X=i=>L+(W-L-R)*i/(n-1),Y=z=>T+(mx-z)/(mx-mn)*(H-T-B);
@@ -595,8 +607,25 @@ const FUTURES_PUBLIC={
  vix:{code:"VIX",url:"https://www.cboe.com/tradable-products/vix/vix-historical-data/",accent:"#fb6571",decimals:2,kind:"vix"}
 };
 const FUTURE_KEYS=["gold","silver","brent","copper"];
-const DISPLAY_PERIOD_DAYS={"1d":1,"5d":7,"1mo":31,"3mo":95,"6mo":190,"1y":370,"5y":1850};
-const DISPLAY_PERIOD_LABEL={"1d":"1D","5d":"1S","1mo":"1M","3mo":"3M","6mo":"6M","1y":"1A","5y":"5A"};
+const DISPLAY_PERIOD_DAYS={"1d":1,"3d":3,"5d":7,"2w":14,"1mo":31,"3mo":95,"6mo":190,"1y":370,"2y":740,"5y":1850};
+const DISPLAY_PERIOD_LABEL={"1d":"1D","3d":"3D","5d":"1S","2w":"2S","1mo":"1M","3mo":"3M","6mo":"6M","1y":"1A","2y":"2A","5y":"5A"};
+function periodCutoff(referenceSeconds,period){
+ const date=new Date(referenceSeconds*1000);
+ switch(period){
+ case "1d":date.setUTCDate(date.getUTCDate()-1);break;
+ case "3d":date.setUTCDate(date.getUTCDate()-3);break;
+ case "5d":date.setUTCDate(date.getUTCDate()-7);break;
+ case "2w":date.setUTCDate(date.getUTCDate()-14);break;
+ case "1mo":date.setUTCMonth(date.getUTCMonth()-1);break;
+ case "3mo":date.setUTCMonth(date.getUTCMonth()-3);break;
+ case "6mo":date.setUTCMonth(date.getUTCMonth()-6);break;
+ case "1y":date.setUTCFullYear(date.getUTCFullYear()-1);break;
+ case "2y":date.setUTCFullYear(date.getUTCFullYear()-2);break;
+ case "5y":date.setUTCFullYear(date.getUTCFullYear()-5);break;
+ default:date.setUTCMonth(date.getUTCMonth()-1);
+ }
+ return date.getTime()/1000;
+}
 let futuresCache={},futuresFreshness={};
 function decodeFuturesCloseTable(markup,code){
  const doc=new DOMParser().parseFromString(markup,"text/html");
@@ -631,13 +660,14 @@ function decodeFuturesCloseTable(markup,code){
 function pickPeriodRows(all,period,kind){
  const sorted=(all||[]).filter(z=>z&&Number.isFinite(z.t)&&Number.isFinite(z.c)&&z.c>0).sort((a,b)=>a.t-b.t);
  if(sorted.length<2)return sorted;
- const span=DISPLAY_PERIOD_DAYS[period]||31,end=sorted.at(-1).t;
- const rows=sorted.filter(z=>z.t>=end-span*86400);
+ const cutoff=periodCutoff(sorted.at(-1).t,period);
+ const rows=sorted.filter(z=>z.t>=cutoff);
  if(rows.length<2)return sorted.slice(-2);
  return rows;
 }
 function metricCoversWindow(all,period,kind){
  const days=DISPLAY_PERIOD_DAYS[period]||31;
+ if(period==="3d")return all.filter(z=>z.t>=periodCutoff(all.at(-1).t,period)).length>=2;
  const span=all.length>1?(all.at(-1).t-all[0].t)/86400:0;
  return span>=days*.7;
 }
@@ -945,10 +975,10 @@ function renderFuturesComparison(){
  }
  const lastDate=shared.at(-1);
  const limit=DISPLAY_PERIOD_DAYS[nativePeriod]||31;
- const earliest=Date.parse(lastDate+"T00:00:00Z")-limit*86400000;
+ const earliest=periodCutoff(Date.parse(lastDate+"T00:00:00Z")/1000,nativePeriod)*1000;
  const selected=shared.filter(date=>Date.parse(date+"T00:00:00Z")>=earliest);
- if(selected.length<3){
-   host.innerHTML='<div class="native-error">No hay al menos tres sesiones comunes dentro de '+label+'. Selecciona un periodo mayor para estudiar cierres de futuros comparables.</div>';
+ if(selected.length<2){
+   host.innerHTML='<div class="native-error">No hay al menos dos sesiones comunes dentro de '+label+'. Selecciona un periodo mayor para estudiar cierres de futuros comparables.</div>';
    return;
  }
  const dates=selected.map(date=>maps[0].get(date).t);
@@ -957,7 +987,7 @@ function renderFuturesComparison(){
    return {label:meta.name,color:meta.color,points:selected.map(date=>(m.get(date).c/base-1)*100)};
  });
  const spanDays=(Date.parse(lastDate+"T00:00:00Z")-Date.parse(selected[0]+"T00:00:00Z"))/86400000;
- const incomplete=spanDays<limit*.7;
+ const incomplete=nativePeriod==="3d"?false:spanDays<limit*.7;
  const warning=incomplete?'<strong style="color:#ecc17a">Histórico incompleto para '+label+': '+selected.length+' sesiones comunes en '+Math.round(spanDays)+' días; no cubre el periodo seleccionado.</strong>':
    '<span>'+selected.length+' cierres diarios coincidentes · '+label+'.</span>';
  const oldest=selected[0];
@@ -994,14 +1024,18 @@ async function fetchNative(period){
 
  renderFuturesComparison();
  document.getElementById("chart-ratio").innerHTML='<div class="native-error">Esperando datos comparables…</div>';
- const interval=PERIODS[period]||"1d";
+ const interval=PERIODS[period]||"1d",apiRange=XAUS_REQUEST_RANGE[period]||period;
  await Promise.all(Object.keys(DATA_SYMBOLS).map(async key=>{
    try{
-     const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range:period,interval}).toString();
+     const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range:apiRange,interval}).toString();
      const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(16000)});
      if(!res.ok)throw Error("HTTP "+res.status);
      const entry=marketValidate(await res.json(),DATA_SYMBOLS[key]);
-     if(token===nativeRequest)nativeData[key]=entry;
+     if(token===nativeRequest){
+       const lastPoint=entry.points.at(-1);
+       const clipped=entry.points.filter(p=>p.t>=periodCutoff(lastPoint.t,period));
+       nativeData[key]={...entry,points:clipped};
+     }
    }catch(e){console.warn("Serie "+key+" no validada; no se inventa dato.",e);}
  }));
  if(token===nativeRequest)renderNative();
@@ -1090,11 +1124,13 @@ function getRows(){const keys=['DGS2','DGS10','DGS30','DFII10'];const d=new Map(
 function windowStart(end,window){
  const dt=new Date(end+"T00:00:00Z");
  if(window==="1D")dt.setUTCDate(dt.getUTCDate()-1);
+ else if(window==="3D")dt.setUTCDate(dt.getUTCDate()-3);
  else if(window==="1S")dt.setUTCDate(dt.getUTCDate()-7);
+ else if(window==="2S")dt.setUTCDate(dt.getUTCDate()-14);
  else if(window==="1M")dt.setUTCMonth(dt.getUTCMonth()-1);
  else if(window==="3M")dt.setUTCMonth(dt.getUTCMonth()-3);
  else if(window==="6M")dt.setUTCMonth(dt.getUTCMonth()-6);
- else dt.setUTCFullYear(dt.getUTCFullYear()-(window==="5A"?5:1));
+ else dt.setUTCFullYear(dt.getUTCFullYear()-(window==="5A"?5:window==="2A"?2:1));
  return dt.toISOString().slice(0,10);
 }
 function syncMacroToMaster(period){
@@ -1249,11 +1285,15 @@ function drawMarketDetail(){
    if(cboeHistory.length<3){host.innerHTML='<div class="native-error">VIX aún no disponible: descargando histórico oficial de Cboe.</div>';return;}
    const last=cboeHistory.at(-1),end=new Date(last.t*1000),start=new Date(end);
    if(detailWindow==="1D")start.setUTCDate(start.getUTCDate()-1);
+   else if(detailWindow==="3D")start.setUTCDate(start.getUTCDate()-3);
    else if(detailWindow==="1S")start.setUTCDate(start.getUTCDate()-7);
+   else if(detailWindow==="2S")start.setUTCDate(start.getUTCDate()-14);
    else if(detailWindow==="1M")start.setUTCMonth(start.getUTCMonth()-1);
-   else start.setUTCFullYear(start.getUTCFullYear()-(detailWindow==="5A"?5:1));
+   else if(detailWindow==="3M")start.setUTCMonth(start.getUTCMonth()-3);
+   else if(detailWindow==="6M")start.setUTCMonth(start.getUTCMonth()-6);
+   else start.setUTCFullYear(start.getUTCFullYear()-(detailWindow==="5A"?5:detailWindow==="2A"?2:1));
    const pts=cboeHistory.filter(p=>p.t>=start.getTime()/1000);
-   if(pts.length<3){host.innerHTML='<div class="native-error">Sin suficientes cierres de VIX para trazar este periodo. No se inventan cotizaciones intradía.</div>';} else {
+   if(pts.length<2){host.innerHTML='<div class="native-error">Sin suficientes cierres de VIX para trazar este periodo. No se inventan cotizaciones intradía.</div>';} else {
    nativeChart("detail-chart",[{label:"VIX · cierre",color:"#fb6571",points:pts.map(x=>x.c)}],pts.map(p=>p.t),"",'<span>Fuente Cboe · VIX de cierre diario, no dato intradía.</span>');
    }
    foot.textContent='Cboe · '+pts.length+' cierres históricos · última sesión '+new Date(last.t*1000).toLocaleDateString('es-ES',{timeZone:'UTC'})+' · no feed de tiempo real';
