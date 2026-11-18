@@ -511,7 +511,7 @@
   </section>
 
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V3.5</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V3.6</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><span id="detail-period" class="small-tag">1M</span><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1193,7 +1193,7 @@ function readableMacroRows(rows,period){
 function macroAxisDate(date,spanDays){
  if(!date)return "";
  const y=date.slice(0,4),m=Number(date.slice(5,7)),d=Number(date.slice(8,10));
- if(spanDays>680)return y;
+ if(spanDays>1100)return y;
  if(spanDays>130)return MACRO_SHORT_MONTHS[m-1]+" "+y.slice(2);
  return d+" "+MACRO_SHORT_MONTHS[m-1];
 }
@@ -1224,13 +1224,19 @@ function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],pal
   result+='<text class="axis-text" x="'+(left-9)+'" y="'+(py+4).toFixed(2)+'" text-anchor="end">'+fmt(val,2)+' %</text>';
  }
  const maxTicks=W<330?3:W<530?4:6;
- const idxs=[...new Set(Array.from({length:Math.min(maxTicks,n)},(_,j)=>Math.round((n-1)*j/(Math.min(maxTicks,n)-1||1))))];
- idxs.forEach((i,j)=>{
-  const label=(numbers&&stamps)?macroAxisDate(dates[i],spanDays):(xLabels[i]||"");
-  const xCoord=x(i),anchor=j===0?"start":j===idxs.length-1?"end":"middle";
+ const tickCount=Math.min(maxTicks,n);
+ for(let j=0;j<tickCount;j++){
+  const fraction=j/(tickCount-1||1),index=Math.round(fraction*(n-1));
+  // Date axes are spaced by actual calendar time, not by count of rate
+  // changes (crucial for the Fed/BCE step chart).
+  const timestamp=stamps?stamps[0]+fraction*(stamps.at(-1)-stamps[0]):null;
+  const date=timestamp?new Date(timestamp).toISOString().slice(0,10):null;
+  const label=stamps?macroAxisDate(date,spanDays):(xLabels[index]||"");
+  const xCoord=stamps?left+fraction*plotW:x(index);
+  const anchor=j===0?"start":j===tickCount-1?"end":"middle";
   result+='<line x1="'+xCoord.toFixed(2)+'" y1="'+top+'" x2="'+xCoord.toFixed(2)+'" y2="'+(H-bottom)+'" stroke="#547086" stroke-opacity=".17" stroke-width=".8"/>';
   result+='<text class="axis-text" x="'+xCoord.toFixed(2)+'" y="'+(H-10)+'" text-anchor="'+anchor+'">'+label+'</text>';
- });
+ }
  series.forEach((ser,index)=>{
   const cls=palette[index]||["stroke-gold","stroke-cyan","stroke-silver"][index]||"stroke-purple";
   let path="",prev=false;
@@ -1633,7 +1639,7 @@ function openMarketDetail(kind){
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
  const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
- title.textContent=names[kind]||"Gráfico de mercado";
+ title.textContent=kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado");
  document.getElementById("detail-period").textContent=detailWindow;
  drawMarketDetail();
 }
