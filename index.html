@@ -703,35 +703,114 @@ function quoteNative(id,pts,dec,color,label){
  const observed=pts.at(-1)?.t;
  node.title="Última barra: "+(observed?new Date(observed*1000).toLocaleString("es-ES",{timeZone:"Europe/Madrid"}):"—")+". Fuente "+label+" · dato indicativo, no ejecución.";
 }
-function nativeChart(id,lines,dates,unit,sub){
- const host=document.getElementById(id);if(!host)return;
- const n=dates.length;
- if(n<2||lines.some(s=>s.points.length!==n)){host.innerHTML='<div class="native-error">No hay datos suficientes y coincidentes para dibujar este gráfico.<a href="https://www.investing.com/commodities/gold-streaming-chart" target="_blank" rel="noopener noreferrer">Ver futuro oro ↗</a></div>';return;}
- const W=850,H=240,L=55,R=17,T=14,B=28,values=lines.flatMap(s=>s.points);
- let mn=Math.min(...values),mx=Math.max(...values),spread=Math.max(.001,mx-mn);mn-=spread*.18;mx+=spread*.18;
- const X=i=>L+(W-L-R)*i/(n-1),Y=z=>T+(mx-z)/(mx-mn)*(H-T-B);
- let svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Gráfico de '+(unit==="%"?"rendimiento comparado":"ratio oro plata")+'">';
- for(let j=0;j<5;j++){const val=mn+(mx-mn)*j/4,py=Y(val);svg+='<path d="M'+L+','+py.toFixed(2)+'H'+(W-R)+'" stroke="#294453" stroke-width=".8"/><text x="'+(L-9)+'" y="'+(py+4).toFixed(2)+'" text-anchor="end" fill="#8199aa" font-size="11">'+fmt(val,2)+unit+'</text>';}
- for(let j=0;j<5;j++){const idx=Math.round((n-1)*j/4),px=X(idx),d=new Date(dates[idx]*1000),label=d.toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"});svg+='<text x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="#8199aa" font-size="11">'+label+'</text>';}
- for(const s of lines){const path=s.points.map((p,i)=>(i?"L":"M")+X(i).toFixed(2)+","+Y(p).toFixed(2)).join(" ");svg+='<path d="'+path+'" fill="none" stroke="'+s.color+'" stroke-width="2.7" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/><circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(s.points.at(-1)).toFixed(1)+'" r="3.8" fill="'+s.color+'"/>';}
- svg+='<line id="cross-'+id+'" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#7899ac" stroke-dasharray="4,4" opacity="0"/></svg>';
- let legend='<div class="native-legend">';
- for(const s of lines)legend+='<span><i class="native-dot" style="background:'+s.color+'"></i>'+s.label+' <strong>'+fmt(s.points.at(-1),2)+unit+'</strong></span>';
- legend+='</div>';
- host.innerHTML='<div class="native-canvas">'+legend+'<div class="native-series">'+svg+'<div class="native-tip"></div></div><div class="native-note">'+sub+'</div></div>';
- const frame=host.querySelector(".native-series"),shape=frame.querySelector("svg"),tip=frame.querySelector(".native-tip"),cross=frame.querySelector("line[id^=cross]");
- frame.addEventListener("pointermove",ev=>{
-   const rect=shape.getBoundingClientRect();if(!rect.width)return;
-   const local=(ev.clientX-rect.left)/rect.width*W;
-   const idx=Math.max(0,Math.min(n-1,Math.round((local-L)/(W-L-R)*(n-1))));
-   const d=new Date(dates[idx]*1000),periodLabel=nativePeriod==="1d"||nativePeriod==="5d"?d.toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):d.toLocaleDateString("es-ES");
-   tip.textContent=periodLabel+" · "+lines.map(s=>s.label+": "+fmt(s.points[idx],2)+unit).join(" | ");
-   tip.style.display="block";const loc=(ev.clientX-rect.left);tip.style.left=Math.max(12,Math.min(rect.width-12,loc))+"px";tip.style.transform=loc>rect.width/2?"translateX(-100%)":"none";
-   cross.setAttribute("x1",X(idx));cross.setAttribute("x2",X(idx));cross.setAttribute("opacity","1");
- });
- frame.addEventListener("pointerleave",()=>{tip.style.display="none";cross.setAttribute("opacity","0");});
-}
 
+/* Native market chart: same geometry/readability system as macro charts.
+   The input series remain the real source observations; a weekly plot for
+   >360 samples only reduces rendering density and never creates prices. */
+const marketChartCache=new Map();
+function marketSampleIndexes(dates){
+ const n=dates.length;
+ if(n<=360)return dates.map((_,i)=>i);
+ const byWeek=new Map();
+ for(let i=0;i<n;i++){
+   const d=new Date(dates[i]*1000);
+   if(!Number.isFinite(d.getTime()))continue;
+   const mon=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-((d.getUTCDay()+6)%7));
+   byWeek.set(mon,i);
+ }
+ return [...new Set([0,...byWeek.values(),n-1])].sort((a,b)=>a-b);
+}
+function marketAxisLabel(epoch,spanSeconds,period){
+ const d=new Date(epoch*1000);
+ if(!Number.isFinite(d.getTime()))return "—";
+ if(period==="1d"||spanSeconds<86400*2)return d.toLocaleString("es-ES",{day:"2-digit",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+ const yyyy=d.getUTCFullYear(),m=d.getUTCMonth(),day=d.getUTCDate();
+ if(spanSeconds>=86400*1090)return String(yyyy);
+ if(spanSeconds>=86400*110)return MACRO_SHORT_MONTHS[m]+" "+String(yyyy).slice(-2);
+ return day+" "+MACRO_SHORT_MONTHS[m];
+}
+function nativeChart(id,lines,dates,unit,sub){
+ const host=document.getElementById(id);
+ if(!host)return;
+ if(!Array.isArray(dates)||dates.length<2||lines.some(line=>line.points.length!==dates.length)||dates.some(t=>!Number.isFinite(t))){
+  host.innerHTML='<div class="native-error">No hay observaciones suficientes y coincidentes para este gráfico. No se completan fechas ni precios ausentes.</div>';
+  marketChartCache.delete(id);
+  return;
+ }
+ const n=dates.length;
+ const indexes=marketSampleIndexes(dates);
+ const plotDates=indexes.map(i=>dates[i]);
+ const plotLines=lines.map(line=>({...line,points:indexes.map(i=>line.points[i])}));
+ const legend='<div class="native-legend">'+lines.map(line=>
+   '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+
+   ' <strong>'+fmt(line.points.at(-1),2)+unit+'</strong></span>'
+ ).join("")+'</div>';
+ const thinning=indexes.length<n?'<span>Trazado semanal con cierres reales; '+n+' observaciones usadas en el cálculo.</span>':'';
+ host.innerHTML='<div class="native-canvas">'+legend+
+   '<div class="native-series"><div class="native-tip" role="status"></div></div>'+
+   '<div class="native-note">'+sub+thinning+'</div></div>';
+ const frame=host.querySelector(".native-series"),tip=frame.querySelector(".native-tip");
+ const box=frame.getBoundingClientRect(),hostBox=host.getBoundingClientRect();
+ const W=Math.max(184,Math.round(box.width||hostBox.width||390));
+ const H=Math.max(138,Math.round(box.height||Math.max(160,hostBox.height-72)||220));
+ const L=W<280?52:W<500?60:68,R=W<280?9:16,T=17,B=33;
+ const pw=Math.max(40,W-L-R),ph=Math.max(40,H-T-B);
+ const all=plotLines.flatMap(line=>line.points.filter(Number.isFinite));
+ if(!all.length){frame.innerHTML='<div class="native-error">Sin precios válidos para el periodo.</div>';return;}
+ let mn=Math.min(...all),mx=Math.max(...all),span=Math.max(.000001,mx-mn);
+ mn-=span*.14;mx+=span*.14;
+ const Y=z=>T+(mx-z)/(mx-mn)*ph;
+ const firstT=plotDates[0],lastT=plotDates.at(-1),timeRange=Math.max(1,lastT-firstT);
+ const X=t=>L+(t-firstT)/timeRange*pw;
+ let svg='<svg data-market-svg="1" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" tabindex="0" aria-label="Serie histórica '+(unit==="%"?"normalizada":"de mercado")+'. Toca el gráfico para inspeccionar los datos.">';
+ for(let j=0;j<5;j++){
+   const value=mn+(mx-mn)*j/4,cy=Y(value);
+   svg+='<line class="native-grid" x1="'+L+'" y1="'+cy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+cy.toFixed(1)+'"/>';
+   svg+='<text class="native-axis" x="'+(L-8)+'" y="'+(cy+4).toFixed(1)+'" text-anchor="end">'+fmt(value,unit==="%"?1:2)+unit+'</text>';
+ }
+ const ticks=W<310?3:W<570?4:6;
+ for(let j=0;j<ticks;j++){
+   const fraction=j/(ticks-1),t=firstT+timeRange*fraction,cx=X(t);
+   svg+='<line x1="'+cx.toFixed(1)+'" y1="'+T+'" x2="'+cx.toFixed(1)+'" y2="'+(H-B)+'" stroke="#416075" stroke-width=".8" stroke-opacity=".2"/>';
+   svg+='<text class="native-axis" x="'+cx.toFixed(1)+'" y="'+(H-10)+'" text-anchor="'+(j===0?"start":j===ticks-1?"end":"middle")+'">'+marketAxisLabel(t,timeRange,nativePeriod)+'</text>';
+ }
+ for(const line of plotLines){
+   const points=line.points;
+   let path="",on=false;
+   for(let i=0;i<points.length;i++){
+     if(!Number.isFinite(points[i])){on=false;continue;}
+     path+=(on?" L":"M")+X(plotDates[i]).toFixed(2)+" "+Y(points[i]).toFixed(2);
+     on=true;
+   }
+   svg+='<path d="'+path+'" fill="none" stroke="'+line.color+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
+   svg+='<circle cx="'+X(lastT).toFixed(1)+'" cy="'+Y(points.at(-1)).toFixed(1)+'" r="3.7" fill="'+line.color+'"/>';
+ }
+ svg+='<line class="market-crosshair" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/></svg>';
+ frame.insertAdjacentHTML("afterbegin",svg);
+ const shape=frame.querySelector("svg[data-market-svg]"),cross=frame.querySelector(".market-crosshair");
+ marketChartCache.set(id,{lines,dates,unit,sub,displayCount:indexes.length});
+ const inspect=(event)=>{
+   const rect=shape.getBoundingClientRect();
+   if(rect.width<=0)return;
+   const xOnCanvas=(event.clientX-rect.left)/rect.width*W;
+   const target=firstT+Math.max(0,Math.min(1,(xOnCanvas-L)/pw))*timeRange;
+   let low=0,high=plotDates.length-1;
+   while(low<high){const mid=(low+high)>>1;if(plotDates[mid]<target)low=mid+1;else high=mid;}
+   const i=low>0&&Math.abs(plotDates[low-1]-target)<Math.abs(plotDates[low]-target)?low-1:low;
+   const date=new Date(plotDates[i]*1000).toLocaleString("es-ES",{year:"numeric",month:"short",day:"numeric",hour:timeRange<86400*5?"2-digit":undefined,minute:timeRange<86400*5?"2-digit":undefined,timeZone:"UTC"});
+   tip.textContent=date+" · "+plotLines.map(z=>z.label+": "+fmt(z.points[i],unit==="%"?2:4)+unit).join(" · ");
+   tip.classList.add("visible");
+   tip.style.display="block";
+   const xx=X(plotDates[i]).toFixed(2);
+   cross.setAttribute("x1",xx);cross.setAttribute("x2",xx);cross.style.opacity="1";
+ };
+ shape.addEventListener("pointermove",inspect,{passive:true});
+ shape.addEventListener("pointerdown",inspect,{passive:true});
+ shape.addEventListener("pointerleave",event=>{if(event.pointerType==="mouse"){tip.classList.remove("visible");tip.style.display="none";cross.style.opacity="0";}});
+ shape.addEventListener("keydown",event=>{
+  if(event.key==="Enter"||event.key===" "){event.preventDefault();const r=shape.getBoundingClientRect();inspect({clientX:r.left+r.width*.65});}
+ });
+}
 /* GC/SI verified front-month daily closing prices, read from openly available
    data tables on page visit.  These are NOT tick quotes or CME settlements.
    No TradingView restricted iframe, proxy, cron, server or recurring requests. */
