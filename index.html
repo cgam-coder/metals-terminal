@@ -376,10 +376,10 @@
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
-  <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><a class="metal-source-link" href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
-  <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><a class="metal-source-link" href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
-  <article class="ticker-card metal-feature copper-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><a href="https://trading-commodity.com/download/hg/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></article>
-  <article class="ticker-card metal-feature brent-feature"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><a href="https://trading-commodity.com/download/bz/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></article>
+  <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
+  <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
+  <article class="ticker-card metal-feature copper-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></article>
+  <article class="ticker-card metal-feature brent-feature"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></article>
   <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">Índice dólar · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-dxy"><div class="metal-wait">Leyendo serie DXY…</div></div></article>
   <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:#8db8ff">€</span><h2>EUR/USD</h2></div><div class="card-caption">Divisas · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-eur"><div class="metal-wait">Leyendo EUR/USD…</div></div></article>
   <article class="ticker-card risk metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX oficial de Cboe">Ampliar ↗</button></div><div class="card-caption">Cboe · índice VIX · último cierre</div><div class="quote-slot metal-futures-slot" id="q-vix"><div class="metal-wait">Leyendo histórico Cboe…</div></div></article>
@@ -423,14 +423,14 @@
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los futuros GC, SI y HG se comparan mediante gráficos SVG propios de sus cierres publicados, no por widgets COMEX en directo. XAU/XAG spot se utiliza únicamente en la ratio inferior; DXY y EUR/USD usan XAUS y el VIX utiliza cierres diarios de Cboe. Algunos módulos conservan widgets externos de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
-<p>El gráfico comparativo principal utiliza los cierres de futuros GC, SI y HG con fechas coincidentes y base 0 %. La ratio inferior sigue calculándose con spot XAU/XAG y se etiqueta por separado. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los futuros GC, SI, HG y BZ tienen cobertura pública limitada a 15 sesiones: se indica cuando un periodo solicitado no está disponible. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
+<p>Los futuros históricos de hasta cinco años proceden del conjunto <a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal Commodity Prices</a>, disponible gratuitamente para investigación y educación. Se consulta una vez al abrir y se validan las cuatro series juntas. Se diferencia del proveedor alternativo trading-commodity.com, cuyos cierres pueden diferir, y nunca se fusionan las series de ambos proveedores. Los cambios de contrato pueden introducir saltos en una serie continua. El gráfico comparativo principal utiliza los cierres de futuros GC, SI y HG con fechas coincidentes y base 0 %. La ratio inferior sigue calculándose con spot XAU/XAG y se etiqueta por separado. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los futuros GC, SI, HG y BZ tienen cobertura pública limitada a 15 sesiones: se indica cuando un periodo solicitado no está disponible. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
 <p>Los tipos nominales y reales proceden del <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">Tesoro de EE. UU.</a>; el breakeven se calcula como Treasury 10Y − TIPS 10Y, con compensaciones de inflación y primas de riesgo, no como predicción precisa de IPC.</p>
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El VIX muestra únicamente el <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data/" target="_blank" rel="noopener noreferrer">cierre diario Cboe</a>; no contiene datos en vivo del índice. Se consulta cuando abres el terminal, sin cron.</p>
 <p>El archivo <code>data/series.json</code> es una instantánea que se descarga al abrir la página; solo cambia cuando se ejecuta manualmente su actualización y se publica. No hay tareas programadas de GitHub. Sin conexión o sin publicación, el panel conserva la instantánea oficial integrada con fecha visible. El HTML no usa claves API, no ejecuta operaciones y no recopila datos personales.</p>
 <section class="historical-import" aria-labelledby="import-title">
  <h3 id="import-title">Histórico de futuros de hasta cinco años</h3>
- <p>Las tablas gratuitas integradas solo exponen 15 sesiones. Para habilitar periodos largos con futuros reales, descarga una vez los CSV <strong>«Raw contract prices»</strong> en las páginas públicas <a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a>, <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a>, <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a> y <a href="https://trading-commodity.com/download/bz/" target="_blank" rel="noopener noreferrer">BZ</a>. Importa aquí esos cuatro CSV, juntos o por separado. El terminal conservará los cierres en el almacenamiento local de <strong>este navegador</strong>, sin subirlos a GitHub.</p>
+ <p>El terminal intenta obtener automáticamente cinco años de cierres de futuros del conjunto Aethereal Data. Si la descarga falla, utiliza las últimas 15 sesiones verificadas como respaldo. Como alternativa voluntaria, puedes descargar una vez los CSV <strong>«Raw contract prices»</strong> en las páginas públicas <a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a>, <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a>, <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a> y <a href="https://trading-commodity.com/download/bz/" target="_blank" rel="noopener noreferrer">BZ</a>. Importa aquí esos cuatro CSV, juntos o por separado. El terminal conservará los cierres en el almacenamiento local de <strong>este navegador</strong>, sin subirlos a GitHub.</p>
  <label for="futures-csv-upload">Importar CSV históricos GC / SI / HG / BZ</label>
  <input id="futures-csv-upload" type="file" accept=".csv,text/csv" multiple />
  <div id="futures-import-status" class="historical-import-status" aria-live="polite">No se ha importado ningún archivo en esta sesión.</div>
@@ -803,8 +803,78 @@ function verifiedFallbackFutures(){
    renderFuturesComparison();
  }catch(e){console.warn("Respaldo de futuros no disponible",e);}
 }
+
+/* Single on-demand, permitted research dataset for 5-year daily front-month
+   futures history; the four series must come from the SAME supplier.
+   Never splice Aethereal quotes with trading-commodity.com quotes. */
+const LONG_FUTURES_DATASET_URL="https://dataset.aethereal.top/files/commodity-prices.csv";
+const LONG_FUTURES_SYMBOLS={"GC=F":"gold","SI=F":"silver","HG=F":"copper","BZ=F":"brent"};
+let longFuturesProvenance="none";
+function parseFiveYearCommodityCsv(text){
+ const lines=text.replace(/^\uFEFF/,"").trim().split(/\r?\n/);
+ const head=lines.shift().split(",").map(c=>c.trim().toLowerCase());
+ const ix=Object.fromEntries(["date","symbol","close","open","high","low"].map(k=>[k,head.indexOf(k)]));
+ if(Object.values(ix).some(v=>v<0))throw Error("Cabecera de CSV de futuros no reconocida");
+ const now=new Date(),from=new Date(now);
+ from.setUTCFullYear(from.getUTCFullYear()-5);from.setUTCDate(from.getUTCDate()-15);
+ const minDate=from.toISOString().slice(0,10);
+ const endTime=Date.now()/1000+86400;
+ const parsed={gold:new Map(),silver:new Map(),copper:new Map(),brent:new Map()},invalid={gold:0,silver:0,copper:0,brent:0};
+ for(const line of lines){
+   const row=line.split(","),key=LONG_FUTURES_SYMBOLS[row[ix.symbol]],date=row[ix.date];
+   if(!key||!/^\d{4}-\d{2}-\d{2}$/.test(date||"")||date<minDate)continue;
+   const c=Number(row[ix.close]),o=Number(row[ix.open]),h=Number(row[ix.high]),l=Number(row[ix.low]);
+   const t=Date.parse(date+"T17:00:00Z")/1000;
+   const valid=[c,o,h,l].every(Number.isFinite)&&c>0&&h>=l&&c<=h*1.0001&&c>=l*.9999&&o<=h*1.0001&&o>=l*.9999&&t<endTime;
+   if(!valid){invalid[key]++;continue;}
+   parsed[key].set(date,{date,t,c,o,h,l});
+ }
+ const data={};
+ for(const key of FUTURE_KEYS){
+   const arr=[...parsed[key].values()].sort((a,b)=>a.date.localeCompare(b.date));
+   const span=arr.length>1?(arr.at(-1).t-arr[0].t)/86400:0;
+   // A 5-year history should span at least 4.75 years, with most trading days.
+   if(arr.length<1050||span<1730)throw Error("Histórico de "+key+" insuficiente: "+arr.length+" cierres, "+Math.round(span)+" días");
+   if(invalid[key]>Math.max(10,arr.length*.01))throw Error("Demasiadas observaciones inconsistentes de "+key);
+   data[key]=arr;
+ }
+ return data;
+}
+function sourceCoverageLabel(all,source){
+ const first=all?.[0]?.date,last=all?.at(-1)?.date;
+ return source+" · "+(all?.length||0)+" sesiones · "+first+" a "+last;
+}
+async function loadAetherealFiveYears(){
+ const response=await fetch(LONG_FUTURES_DATASET_URL,{
+    mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(35000)
+ });
+ if(!response.ok)throw Error("HTTP "+response.status);
+ const type=response.headers.get("content-type")||"";
+ const raw=await response.text();
+ if(raw.length<150000||raw.length>15_000_000)throw Error("Archivo inesperado: "+raw.length+" bytes");
+ const data=parseFiveYearCommodityCsv(raw);
+ const provenance="Aethereal · futuros históricos (uso personal, no feed CME/ICE)";
+ // Commit atomically only after all four have been parsed and validated.
+ for(const key of FUTURE_KEYS){
+   futuresCache[key]=data[key];
+   futuresFreshness[key]=sourceCoverageLabel(data[key],"Aethereal");
+ }
+ longFuturesProvenance="aethereal";
+ renderFuturesCards();
+ renderFuturesComparison();
+ return data;
+}
 async function loadFuturesCards(){
- verifiedFallbackFutures();
+ verifiedFallbackFutures(); // Immediate UI: the last dated, verified snapshot.
+ try{
+   await loadAetherealFiveYears();
+   return; // Do NOT also fetch and splice different front-month quote methodologies.
+ }catch(e){
+   console.warn("5 años de futuros no disponibles; conservando cierres verificables separados",e);
+   longFuturesProvenance="recent-fallback";
+ }
+ // Fall back only when the five-year dataset cannot be checked. Do not
+ // replace the coherent five-year curves with an incompatible fifteen-day feed.
  await Promise.all(FUTURE_KEYS.map(async key=>{
    const conf=FUTURES_PUBLIC[key];
    try{
@@ -812,17 +882,13 @@ async function loadFuturesCards(){
      if(!r.ok)throw Error("HTTP "+r.status);
      const fresh=decodeFuturesCloseTable(await r.text(),conf.code);
      const prev=futuresCache[key]?.at(-1)?.date;
-     if(prev&&fresh.at(-1)?.date<prev)throw Error("Cierre más antiguo que instantánea");
+     if(prev&&fresh.at(-1).date<prev)throw Error("El cierre es más antiguo que la instantánea");
      futuresCache[key]=mergeFuturesHistory(futuresCache[key],fresh);
-     futuresFreshness[key]=futuresCache[key].length>fresh.length?"Histórico local + último "+fresh.at(-1).date:"Último "+fresh.at(-1).date;
-     drawFuturesCloseTile(key,fresh,futuresFreshness[key]);
+     futuresFreshness[key]="Histórico alternativo · "+fresh.at(-1).date;
+     drawFuturesCloseTile(key,futuresCache[key],futuresFreshness[key]);
      if(key==="gold"||key==="silver"||key==="copper")renderFuturesComparison();
    }catch(e){
-     console.warn("Actualización de "+conf.code+" no disponible; conservando cierre verificado",e);
-     if(!futuresCache[key]?.length){
-       const el=document.getElementById("q-"+key);
-       if(el)el.innerHTML='<div class="metal-error">Cierre '+conf.code+' no disponible. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div>';
-     }
+     console.warn("Tampoco se pudo verificar "+conf.code+"; se conserva su última instantánea",e);
    }
  }));
 }
