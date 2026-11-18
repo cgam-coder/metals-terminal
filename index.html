@@ -122,7 +122,7 @@
 'use strict';
 const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'TVC:DXY',eur:'FX:EURUSD',vix:'TVC:VIX',brent:'TVC:UKOIL',copper:'COMEX:HG1!'};
 const sources={q:'https://www.tradingview.com/widget-docs/',rates:'https://home.treasury.gov/resource-center/data-chart-center/interest-rates'};
-let macro=null;let curveHistorical=false;let selectedPeriod='12M';
+let macro=null;let curveHistorical=false;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const fmt=(v,dec=2)=>Number.isFinite(v)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v):'—';
 const prettyDate=s=>s?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z')):'—';
@@ -285,25 +285,127 @@ function bootMarket(){
  loadCboeVix();
 }
 
-function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[]}){const left=45,right=14,top=13,bottom=27,plotW=width-left-right,plotH=height-top-bottom;const all=series.flatMap(s=>s.values.filter(Number.isFinite));if(!all.length)return '<div style="display:grid;place-items:center;height:100%;color:#95a9b8;font-size:12px">Sin datos verificados</div>';
+function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false}){const left=45,right=14,top=13,bottom=27,plotW=width-left-right,plotH=height-top-bottom;const all=series.flatMap(s=>s.values.filter(Number.isFinite));if(!all.length)return '<div style="display:grid;place-items:center;height:100%;color:#95a9b8;font-size:12px">Sin datos verificados</div>';
 const mn=yMin??Math.min(...all),mx=yMax??Math.max(...all);const range=Math.max(mx-mn,.03);const lower=yMin??mn-range*.16,upper=yMax??mx+range*.17;const y=val=>top+((upper-val)/(upper-lower))*plotH;const n=Math.max(...series.map(s=>s.values.length),2);const x=i=>left+i*plotW/(n-1);let out=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">`;
 for(let t=0;t<5;t++){const val=lower+(upper-lower)*t/4;const pos=y(val);out+=`<line class="grid" x1="${left}" y1="${pos}" x2="${width-right}" y2="${pos}"/><text class="axis-text" x="${left-7}" y="${pos+3}" text-anchor="end">${fmt(val,2)}%</text>`;}
 for(let t=0;t<4;t++){const i=Math.round(t*(n-1)/3);const pos=x(i);out+=`<line class="grid" x1="${pos}" y1="${top}" x2="${pos}" y2="${height-bottom}"/><text class="axis-text" x="${pos}" y="${height-8}" text-anchor="middle">${xLabels[i]||''}</text>`;}
-series.forEach((s,idx)=>{const cls=palette[idx]||['stroke-gold','stroke-cyan','stroke-silver'][idx]||'stroke-purple';const path=s.values.map((z,i)=>Number.isFinite(z)?`${i===0?'M':'L'}${x(i).toFixed(2)} ${y(z).toFixed(2)}`:'').join(' ');out+=`<path d="${path}" class="${cls}"/>`;if(Number.isFinite(s.values.at(-1))){out+=`<circle cx="${x(s.values.length-1)}" cy="${y(s.values.at(-1))}" r="3.2" fill="${s.color||'#38c9e5'}"><title>${s.name||''} ${fmt(s.values.at(-1))}%</title></circle>`;}});
+series.forEach((s,idx)=>{const cls=palette[idx]||['stroke-gold','stroke-cyan','stroke-silver'][idx]||'stroke-purple';let path='';s.values.forEach((z,i)=>{if(!Number.isFinite(z))return;if(step&&i&&Number.isFinite(s.values[i-1]))path+=`H${x(i).toFixed(2)} V${y(z).toFixed(2)}`;else path+=`${path?' L':'M'}${x(i).toFixed(2)} ${y(z).toFixed(2)}`;});out+=`<path d="${path}" class="${cls}"/>`;if(Number.isFinite(s.values.at(-1))){out+=`<circle cx="${x(s.values.length-1)}" cy="${y(s.values.at(-1))}" r="3.2" fill="${s.color||'#38c9e5'}"><title>${s.name||''} ${fmt(s.values.at(-1))}%</title></circle>`;}});
 return out+'</svg>';}
 function getRows(){const keys=['DGS2','DGS10','DGS30','DFII10'];const d=new Map();for(const k of keys){for(const row of v(macro,k)){if(!d.has(row.date))d.set(row.date,{date:row.date});d.get(row.date)[k]=row.value;}}return [...d.values()].sort((a,b)=>a.date.localeCompare(b.date));}
-function renderCurve(){const rows=getRows().filter(r=>[r.DGS2,r.DGS10,r.DGS30].every(Number.isFinite));let a=rows.at(-1),b=rows.length>1?rows.at(Math.max(0,rows.length-22)):null;if(!a){$('#curve-graph').innerHTML='<div class="tv-fallback">Faltan datos de rendimientos</div>';return;}
-$('#yield-stamp').textContent='Tesoro EE. UU. · Último cierre: '+prettyDate(a.date);
-$('#legend-today').textContent=curveHistorical?'Treasury 10Y':'Último · '+prettyDate(a.date);$('#legend-before').textContent=curveHistorical?'Treasury 2Y':'Comparación · '+prettyDate(b?.date);
-$('#curve-caption').textContent=curveHistorical?'Evolución temporal de los rendimientos nominales':'Curva por vencimiento: 2Y, 10Y y 30Y';
-if(!curveHistorical){$('#curve-graph').innerHTML=svgPlot({series:[{values:[a.DGS2,a.DGS10,a.DGS30],color:'#38c9e5'},{values:b?[b.DGS2,b.DGS10,b.DGS30]:[],color:'#f4ba3c'}],xLabels:['2Y','10Y','30Y'],palette:['stroke-cyan','stroke-gold'],width:390,height:222});}
-else{$('#curve-graph').innerHTML=svgPlot({series:[{values:rows.map(z=>z.DGS10),color:'#38c9e5'},{values:rows.map(z=>z.DGS2),color:'#f4ba3c'},{values:rows.map(z=>z.DGS30),color:'#d7e3ef'}],xLabels:rows.map((z,i)=>i%Math.max(1,Math.round(rows.length/4))===0?z.date.slice(5):''),palette:['stroke-cyan','stroke-gold','stroke-silver'],width:390,height:222});}
-const spread=a.DGS10-a.DGS2;$('#yield-stats').innerHTML=`<div>Treasury 2 años</div><div>${fmt(a.DGS2)} %</div><div>Treasury 10 años</div><div>${fmt(a.DGS10)} %</div><div>Treasury 30 años</div><div>${fmt(a.DGS30)} %</div><div>Spread 10Y − 2Y</div><div style="color:${spread>=0?'var(--green)':'var(--red)'}">${spread>0?'+':''}${fmt(spread)} pp</div>`;}
-function renderReals(){const rows=getRows().filter(r=>Number.isFinite(r.DGS10)&&Number.isFinite(r.DFII10));if(!rows.length)return;const a=rows.at(-1);$('#tips-value').textContent=fmt(a.DFII10)+' %';$('#breakeven-value').textContent=fmt(a.DGS10-a.DFII10)+' %';const labels=rows.map((r,i)=>i%Math.max(1,Math.round(rows.length/4))===0?r.date.slice(5):'');$('#real-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DFII10),color:'#b88aff'},{values:rows.map(r=>r.DGS10-r.DFII10),color:'#f4ba3c'}],xLabels:labels,palette:['stroke-purple','stroke-gold'],width:830,height:160});}
-function renderPolicy(){let a=v(macro,'DFEDTARU'),b=v(macro,'ECBDFR');const latestF=last(a),latestB=last(b);$('#fed-value').textContent=latestF?fmt(latestF.value)+' %':'—';$('#ecb-value').textContent=latestB?fmt(latestB.value)+' %':'—';const dates=[...new Set([...a,...b].map(r=>r.date))].sort();if(!dates.length)return;const aligned=arr=>{let n=null;const lookup=new Map(arr.map(d=>[d.date,d.value]));return dates.map(date=>{if(lookup.has(date))n=lookup.get(date);return n});};$('#policy-graph').innerHTML=svgPlot({series:[{values:aligned(a),color:'#f4ba3c'},{values:aligned(b),color:'#38c9e5'}],xLabels:dates.map((x,i)=>i%Math.max(1,Math.round(dates.length/3))===0?x.slice(5):''),palette:['stroke-gold','stroke-cyan'],width:290,height:280});}
-function renderMacro(){if(!macro?.series)return;const all=getRows();const max=all.at(-1)?.date||macro.updated||'—';$('#stamp').textContent='Macro: '+prettyDate(max);renderCurve();renderReals();renderPolicy();}
-async function bootMacro(){try{const inline=document.getElementById('initial-macro');if(inline){const seed=JSON.parse(inline.textContent);if(seed?.series){macro=seed;renderMacro();}}}catch(ex){console.warn('Instantánea integrada no válida',ex)}try{const r=await fetch('data/series.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const obj=await r.json();if(!obj.series||!obj.source)throw Error('formato');macro=obj;renderMacro();}catch(e){if(!macro)$('#stamp').textContent='Macro: no disponible';console.warn('Se utiliza la última instantánea oficial disponible.',e)}}
-function init(){bootMarket();bootMacro();$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+
+function windowStart(end,window){
+  const dt=new Date(end+"T00:00:00Z");
+  if(window==="1M")dt.setUTCMonth(dt.getUTCMonth()-1);
+  else dt.setUTCFullYear(dt.getUTCFullYear()-(window==="5A"?5:1));
+  return dt.toISOString().slice(0,10);
+}
+function macroWindowRows(rows,what){
+ if(!rows.length)return [];
+ const start=windowStart(rows.at(-1).date,macroWindows[what]||"1M");
+ return rows.filter(x=>x.date>=start);
+}
+function macroLabels(rows,what){
+ const w=macroWindows[what];
+ return rows.map((r,i)=>i%Math.max(1,Math.round(rows.length/4))===0?(w==="5A"?r.date.slice(2,7):r.date.slice(5)):"");
+}
+function renderCurve(){
+ const all=getRows().filter(r=>[r.DGS2,r.DGS10,r.DGS30].every(Number.isFinite));
+ const rows=macroWindowRows(all,"curve"),now=rows.at(-1),then=rows[0];
+ if(!now){$('#curve-graph').innerHTML='<div class="native-error">Sin datos Treasury verificados para este periodo.</div>';return;}
+ $('#yield-stamp').textContent='Tesoro EE. UU. · Último dato: '+prettyDate(now.date);
+ $('#legend-today').textContent=curveHistorical?'Treasury 10Y':'Último · '+prettyDate(now.date);
+ $('#legend-before').textContent=curveHistorical?'Treasury 2Y':'Inicio · '+prettyDate(then.date);
+ $('#curve-caption').textContent=curveHistorical?'Evolución nominal 2Y, 10Y y 30Y · '+macroWindows.curve:'Curva por vencimiento · comparación con '+macroWindows.curve;
+ if(!curveHistorical){
+   $('#curve-graph').innerHTML=svgPlot({series:[{values:[now.DGS2,now.DGS10,now.DGS30],color:'#38c9e5'},{values:[then.DGS2,then.DGS10,then.DGS30],color:'#f4ba3c'}],xLabels:['2Y','10Y','30Y'],palette:['stroke-cyan','stroke-gold'],width:390,height:222});
+ }else{
+   $('#curve-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DGS10),color:'#38c9e5'},{values:rows.map(r=>r.DGS2),color:'#f4ba3c'},{values:rows.map(r=>r.DGS30),color:'#d7e3ef'}],xLabels:macroLabels(rows,"curve"),palette:['stroke-cyan','stroke-gold','stroke-silver'],width:390,height:222});
+ }
+ const spread=now.DGS10-now.DGS2;
+ $('#yield-stats').innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?'var(--green)':'var(--red)')+'">'+(spread>0?'+':'')+fmt(spread)+' pp</div>';
+}
+function renderReals(){
+ const all=getRows().filter(r=>Number.isFinite(r.DGS10)&&Number.isFinite(r.DFII10));
+ const rows=macroWindowRows(all,"reals"),now=rows.at(-1);
+ if(!now){$('#real-graph').innerHTML='<div class="native-error">No hay TIPS y Treasury de la misma fecha para este periodo.</div>';return;}
+ $('#tips-value').textContent=fmt(now.DFII10)+' %';$('#breakeven-value').textContent=fmt(now.DGS10-now.DFII10)+' %';
+ $('#real-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DFII10),color:'#b88aff'},{values:rows.map(r=>r.DGS10-r.DFII10),color:'#f4ba3c'}],xLabels:macroLabels(rows,"reals"),palette:['stroke-purple','stroke-gold'],width:830,height:180});
+}
+function renderPolicy(){
+ const fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
+ const latestF=last(fed),latestB=last(ecb);
+ $('#fed-value').textContent=latestF?fmt(latestF.value)+' %':'—';
+ $('#ecb-value').textContent=latestB?fmt(latestB.value)+' %':'—';
+ if(!latestF||!latestB){$('#policy-graph').innerHTML='<div class="native-error">Faltan tipos Fed/BCE contrastados.</div>';return;}
+ const end=latestF.date>latestB.date?latestF.date:latestB.date;
+ const start=windowStart(end,macroWindows.policy);
+ const dates=[...new Set([...fed,...ecb].filter(r=>r.date>=start&&r.date<=end).map(r=>r.date))].sort();
+ if(!dates.length)dates.push(end);
+ const xDates=[start,...dates.filter(d=>d>start)];
+ const align=arr=>{let lastVal=null;const map=new Map(arr.map(r=>[r.date,r.value]));for(const r of arr)if(r.date<=start&&Number.isFinite(r.value))lastVal=r.value;return xDates.map(d=>{if(map.has(d))lastVal=map.get(d);return lastVal;});};
+ const aa=align(fed),bb=align(ecb);
+ if(aa.some(z=>!Number.isFinite(z))||bb.some(z=>!Number.isFinite(z))){$('#policy-graph').innerHTML='<div class="native-error">Histórico oficial incompleto para el periodo.</div>';return;}
+ $('#policy-graph').innerHTML=svgPlot({series:[{values:aa,color:'#f4ba3c'},{values:bb,color:'#38c9e5'}],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:['stroke-gold','stroke-cyan'],width:290,height:280,step:true});
+}
+function renderMacro(){
+ if(!macro?.series)return;
+ const rows=getRows(),stamp=rows.at(-1)?.date||macro.updated||null;
+ $('#stamp').textContent='Macro: '+prettyDate(stamp)+(macroLive?' · FRED':' · instantánea');
+ renderCurve();renderReals();renderPolicy();
+}
+function parseFredCsv(key,raw){
+ const lines=raw.trim().split(/\r?\n/),head=lines.shift().replace(/\uFEFF/g,"").split(",");
+ if(head[0]!=="observation_date"||head[1]!==key)throw Error('Esquema FRED incorrecto '+key);
+ const dates=new Map();
+ for(const row of lines){
+   const [date,txt]=row.split(",");
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||""))continue;
+   if(!txt?.trim()||txt.trim()===".")continue;
+   const num=Number(txt);
+   if(!Number.isFinite(num)||num<-20||num>50)continue;
+   dates.set(date,{date,value:num});
+ }
+ if(dates.size<40)throw Error('Histórico FRED insuficiente '+key);
+ return [...dates.values()].sort((a,b)=>a.date.localeCompare(b.date));
+}
+async function fetchMacroOfficial(){
+ const keys=['DGS2','DGS10','DGS30','DFII10','DFEDTARU','ECBDFR'];
+ const from=new Date();from.setUTCFullYear(from.getUTCFullYear()-5);from.setUTCDate(from.getUTCDate()-8);
+ const start=from.toISOString().slice(0,10);
+ const done=await Promise.allSettled(keys.map(async key=>{
+   const url='https://fred.stlouisfed.org/graph/fredgraph.csv?'+new URLSearchParams({id:key,cosd:start});
+   const response=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(18000)});
+   if(!response.ok)throw Error('FRED '+key+': HTTP '+response.status);
+   return {key,rows:parseFredCsv(key,await response.text())};
+ }));
+ let updated=0;
+ for(const item of done){
+   if(item.status!=='fulfilled'){console.warn('FRED no disponible',item.reason);continue;}
+   const {key,rows}=item.value;
+   const existing=v(macro,key),index=new Map(existing.map(row=>[row.date,row]));
+   for(const row of rows)index.set(row.date,row);
+   macro.series[key]=[...index.values()].sort((a,b)=>a.date.localeCompare(b.date)).filter(row=>row.date>=start);
+   updated++;
+ }
+ if(updated){macroLive=true;macro.source='FRED (fuentes US Treasury, Fed y BCE) · consulta al abrir';renderMacro();}
+ else console.warn('FRED inaccesible: usando instantánea fechada, sin datos ficticios.');
+}
+async function bootMacro(){
+ try{
+   const seed=document.getElementById('initial-macro');
+   if(seed){const obj=JSON.parse(seed.textContent);if(obj?.series){macro=obj;renderMacro();}}
+ }catch(e){console.warn('Instantánea integrada inválida',e);}
+ try{
+   const r=await fetch('data/series.json',{cache:'no-store'});
+   if(!r.ok)throw Error(r.status);
+   const obj=await r.json();
+   if(!obj?.series||!obj.source)throw Error('JSON no válido');
+   macro=obj;renderMacro();
+ }catch(e){console.warn('Instantánea publicada no disponible',e);}
+ if(!macro)macro={source:'FRED',series:{}};
+ await fetchMacroOfficial();
+}
+function init(){bootMarket();bootMacro();document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
