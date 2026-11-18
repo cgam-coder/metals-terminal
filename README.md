@@ -10,6 +10,14 @@ Cuando se cambia el intervalo dentro de «Ampliar» para la ratio spot XAU/XAG, 
 
 Se mantienen el selector global sincronizado, el criterio de fechas comparables, la fuente XAUS y las restricciones originales: no hay precios de relleno, nuevos servicios ni trabajos automáticos. Una demora de DXY/EUR/USD ya no bloquea el gráfico de la ratio ampliada.
 
+## Rango de fechas personalizado (Desde / Hasta) — 18/11/2026
+
+Dos selectores HTML de fecha, **Desde** y **Hasta**, aparecen en la cabecera y en todos los gráficos ampliados. Se puede elegir un periodo civil inclusivo, incluso una sola fecha poniendo el mismo día en ambos campos, y pulsar **Mostrar**. El rango se aplica al terminal completo: siete mercados, comparativo GC/SI/HG, ratio spot XAU/XAG y gráficos Treasury, TIPS/inflación implícita y Fed/BCE. Ambos controles y la URL comparten el mismo estado (`?period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD`). Pulsar cualquiera de los diez periodos predefinidos desactiva el rango; «Restablecer» vuelve a 1M. «Actualizar todo» conserva las fechas elegidas.
+
+Se admiten fechas válidas **dentro de los últimos cinco años y hasta hoy**, inclusive, con fecha inicial anterior o igual a la final. El filtro respeta la fecha real de cada observación y no añade datos de otros días para completar la curva. Si solo existe un cierre, puede mostrarse su valor y fecha, pero no se inventa una línea temporal. Las series de futuros y VIX disponen de cierres diarios, el archivo FRED proporciona historia diaria cuando se ha publicado, y para tipos oficiales se utiliza el nivel conocido a la fecha de fin solicitada y la sucesión real de decisiones.
+
+**Limitación XAUS:** los endpoints admiten ventanas relativas fijas, no consultas arbitrarias `from/to`. La terminal descarga la ventana mínima disponible que cubre la fecha inicial y recorta localmente hasta el final elegido. Para fechas anteriores al horizonte de dos años, XAUS ofrece el histórico 5A semanal; un rango de pocos días puede no contener suficientes puntos. Se informa de ello en el formulario. No se atribuyen precios semanales a días que no figuran en el histórico. Un rango antiguo o muy corto también puede presentar cobertura parcial por ausencia de datos de origen.
+
 ## Corrección de referencias DXY/EUR/USD y VIX — 18/11/2026
 
 Los gráficos ampliados de **DXY** y **EUR/USD** ya no esperan al cierre de todas las solicitudes de XAUS para abandonar «Consultando». Cada serie actualiza su propio panel al recibir una respuesta validada o un error, con el plazo máximo de 16 segundos ya establecido para XAUS. Se mantiene la sincronización con el selector global y se evita mostrar los datos del intervalo anterior como actuales.
