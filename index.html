@@ -204,7 +204,7 @@
     <section class="panel commodity commodity-native"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><a href="https://trading-commodity.com/download/hg/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></section>
   </div>
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V2.0</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V3.0</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><div id="detail-ranges" class="macro-range" hidden><button data-detail-range="1M" class="active">1M</button><button data-detail-range="1A">1A</button><button data-detail-range="5A">5A</button></div><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -212,7 +212,7 @@
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los símbolos de futuros COMEX GC1!, SI1! y HG1! no se pueden incrustar aquí mediante los widgets gratuitos probados. Los gráficos propios de XAU/XAG, DXY y EUR/USD se calculan con XAUS (no son futuros COMEX); el VIX utiliza cierres diarios de Cboe. Algunos módulos conservan widgets externos de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
-<p>Los gráficos principales se dibujan con SVG propio sobre series etiquetadas <code>XAU/USD</code> y <code>XAG/USD</code> de <a href="https://xaus.com/api/" target="_blank" rel="noopener noreferrer">XAUS</a>, API pública que permite CORS y uso personal gratuito. <strong>No son futuros COMEX</strong>, y los futuros GC/SI conservan enlaces externos independientes. La ratio se calcula con ambas series del mismo proveedor cuando coinciden fechas. El navegador solo solicita datos al abrir o cambiar el periodo; no hay actualización automática.</p>
+<p>El gráfico comparativo y su ratio utilizan XAU/USD y XAG/USD indicativos, no futuros. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los futuros GC, SI, HG y BZ tienen cobertura pública limitada a 15 sesiones: se indica cuando un periodo solicitado no está disponible. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
 <p>Los tipos nominales y reales proceden del <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">Tesoro de EE. UU.</a>; el breakeven se calcula como Treasury 10Y − TIPS 10Y, con compensaciones de inflación y primas de riesgo, no como predicción precisa de IPC.</p>
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El VIX muestra únicamente el <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data/" target="_blank" rel="noopener noreferrer">cierre diario Cboe</a>; no contiene datos en vivo del índice. Se consulta cuando abres el terminal, sin cron.</p>
@@ -365,7 +365,6 @@ function pickPeriodRows(all,period,kind){
 }
 function metricCoversWindow(all,period,kind){
  const days=DISPLAY_PERIOD_DAYS[period]||31;
- if(kind==="reference"||kind==="vix")return true;
  const span=all.length>1?(all.at(-1).t-all[0].t)/86400:0;
  return span>=days*.7;
 }
@@ -744,7 +743,7 @@ function openMarketDetail(kind){
  detailKind=kind;detailWindow='1A';
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title'),controls=document.getElementById('detail-ranges');
  root.hidden=false;document.body.style.overflow="hidden";
- const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · CFD XCUUSD · OANDA",brent:"Brent · CFD UKOIL · TVC"};
+ const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario"};
  title.textContent=names[kind]||"Gráfico de mercado";
  controls.hidden=kind!=="vix";
  controls.querySelectorAll('button').forEach(x=>x.classList.toggle("active",x.dataset.detailRange==="1A"));
@@ -771,12 +770,15 @@ function drawMarketDetail(){
    const ratio=obs.map(p=>p.g/p.s),percent=ratioDisplay==="percent";
    nativeChart("detail-chart",[{label:percent?"Δ ratio":"XAU/XAG",color:"#38c9e5",points:percent?ratio.map(r=>(r/ratio[0]-1)*100):ratio}],obs.map(p=>p.t),percent?"%":"",'<span>Observaciones de referencia XAUS · '+nativePeriod+' · ratio no basada en futuros GC/SI</span>');
    foot.textContent='Fuente XAUS · escala propia y seguimiento de valores al pasar el cursor. Cambia el rango en el panel principal.';
- }else if(detailKind==="copper"){
-   advanced("detail-chart","OANDA:XCUUSD",[],"12M","3");
-   foot.textContent='OANDA · CFD de cobre XCUUSD · diferente del futuro COMEX HG. Herramientas temporales dentro del gráfico.';
- }else if(detailKind==="brent"){
-   advanced("detail-chart","TVC:UKOIL",[],"12M","3");
-   foot.textContent='TVC · CFD sobre Brent UKOIL · diferente del futuro ICE BRN1!. Herramientas temporales dentro del gráfico.';
+ }else if(detailKind==="copper"||detailKind==="brent"){
+   const cfg=FUTURES_PUBLIC[detailKind],all=futuresCache[detailKind]||[];
+   const rows=pickPeriodRows(all,nativePeriod,"futures");
+   if(rows.length<3){
+     host.innerHTML='<div class="native-error">El histórico público no permite representar más sesiones verificadas de '+cfg.code+'.</div>';
+   }else{
+     nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>Fuente '+cfg.url+' · futuros de contrato próximo · cierres diarios</span>');
+   }
+   foot.textContent="Futuros "+cfg.code+" · sólo "+all.length+" cierres públicos disponibles · periodo solicitado "+(DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod)+". El gráfico no representa días sin observaciones.";
  }
 }
 
