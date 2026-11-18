@@ -50,6 +50,21 @@ El último valor publicado y su fecha no cambian al seleccionar otro periodo his
 
 El periodo global se conserva en la URL mediante el parámetro period. «Actualizar todo» fuerza la recarga de la página y conserva ese periodo, en vez de restablecer 1M.
 
+## Histórico macro de cinco años disponible también en móvil
+
+**Corrección de noviembre de 2026.** El archivo `data/series.json` publicado anteriormente solo incluía 11 observaciones de Treasury/TIPS y 2 de Fed/BCE; cuando el navegador móvil no podía consultar directamente los CSV de FRED, el terminal mostraba erróneamente «1A · 11 obs. · cobertura parcial». Se ha sustituido por seis series verificadas de cinco años completas, obtenidas directamente de FRED, y se ha cambiado la carga para utilizar primero esa copia **del mismo origen GitHub Pages**.
+
+| Serie | Registros archivados | Último dato oficial archivado |
+|---|---:|---|
+| DGS2, DGS10, DGS30 y DFII10 | 1.264 cada una | 16/11/2026 |
+| DFEDTARU y ECBDFR | 1.851 cada una | 18/11/2026 |
+
+Los gráficos comparten el selector temporal único: en 1A hay 250 cierres comunes del Treasury y los TIPS y 366 observaciones de las series de tipos; en 5A hay 1.249 y 1.827, respectivamente. Los datos son observaciones reales, no interpoladas. El archivo original publicado se descarga sin depender de permisos CORS de `fred.stlouisfed.org`.
+
+La consulta directa a FRED se mantiene para intentar obtener nuevas observaciones cuando el navegador lo permite. Si falla, se conservan las últimas fechas archivadas. **«Actualizar todo» no actualiza automáticamente el fichero publicado de GitHub**: para renovar esa copia se usa la ejecución manual del workflow `Actualizar datos macro oficiales` en GitHub Actions, sin cron. El script de actualización ahora conserva cinco años más un margen; anteriormente descartaba toda observación anterior a 400 días.
+
+Es importante distinguir dato histórico completo de dato al minuto: una serie de cinco años puede terminar unos días antes de la fecha de consulta si FRED aún no ha publicado una actualización. El terminal siempre debe mostrar la fecha de cierre y si procede del CSV consultado directamente o de su archivo publicado.
+
 ## Macro: fechas oficiales, no instantáneas adelantadas
 
 Los tres paneles de Treasury, TIPS/breakeven y Fed/BCE se actualizan al abrir la web mediante los CSV oficiales de FRED (DGS2, DGS10, DGS30, DFII10, DFEDTARU, ECBDFR). Las seis series se consultan para cinco años completos de historia; el selector global de 1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A recorta las observaciones reales y **no vuelve a solicitar toda la historia en cada clic**.
