@@ -600,7 +600,7 @@
   </section>
 
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V3.7</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V3.8</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><span id="detail-period" class="small-tag">1M</span><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1849,7 +1849,10 @@ function renderMacro(){
  const archived=macroArchiveKeys.size;
  const verified=MACRO_SERIES.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
  const source=loaded===6?"FRED directo":archived===6?(loaded?"FRED directo + archivo":"FRED archivo verificado"):verified?"FRED parcial "+verified+"/6":"respaldo corto";
- $("#stamp").textContent="Macro "+macroWindows.curve+" · "+source+" · "+prettyDate(lastDate||macro.updated);
+ const lagging=MACRO_SERIES.filter(k=>businessDaysSince(v(macro,k).at(-1)?.date)>4);
+ $("#stamp").textContent="Macro "+macroWindows.curve+" · "+source+" · "+prettyDate(lastDate||macro.updated)+
+   (lagging.length?" · revisar "+lagging.length+" series retrasadas":"");
+ $("#stamp").title=lagging.length?"Última publicación antigua; consultar fuente FRED: "+lagging.join(", "):"Fechas oficiales según la frecuencia de publicación de cada serie";
  renderCurve();renderReals();renderPolicy();
 }
 function parseFredCsv(key,raw){
