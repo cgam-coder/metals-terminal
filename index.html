@@ -53,7 +53,7 @@
   <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio XAU/XAG · fuente única</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">USD Index · datos XAUS</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--silver)">€</span><h2>EUR/USD</h2></div><div class="card-caption">Tipo de cambio</div><div class="quote-slot" id="q-eur"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2></div><div class="card-caption">Volatilidad implícita · TVC</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2></div><div class="card-caption">Cboe VIX · último cierre diario</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
@@ -156,7 +156,7 @@ function quoteNative(id,pts,dec,color,label){
  const sign=delta>=0?"+":"",cl=delta>=0?"native-positive":"native-negative";
  node.innerHTML='<div class="native-card"><span class="native-num">'+fmt(cur,dec)+'</span><span class="native-meta"><span class="'+cl+'">'+sign+fmt(delta,2)+' % · período</span><span>'+label+'</span></span><svg class="native-spark" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+points+'" fill="none" stroke="'+color+'" stroke-width="1.7" vector-effect="non-scaling-stroke"/></svg></div>';
  const observed=pts.at(-1)?.t;
- node.title="Última barra: "+(observed?new Date(observed*1000).toLocaleString("es-ES",{timeZone:"Europe/Madrid"}):"—")+". Referencia indicativa XAUS, no ejecución.";
+ node.title="Última barra: "+(observed?new Date(observed*1000).toLocaleString("es-ES",{timeZone:"Europe/Madrid"}):"—")+". Fuente "+label+" · dato indicativo, no ejecución.";
 }
 function nativeChart(id,lines,dates,unit,sub){
  const host=document.getElementById(id);if(!host)return;
@@ -222,9 +222,48 @@ async function fetchNative(period){
  }));
  if(token===nativeRequest)renderNative();
 }
+
+async function loadCboeVix(){
+ // Cboe publishes daily historical VIX closes as a downloadable public CSV.
+ // This does not provide real-time VIX index streaming.
+ const id="q-vix",url="https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv";
+ try{
+   const r=await fetch(url,{mode:"cors",credentials:"omit",signal:AbortSignal.timeout(14000)});
+   if(!r.ok)throw Error("HTTP "+r.status);
+   const txt=await r.text();
+   const lines=txt.trim().split(/\r?\n/);
+   const header=lines[0].replace(/"/g,"").split(",").map(x=>x.trim().toUpperCase());
+   const iDate=header.indexOf("DATE"),iClose=header.indexOf("CLOSE");
+   if(iDate<0||iClose<0)throw Error("Esquema Cboe desconocido");
+   const pts=[];
+   for(const line of lines.slice(-350)){
+     const cols=line.replace(/"/g,"").split(",");
+     const dm=(cols[iDate]||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+     if(!dm)continue;
+     const t=Date.UTC(+dm[3],+dm[1]-1,+dm[2])/1000,close=Number(cols[iClose]);
+     if(!Number.isFinite(close)||close<=0||close>150||t> Date.now()/1000+86400)continue;
+     pts.push({t,c:close});
+   }
+   pts.sort((a,b)=>a.t-b.t);
+   if(pts.length<4)throw Error("Histórico reciente insuficiente");
+   const last=pts.at(-1),prev=pts.at(-2),change=(last.c/prev.c-1)*100;
+   const spark=pts.slice(-30),values=spark.map(p=>p.c),low=Math.min(...values),span=Math.max(.001,Math.max(...values)-low);
+   const coords=values.map((z,i)=>(i*100/(values.length-1)).toFixed(1)+","+(20-(z-low)/span*17).toFixed(1)).join(" ");
+   const node=document.getElementById(id),sign=change>=0?"+":"";
+   node.innerHTML='<div class="native-card"><div class="native-num">'+fmt(last.c,2)+'</div><div class="native-meta"><span class="'+(change>=0?"native-positive":"native-negative")+'">'+sign+fmt(change,2)+' % · sesión</span><span>Cboe</span></div><svg class="native-spark" viewBox="0 0 100 22" preserveAspectRatio="none"><polyline points="'+coords+'" stroke="#fb6571" stroke-width="1.7" fill="none" vector-effect="non-scaling-stroke"/></svg></div>';
+   node.title="VIX oficial Cboe · cierre diario "+new Date(last.t*1000).toLocaleDateString("es-ES",{timeZone:"UTC"})+" · NO tiempo real";
+ }catch(e){
+   console.warn("Cboe VIX diario no disponible",e);
+   restrictedCard("vix",id);
+ }
+}
+
 function bootMarket(){
- restrictedCard("vix","q-vix");restrictedCard("copper","q-copper");quote("q-brent",MARKET.brent);
+ restrictedCard("vix","q-vix");
+ restrictedCard("copper","q-copper");
+ quote("q-brent",MARKET.brent);
  fetchNative("1mo");
+ loadCboeVix();
 }
 
 function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[]}){const left=45,right=14,top=13,bottom=27,plotW=width-left-right,plotH=height-top-bottom;const all=series.flatMap(s=>s.values.filter(Number.isFinite));if(!all.length)return '<div style="display:grid;place-items:center;height:100%;color:#95a9b8;font-size:12px">Sin datos verificados</div>';
