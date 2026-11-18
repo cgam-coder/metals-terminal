@@ -1806,7 +1806,7 @@ function openMarketDetail(kind){
  detailKind=kind;detailWindow=DISPLAY_PERIOD_LABEL[nativePeriod]||"1M";
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
- const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
+ const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado");
  document.getElementById("detail-period").textContent=detailWindow;
  drawMarketDetail();
@@ -1836,6 +1836,13 @@ function drawMarketDetail(){
    return;
  }
  host.classList.remove("macro-focus-chart");
+ if(detailKind==="futures"){
+   const src=marketChartCache.get("chart-main");
+   if(!src){host.innerHTML='<div class="native-error">La comparación de futuros aún no contiene suficientes datos verificables.</div>';return;}
+   nativeChart("detail-chart",src.lines,src.dates,src.unit,src.sub);
+   foot.textContent="GC, SI y HG · "+src.dates.length+" cierres comunes verificados · periodo "+detailWindow+" · fuente de contratos próximos identificada en la cabecera · toca para inspeccionar.";
+   return;
+ }
  if(detailKind==="vix"){
    if(cboeHistory.length<3){host.innerHTML='<div class="native-error">VIX aún no disponible: descargando histórico oficial de Cboe.</div>';return;}
    const last=cboeHistory.at(-1),end=new Date(last.t*1000),start=new Date(end);
@@ -1858,15 +1865,24 @@ function drawMarketDetail(){
    const ratio=obs.map(p=>p.g/p.s),percent=ratioDisplay==="percent";
    nativeChart("detail-chart",[{label:percent?"Δ ratio":"XAU/XAG",color:"#38c9e5",points:percent?ratio.map(r=>(r/ratio[0]-1)*100):ratio}],obs.map(p=>p.t),percent?"%":"",'<span>Observaciones de referencia XAUS · '+nativePeriod+' · ratio no basada en futuros GC/SI</span>');
    foot.textContent='Fuente XAUS · escala propia y seguimiento de valores al pasar el cursor. Cambia el rango en el panel principal.';
- }else if(detailKind==="copper"||detailKind==="brent"){
+ }else if(["gold","silver","copper","brent"].includes(detailKind)){
    const cfg=FUTURES_PUBLIC[detailKind],all=futuresCache[detailKind]||[];
    const rows=pickPeriodRows(all,nativePeriod,"futures");
-   if(rows.length<3){
-     host.innerHTML='<div class="native-error">El histórico público no permite representar más sesiones verificadas de '+cfg.code+'.</div>';
+   if(rows.length<2){
+     host.innerHTML='<div class="native-error">No existen al menos dos cierres diarios verificables de '+cfg.code+' dentro de este intervalo. No se simula una evolución intradía.</div>';
    }else{
-     nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>Fuente '+cfg.url+' · futuros de contrato próximo · cierres diarios</span>');
+     const provenance=longFuturesProvenance==="aethereal"?"Aethereal Commodity Prices":"Cierres alternativos fechados";
+     nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>'+provenance+' · futuros de contrato próximo · datos de cierre, no intradía.</span>');
    }
-   foot.textContent="Futuros "+cfg.code+" · sólo "+all.length+" cierres públicos disponibles · periodo solicitado "+(DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod)+". El gráfico no representa días sin observaciones.";
+   foot.textContent=cfg.code+" · "+rows.length+" cierres mostrados de "+all.length+" disponibles · "+detailWindow+" · "+(longFuturesProvenance==="aethereal"?"Aethereal":"Fuente alternativa")+" · sin fechas interpoladas.";
+ }else if(detailKind==="dxy"||detailKind==="eur"){
+   const data=nativeData[detailKind],points=data?.points||[],cfg=FUTURES_PUBLIC[detailKind];
+   if(points.length<2){
+     host.innerHTML='<div class="native-error">No hay al menos dos referencias XAUS verificadas para el intervalo seleccionado.</div>';
+   }else{
+     nativeChart("detail-chart",[{label:cfg.code,color:cfg.accent,points:points.map(p=>p.c)}],points.map(p=>p.t),"",'<span>Fuente XAUS · referencia indicativa; no es un futuro ni un precio ejecutable.</span>');
+   }
+   foot.textContent=cfg.code+" · "+points.length+" observaciones de referencia · "+detailWindow+" · fecha final "+(points.at(-1)?new Date(points.at(-1).t*1000).toISOString().slice(0,10):"—")+" · fuente XAUS.";
  }
 }
 
@@ -1875,10 +1891,10 @@ window.addEventListener('resize',()=>{
  const nextWidth=window.innerWidth;
  if(Math.abs(nextWidth-lastMacroWidth)<9)return;
  lastMacroWidth=nextWidth;
- if(macro?.series){
-   renderCurve();renderReals();renderPolicy();
-   if(detailKind&&detailKind.startsWith("macro-"))drawMarketDetail();
- }
+ if(macro?.series){renderCurve();renderReals();renderPolicy();}
+ if(Object.keys(nativeData).length)renderNative();
+ else {renderFuturesCards();renderVixCard();renderFuturesComparison();}
+ if(detailKind)drawMarketDetail();
 });
 $('#global-timeframes').addEventListener('click',event=>{
  const b=event.target.closest('button[data-global-period]');
