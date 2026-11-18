@@ -678,18 +678,40 @@ const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'
 const sources={q:'https://www.tradingview.com/widget-docs/',rates:'https://home.treasury.gov/resource-center/data-chart-center/interest-rates'};
 let macro=null;let curveHistorical=true;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-// Only one chart may retain its inspected point across interactions.
+// A new touch must clear every visible chart marker, including those left
+// behind by earlier chart redraws. One selected chart at a time.
 let activeChartInspector=null;
-function activateChartInspector(chart,clear){
- if(activeChartInspector?.chart!==chart)activeChartInspector?.clear();
- activeChartInspector={chart,clear};
-}
-function clearChartInspector(chart){
- if(activeChartInspector?.chart===chart){
+function clearAllChartInspections(){
+ if(activeChartInspector){
   activeChartInspector.clear();
   activeChartInspector=null;
  }
+ document.querySelectorAll(".metal-hover.visible,.native-tip.visible,.macro-hover-tip.visible").forEach(tip=>{
+  tip.classList.remove("visible");
+  if(tip.classList.contains("native-tip"))tip.style.display="none";
+ });
+ document.querySelectorAll("line[data-crosshair],line.market-crosshair,line.macro-crosshair").forEach(cross=>{
+  cross.style.opacity="0";
+  cross.setAttribute("opacity","0");
+ });
 }
+function activateChartInspector(chart,clear){
+ if(activeChartInspector?.chart!==chart)clearAllChartInspections();
+ activeChartInspector={chart,clear};
+}
+function clearChartInspector(chart){
+ if(activeChartInspector?.chart===chart)clearAllChartInspections();
+}
+// Capture the touch before the target graph processes it; its own inspector
+// then shows the newly touched point. This also works for empty charts.
+const chartTouchAreas=".ticker-card,#chart-main,#chart-ratio,#curve-graph,#real-graph,#policy-graph,#detail-chart";
+function resetInspectionOnTouch(event){
+ if(event.target instanceof Element&&event.target.closest(chartTouchAreas))clearAllChartInspections();
+}
+document.addEventListener("pointerdown",event=>{
+ if(event.pointerType==="touch"||event.pointerType==="pen")resetInspectionOnTouch(event);
+},true);
+if(!window.PointerEvent)document.addEventListener("touchstart",resetInspectionOnTouch,{capture:true,passive:true});
 const fmt=(v,dec=2)=>Number.isFinite(v)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v):'—';
 const prettyDate=s=>s?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z')):'—';
 const last=a=>(a||[]).filter(x=>Number.isFinite(x.value)).at(-1);
