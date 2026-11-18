@@ -141,6 +141,16 @@
 @media(max-width:760px){.top-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-grid .metal-feature:nth-child(-n+2){grid-column:span 2}.top-grid .market-feature{grid-column:span 1}.top-grid .ticker-card{height:245px}.top-grid .ticker-card .metal-futures-slot{height:165px!important}.commodity-native .metal-futures-slot{min-height:180px}}
 @media(max-width:460px){.top-grid .market-feature{grid-column:span 2}.top-grid .ticker-card .metal-futures-slot{height:165px!important}}
 
+
+/* Macro controls: one explicit time window per selection; same chronology as market */
+.macro-range{max-width:100%;flex-wrap:wrap;justify-content:flex-start}
+.macro-range button{padding:3px 5px;font-size:9px}
+.macro-controls{min-width:0}
+.panel-head{flex-wrap:wrap}
+.curve-panel .chart-container{flex:1;min-height:160px}
+.macro-caption{font-size:10px;line-height:1.45;color:#91a8b7;margin-top:5px}
+@media(max-width:900px){.macro-range button{padding:3px 4px}}
+
 </style>
 </head>
 <body>
@@ -162,7 +172,7 @@
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
-    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><div class="macro-range" data-macro="curve"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
+    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><div class="macro-range" data-macro="curve"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
     <div class="panel-caption" id="curve-caption">Comparación de rendimientos en dos fechas · % anual</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
@@ -178,14 +188,14 @@
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><div class="macro-range" data-macro="policy"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><div class="macro-range" data-macro="policy"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
     <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="macro-range" data-macro="reals"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="macro-range" data-macro="reals"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div>
   </section>
@@ -493,6 +503,7 @@ function renderNative(){
 }
 async function fetchNative(period){
  const token=++nativeRequest;nativePeriod=period;nativeData={};
+ syncMacroToMaster(period);
  renderFuturesCards();
  renderVixCard();
  document.querySelectorAll("#market-ranges button").forEach(x=>x.classList.toggle("active",x.dataset.period===period));
@@ -553,19 +564,61 @@ function bootMarket(){
  fetchNative("1mo");
 }
 
-function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false}){const left=45,right=14,top=13,bottom=27,plotW=width-left-right,plotH=height-top-bottom;const all=series.flatMap(s=>s.values.filter(Number.isFinite));if(!all.length)return '<div style="display:grid;place-items:center;height:100%;color:#95a9b8;font-size:12px">Sin datos verificados</div>';
-const mn=yMin??Math.min(...all),mx=yMax??Math.max(...all);const range=Math.max(mx-mn,.03);const lower=yMin??mn-range*.16,upper=yMax??mx+range*.17;const y=val=>top+((upper-val)/(upper-lower))*plotH;const n=Math.max(...series.map(s=>s.values.length),2);const x=i=>left+i*plotW/(n-1);let out=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">`;
-for(let t=0;t<5;t++){const val=lower+(upper-lower)*t/4;const pos=y(val);out+=`<line class="grid" x1="${left}" y1="${pos}" x2="${width-right}" y2="${pos}"/><text class="axis-text" x="${left-7}" y="${pos+3}" text-anchor="end">${fmt(val,2)}%</text>`;}
-for(let t=0;t<4;t++){const i=Math.round(t*(n-1)/3);const pos=x(i);out+=`<line class="grid" x1="${pos}" y1="${top}" x2="${pos}" y2="${height-bottom}"/><text class="axis-text" x="${pos}" y="${height-8}" text-anchor="middle">${xLabels[i]||''}</text>`;}
-series.forEach((s,idx)=>{const cls=palette[idx]||['stroke-gold','stroke-cyan','stroke-silver'][idx]||'stroke-purple';let path='';s.values.forEach((z,i)=>{if(!Number.isFinite(z))return;if(step&&i&&Number.isFinite(s.values[i-1]))path+=`H${x(i).toFixed(2)} V${y(z).toFixed(2)}`;else path+=`${path?' L':'M'}${x(i).toFixed(2)} ${y(z).toFixed(2)}`;});out+=`<path d="${path}" class="${cls}"/>`;if(Number.isFinite(s.values.at(-1))){out+=`<circle cx="${x(s.values.length-1)}" cy="${y(s.values.at(-1))}" r="3.2" fill="${s.color||'#38c9e5'}"><title>${s.name||''} ${fmt(s.values.at(-1))}%</title></circle>`;}});
-return out+'</svg>';}
+function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false,dates=null,xValues=null}){
+ const left=47,right=15,top=14,bottom=28,plotW=width-left-right,plotH=height-top-bottom;
+ const all=series.flatMap(s=>(s.values||[]).filter(Number.isFinite));
+ if(!all.length)return '<div class="native-error">Sin datos contrastados en el periodo seleccionado.</div>';
+ const mn=yMin??Math.min(...all),mx=yMax??Math.max(...all),range=Math.max(mx-mn,.025);
+ const lower=yMin??mn-range*.16,upper=yMax??mx+range*.16;
+ const y=val=>top+(upper-val)/(upper-lower)*plotH;
+ const n=Math.max(...series.map(s=>s.values.length),1);
+ let stamps=null;
+ if(Array.isArray(dates)&&dates.length===n&&dates.every(x=>/^\d{4}-\d\d-\d\d$/.test(x||""))){
+   stamps=dates.map(d=>Date.parse(d+"T00:00:00Z"));
+ }
+ const xnums=Array.isArray(xValues)&&xValues.length===n?xValues:(stamps||null);
+ const xmin=xnums?Math.min(...xnums):null,xmax=xnums?Math.max(...xnums):null;
+ const x=i=>xnums&&xmax>xmin?left+(xnums[i]-xmin)/(xmax-xmin)*plotW:left+i*plotW/Math.max(n-1,1);
+ let out='<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="Gráfico de datos históricos con fecha de observación">';
+ for(let t=0;t<5;t++){const v=lower+(upper-lower)*t/4,pos=y(v);out+='<line class="grid" x1="'+left+'" y1="'+pos.toFixed(2)+'" x2="'+(width-right)+'" y2="'+pos.toFixed(2)+'"/><text class="axis-text" x="'+(left-7)+'" y="'+(pos+3).toFixed(2)+'" text-anchor="end">'+fmt(v,2)+'%</text>';}
+ const positions=[...new Set([0,Math.round((n-1)/3),Math.round((n-1)*2/3),n-1])];
+ for(const i of positions){const label=xLabels[i]||(stamps?dates[i].slice(2,7):"");out+='<text class="axis-text" x="'+x(i).toFixed(2)+'" y="'+(height-7)+'" text-anchor="middle">'+label+'</text>';}
+ series.forEach((ser,idx)=>{
+   const cls=palette[idx]||["stroke-gold","stroke-cyan","stroke-silver"][idx]||"stroke-purple";
+   let path="",previous=null;
+   ser.values.forEach((v,i)=>{
+     if(!Number.isFinite(v)){previous=null;return;}
+     const xx=x(i).toFixed(2),yy=y(v).toFixed(2);
+     if(previous===null)path+="M"+xx+" "+yy;
+     else if(step)path+=" H"+xx+" V"+yy;
+     else path+=" L"+xx+" "+yy;
+     previous=v;
+   });
+   out+='<path d="'+path+'" class="'+cls+'"/>';
+   const lastIndex=ser.values.findLastIndex(Number.isFinite);
+   if(lastIndex>=0)out+='<circle cx="'+x(lastIndex).toFixed(2)+'" cy="'+y(ser.values[lastIndex]).toFixed(2)+'" r="3.7" fill="'+(ser.color||"#38c9e5")+'"/>';
+ });
+ return out+'</svg>';
+}
 function getRows(){const keys=['DGS2','DGS10','DGS30','DFII10'];const d=new Map();for(const k of keys){for(const row of v(macro,k)){if(!d.has(row.date))d.set(row.date,{date:row.date});d.get(row.date)[k]=row.value;}}return [...d.values()].sort((a,b)=>a.date.localeCompare(b.date));}
 
 function windowStart(end,window){
-  const dt=new Date(end+"T00:00:00Z");
-  if(window==="1M")dt.setUTCMonth(dt.getUTCMonth()-1);
-  else dt.setUTCFullYear(dt.getUTCFullYear()-(window==="5A"?5:1));
-  return dt.toISOString().slice(0,10);
+ const dt=new Date(end+"T00:00:00Z");
+ if(window==="1D")dt.setUTCDate(dt.getUTCDate()-1);
+ else if(window==="1S")dt.setUTCDate(dt.getUTCDate()-7);
+ else if(window==="1M")dt.setUTCMonth(dt.getUTCMonth()-1);
+ else if(window==="3M")dt.setUTCMonth(dt.getUTCMonth()-3);
+ else if(window==="6M")dt.setUTCMonth(dt.getUTCMonth()-6);
+ else dt.setUTCFullYear(dt.getUTCFullYear()-(window==="5A"?5:1));
+ return dt.toISOString().slice(0,10);
+}
+function syncMacroToMaster(period){
+ const range=DISPLAY_PERIOD_LABEL[period]||"1M";
+ for(const group of document.querySelectorAll(".macro-range[data-macro]")){
+   macroWindows[group.dataset.macro]=range;
+   group.querySelectorAll("button[data-window]").forEach(button=>button.classList.toggle("active",button.dataset.window===range));
+ }
+ if(macro?.series)renderMacro();
 }
 function macroWindowRows(rows,what){
  if(!rows.length)return [];
