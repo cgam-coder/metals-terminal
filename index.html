@@ -502,6 +502,7 @@
 .top-grid .ticker-card .metal-spark-outer svg[data-market-tile-svg]{overflow:hidden;touch-action:pan-y}
 .top-grid .ticker-card .metal-spark-outer .market-axis{font:10px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#acc3d3}
 .top-grid .ticker-card .metal-spark-outer .market-grid{stroke:#3d5b6e;stroke-width:.65;stroke-opacity:.45}
+.top-grid .ticker-card .metal-spark-outer .market-crosshair{stroke:#a9dcec;stroke-width:1;stroke-dasharray:4 4;pointer-events:none;vector-effect:non-scaling-stroke;opacity:0}
 .detail-chart .native-canvas{height:100%;min-height:0}
 .detail-chart .native-canvas .native-series{min-height:190px}
 .detail-chart .native-canvas .native-axis{font-size:12px}
@@ -1039,14 +1040,14 @@ function drawFuturesCloseTile(key,rows,note){
  svg+='<path d="'+area+'" fill="url(#'+gradientId+')"/>';
  svg+='<path d="'+path+'" stroke="'+conf.accent+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" fill="none"/>';
  svg+='<circle cx="'+coords.at(-1)[0]+'" cy="'+coords.at(-1)[1]+'" r="3.4" fill="'+conf.accent+'" stroke="#061622" stroke-width="1"/>';
- svg+='<line data-crosshair x1="'+left+'" x2="'+left+'" y1="'+top+'" y2="'+(H-bottom)+'" stroke="#b2d9ec" stroke-dasharray="3 3" stroke-width="1" opacity="0" vector-effect="non-scaling-stroke"/></svg>';
+ svg+='<line class="market-crosshair" data-crosshair x1="'+left+'" x2="'+left+'" y1="'+top+'" y2="'+(H-bottom)+'"/></svg>';
  const total=(last.c/first.c-1)*100;
  el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(last.c,conf.decimals)+'</strong><span class="metal-day-change '+(delta>=0?"pos":"neg")+'">'+sign(delta)+fmt(delta,2)+' % <span style="font-weight:450;color:#9eafbd">/ '+meaning+'</span></span></div>'+
  '<div class="metal-timestamp"><span>'+observed+' '+dateLabel(asOf)+'</span><span class="delayed" title="'+usedNote+'">'+usedNote+'</span></div>'+
  '<div class="metal-spark-outer">'+svg+'<div class="metal-hover" role="status" aria-live="polite"></div></div>'+
  '<div class="metal-scale"><span>Mín: '+fmt(min,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %</span><span>Máx: '+fmt(max,conf.decimals)+'</span></div></div>';
  const plot=el.querySelector(".metal-spark-outer"),shape=plot.querySelector("svg[data-market-tile-svg]"),cross=plot.querySelector("[data-crosshair]"),tip=plot.querySelector(".metal-hover");
- const clearInspection=()=>{tip.classList.remove("visible");cross.setAttribute("opacity","0");};
+ const clearInspection=()=>{tip.classList.remove("visible");cross.style.opacity="0";};
  const inspect=(event)=>{
    const rect=shape.getBoundingClientRect();if(!rect.width)return;
    activateChartInspector(shape,clearInspection);
@@ -1058,7 +1059,7 @@ function drawFuturesCloseTile(key,rows,note){
    const value=sampled[j],x=X(value);
    tip.textContent=dateLabel(displayDate(value))+" · "+fmt(value.c,conf.decimals);
    tip.classList.add("visible");
-   cross.setAttribute("x1",x.toFixed(2));cross.setAttribute("x2",x.toFixed(2));cross.setAttribute("opacity","1");
+   cross.setAttribute("x1",x.toFixed(2));cross.setAttribute("x2",x.toFixed(2));cross.style.opacity="1";
  };
  shape.addEventListener("pointermove",inspect,{passive:true});
  shape.addEventListener("pointerdown",inspect,{passive:true});
