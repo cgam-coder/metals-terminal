@@ -65,6 +65,19 @@ La consulta directa a FRED se mantiene para intentar obtener nuevas observacione
 
 Es importante distinguir dato histórico completo de dato al minuto: una serie de cinco años puede terminar unos días antes de la fecha de consulta si FRED aún no ha publicado una actualización. El terminal siempre debe mostrar la fecha de cierre y si procede del CSV consultado directamente o de su archivo publicado.
 
+## Legibilidad de históricos largos y móvil — V3.6
+
+El historial de hasta cinco años de Treasury, TIPS e inflación implícita y Fed/BCE no ha perdido observaciones. Se ha rediseñado exclusivamente la **representación** para mejorar la lectura en pantallas móviles:
+
+- Ejes SVG calculados en **píxeles CSS reales** del espacio gráfico. Esto evita que se estiren y deformen los textos al cambiar las proporciones de las tarjetas.
+- Etiquetas de fecha distribuidas según el calendario (mes y año para 1A/2A; años para 5A), números del eje Y más legibles y alturas de gráficos móviles ampliadas.
+- En **2A y 5A**, Treasury y TIPS/implícita se dibujan con el **último cierre real de cada semana**, sin medias ni observaciones inventadas. El cálculo de variaciones y el número de cierres del resumen siguen usando el histórico **diario completo**. Por ejemplo, 5A conserva 1.249 observaciones oficiales diarias y representa aproximadamente 260 puntos semanales legibles.
+- Fed/BCE se dibujan con los escalones exclusivamente en las **fechas reales de cambios de tipos**, conservando el valor inicial y el último; la base histórica diaria completa sigue disponible. Los 38 cambios de 5A permanecen intactos.
+- Treasury muestra explícitamente las tres líneas 10Y, 2Y y 30Y en su leyenda.
+- Cada gráfico macro tiene un botón **Ampliar** que abre la vista grande, manteniendo la temporalidad global. Tocando o pasando el cursor sobre el gráfico se puede consultar la fecha y los valores de las observaciones representadas.
+
+Las mejoras son de representación: no cambian las fuentes FRED, el método de cálculo, las fechas de observación ni crean gastos o procesos recurrentes.
+
 ## Macro: fechas oficiales, no instantáneas adelantadas
 
 Los tres paneles de Treasury, TIPS/breakeven y Fed/BCE se actualizan al abrir la web mediante los CSV oficiales de FRED (DGS2, DGS10, DGS30, DFII10, DFEDTARU, ECBDFR). Las seis series se consultan para cinco años completos de historia; el selector global de 1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A recorta las observaciones reales y **no vuelve a solicitar toda la historia en cada clic**.
