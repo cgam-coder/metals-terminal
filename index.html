@@ -940,7 +940,7 @@ function syncCustomDateForms(){
  document.querySelectorAll(".custom-date-form").forEach(form=>{
   form.classList.toggle("active",active);form.removeAttribute("data-error");
   for(const input of form.querySelectorAll('input[type="date"]')){input.min=minCustomDay();input.max=maxCustomDay();input.value=active?customRange[input.name]:"";}
-  form.querySelector(".date-feedback").textContent=active?"Rango activo: "+customRange.from+" a "+customRange.to:"Hasta cinco años. Datos según fuente y sesiones reales.";
+  form.querySelector(".date-feedback").textContent=active?"Rango activo: "+customRange.from+" a "+customRange.to+(customXausSettings().interval==="1wk"?" · XAUS puede ofrecer solo cierres semanales para fechas antiguas.":""):"Hasta cinco años. Datos según fuente y sesiones reales.";
  });
 }
 function customXausSettings(){
@@ -1512,13 +1512,16 @@ function renderFuturesComparison(){
 function renderRatioPanel(){
  marketChartCache.delete("chart-ratio");
  const paired=alignMarket();
- if(paired.length>=3){
+ if(paired.length>=2){
    const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
    const change=ratioDisplay==="percent";
    const vals=change?ratios.map(r=>(r.c/ratios[0].c-1)*100):ratios.map(r=>r.c);
    nativeChart("chart-ratio",[{label:change?"Variación de ratio":"XAU / XAG",color:"#38c9e5",points:vals}],ratios.map(x=>x.t),change?"%":"",'<span>Ratio SPOT XAU/XAG de la misma fuente y fechas comparables · NO cociente de futuros GC/SI.</span>');
+ }else if(paired.length===1){
+  const value=paired[0].g/paired[0].s,date=isoDay(paired[0].t);
+  document.getElementById("chart-ratio").innerHTML='<div class="native-error" role="status">Ratio spot XAU/XAG · '+date+': '+fmt(value,3)+'. Solo una observación coincidente; no existe curva temporal.</div>';
  }else{
-   document.getElementById("chart-ratio").innerHTML='<div class="native-error" role="status">Ratio spot no disponible: faltan datos XAU y XAG con fechas coincidentes en el intervalo seleccionado.</div>';
+  document.getElementById("chart-ratio").innerHTML='<div class="native-error" role="status">Ratio spot no disponible: faltan datos XAU y XAG con fechas coincidentes en el intervalo seleccionado.</div>';
  }
 }
 function renderNative(){
@@ -1954,6 +1957,7 @@ function macroPeriodSummary(id,period,fragments){
  el.setAttribute("data-macro-period",period);
 }
 function renderCurve(){
+ macroPlotCache.delete("curve-graph");
  const keys=["DGS2","DGS10","DGS30"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
  const rows=macroWindowRows(all,"curve"),now=rows.at(-1),then=rows[0];
  const source=macroSourceLabel(keys),period=macroWindows.curve;
@@ -2004,6 +2008,7 @@ function renderCurve(){
  $("#yield-stats").innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?"var(--green)":"var(--red)")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</div>';
 }
 function renderReals(){
+ macroPlotCache.delete("real-graph");
  const keys=["DGS10","DFII10"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
  const rows=macroWindowRows(all,"reals"),now=rows.at(-1);
  const source=macroSourceLabel(keys),period=macroWindows.reals;
@@ -2040,6 +2045,7 @@ function renderReals(){
  if(plotted.length<rows.length)$("#real-dates").textContent+=" · trazado semanal (cierres reales)";
 }
 function renderPolicy(){
+ macroPlotCache.delete("policy-graph");
  const keys=["DFEDTARU","ECBDFR"],fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
  const selectedEnd=nativePeriod==="custom"&&customRange?customRange.to:null;
  const latestF=last(selectedEnd?fed.filter(z=>z.date<=selectedEnd):fed),latestB=last(selectedEnd?ecb.filter(z=>z.date<=selectedEnd):ecb),source=macroSourceLabel(keys),period=macroWindows.policy;
@@ -2275,7 +2281,7 @@ function drawMarketDetail(){
    const fullCover=first&&Date.parse(first+"T00:00:00Z")-Date.parse(startDate+"T00:00:00Z")<=8*86400000;
    const gap2026=pts.some(p=>p.date<="2026-09-22")&&pts.some(p=>p.date>="2026-09-30")&&!pts.some(p=>p.date>="2026-09-23"&&p.date<="2026-09-29");
    if(pts.length<2){
-    host.innerHTML='<div class="native-error" role="status">No hay al menos dos cierres reales de VIX dentro de '+detailWindow+'. No se simula una curva intradía.</div>';
+    host.innerHTML='<div class="native-error" role="status">'+(pts.length===1?"VIX · "+pts[0].date+" · cierre "+fmt(pts[0].c,2)+". Un solo cierre; no se dibuja una curva.":"No hay cierres reales de VIX dentro de "+detailWindow+".")+'</div>';
    }else{
     nativeChart("detail-chart",[{label:"VIX · cierre",color:"#fb6571",points:pts.map(x=>x.c)}],pts.map(p=>p.t),"",'<span>Fuente '+cboeHistorySource+' · únicamente cierres diarios verificados.</span>');
    }
@@ -2285,7 +2291,12 @@ function drawMarketDetail(){
    foot.textContent=cboeHistorySource+" · "+pts.length+" cierres · "+detailWindow+" · "+(first||"—")+" a "+last.date+coverage+gapNotice+" · no dato intradía.";
  }else if(detailKind==="ratio"){
    const obs=alignMarket();
-   if(obs.length<3){
+   if(obs.length===1){
+    host.innerHTML='<div class="native-error" role="status">Ratio XAU/XAG en '+isoDay(obs[0].t)+': <strong>'+fmt(obs[0].g/obs[0].s,3)+'</strong>. Un único dato conjunto; no existe curva temporal.</div>';
+    foot.textContent="Fuente XAUS · ratio calculada con las dos referencias de la misma fecha.";
+    return;
+   }
+   if(obs.length<2){
     host.innerHTML='<div class="native-error" role="status">No hay suficientes observaciones coincidentes de XAU y XAG para '+detailWindow+'. La consulta ha terminado, pero no es posible calcular una ratio histórica fiable con los datos recibidos.</div>';
     foot.textContent="Fuente: XAUS · ambos metales requieren fechas comparables; no se inventan ni interpolan precios.";
     return;
@@ -2297,7 +2308,7 @@ function drawMarketDetail(){
    const cfg=FUTURES_PUBLIC[detailKind],all=futuresCache[detailKind]||[];
    const rows=pickPeriodRows(all,nativePeriod,"futures");
    if(rows.length<2){
-     host.innerHTML='<div class="native-error">No existen al menos dos cierres diarios verificables de '+cfg.code+' dentro de este intervalo. No se simula una evolución intradía.</div>';
+     host.innerHTML='<div class="native-error">'+(rows.length===1?cfg.code+" · "+(rows[0].date||isoDay(rows[0].t))+" · cierre "+fmt(rows[0].c,cfg.decimals)+". Una sola observación; no hay curva.":"No existen cierres diarios verificables de "+cfg.code+" dentro de "+detailWindow+".")+'</div>';
    }else{
      const provenance=longFuturesProvenance==="aethereal"?"Aethereal Commodity Prices":"Cierres alternativos fechados";
      nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>'+provenance+' · futuros de contrato próximo · datos de cierre, no intradía.</span>');
@@ -2306,7 +2317,7 @@ function drawMarketDetail(){
  }else if(detailKind==="dxy"||detailKind==="eur"){
    const data=nativeData[detailKind],points=data?.points||[],cfg=FUTURES_PUBLIC[detailKind];
    if(points.length<2){
-     host.innerHTML='<div class="native-error" role="status">Consulta terminada: no hay al menos dos referencias XAUS verificadas para '+detailWindow+'. No se simulan datos.</div>';
+     host.innerHTML='<div class="native-error" role="status">'+(points.length===1?cfg.code+" · "+isoDay(points[0].t)+" · "+fmt(points[0].c,cfg.decimals)+". Una sola observación; no se inventa curva temporal.":"Consulta terminada: no hay referencias XAUS verificadas para "+detailWindow+".")+'</div>';
    }else{
      nativeChart("detail-chart",[{label:cfg.code,color:cfg.accent,points:points.map(p=>p.c)}],points.map(p=>p.t),"",'<span>Fuente XAUS · referencia indicativa; no es un futuro ni un precio ejecutable.</span>');
    }
