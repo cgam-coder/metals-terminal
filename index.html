@@ -105,6 +105,42 @@
 @media(max-width:1280px){.top-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.top-grid .metal-feature{grid-column:span 2}.top-grid .ticker-card:not(.metal-feature){height:135px}.top-grid .ticker-card:not(.metal-feature) .quote-slot{height:70px}}
 @media(max-width:660px){.top-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-grid .metal-feature{grid-column:span 2}.top-grid .ticker-card:not(.metal-feature){height:145px}.metal-main-price{font-size:25px}}
 
+
+/* Unified native dark premium styling: all quote cards and macro panels */
+.top-grid{grid-template-columns:minmax(0,1.8fr) minmax(0,1.8fr) minmax(0,1.12fr) minmax(0,1.12fr) minmax(0,1.12fr);align-items:stretch}
+.top-grid .ticker-card,.top-grid .ticker-card:not(.metal-feature){height:272px;min-width:0;padding:14px 13px 12px}
+.top-grid .ticker-card .metal-futures-slot{height:193px!important;margin:10px 0 0!important;overflow:hidden!important}
+.ticker-card.market-feature{background:radial-gradient(ellipse at 72% 85%,rgba(56,201,229,.035),transparent 65%),linear-gradient(140deg,#0b1823,#071018)!important}
+.top-grid .ticker-card .metal-content{gap:6px}
+.top-grid .ticker-card .metal-spark-outer{min-height:99px}
+.top-grid .market-feature .metal-main-price{font-size:26px}
+.top-grid .market-feature .metal-day-change{font-size:10px}
+.top-grid .market-feature .metal-scale{font-size:9px}
+.top-grid .market-feature .metal-timestamp{font-size:9px}
+.top-grid .metal-feature .card-heading h2{font-size:16px}
+.top-grid .metal-feature .card-caption{margin-left:29px;font-size:10px}
+.panel{background:radial-gradient(ellipse at 82% 97%,rgba(56,201,229,.022),transparent 60%),linear-gradient(145deg,#0c1923,#07111b 95%)}
+.chart-container,.tv-chart{border:1px solid #233c4b;border-radius:8px;background:linear-gradient(180deg,#0e202b,#091721)!important}
+.curve-panel{border-left:3px solid #38c9e5}.main-panel{border-left:3px solid var(--gold)}
+.ratio-panel{border-left:3px solid var(--cyan)}.policy-panel{border-left:3px solid #7b9efa}
+.real-panel{border-left:3px solid var(--purple)}
+.commodity-native{border-left:3px solid var(--gold);min-width:0}
+.commodity-native:last-child{border-left:3px solid var(--silver)}
+.commodity-native .card-caption{margin:5px 0 0 0!important;font-size:10px}
+.commodity-native .metal-futures-slot{flex:1;height:180px!important;min-height:170px;margin:9px 0 0!important;overflow:hidden!important;width:100%}
+.commodity-native .metal-content{gap:5px}
+.commodity-native .metal-spark-outer{min-height:84px}
+.commodity-native .metal-main-price{font-size:22px}
+.commodity-native .metal-day-change{font-size:10px}
+.macro-note{font-size:10px;color:#8aa5b5;margin:4px 0}
+.real-panel .chart-container{min-height:135px}
+.curve-panel .chart-container{min-height:185px}
+.macro-range button.active{background:#947126;color:#fff;border-color:#dfb34e}
+.macro-window-explain{font-size:10px;color:#9db5c4}
+@media(max-width:1310px){.top-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.top-grid .metal-feature:nth-child(-n+2){grid-column:span 3}.top-grid .market-feature{grid-column:span 2}}
+@media(max-width:760px){.top-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-grid .metal-feature:nth-child(-n+2){grid-column:span 2}.top-grid .market-feature{grid-column:span 1}.top-grid .ticker-card{height:245px}.top-grid .ticker-card .metal-futures-slot{height:165px!important}.commodity-native .metal-futures-slot{min-height:180px}}
+@media(max-width:460px){.top-grid .market-feature{grid-column:span 2}.top-grid .ticker-card .metal-futures-slot{height:165px!important}}
+
 </style>
 </head>
 <body>
@@ -120,10 +156,9 @@
 <section class="top-grid" aria-label="Indicadores de mercado">
   <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><a class="metal-source-link" href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
   <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><a class="metal-source-link" href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
-  <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio XAU/XAG · fuente única</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">USD Index · datos XAUS</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--silver)">€</span><h2>EUR/USD</h2></div><div class="card-caption">Tipo de cambio</div><div class="quote-slot" id="q-eur"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX de Cboe">Gráfico ↗</button></div><div class="card-caption">Cboe VIX · último cierre diario</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">Índice dólar · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-dxy"><div class="metal-wait">Leyendo serie DXY…</div></div></article>
+  <article class="ticker-card currency metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:#8db8ff">€</span><h2>EUR/USD</h2></div><div class="card-caption">Divisas · referencia XAUS</div><div class="quote-slot metal-futures-slot" id="q-eur"><div class="metal-wait">Leyendo EUR/USD…</div></div></article>
+  <article class="ticker-card risk metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX oficial de Cboe">Ampliar ↗</button></div><div class="card-caption">Cboe · índice VIX · último cierre</div><div class="quote-slot metal-futures-slot" id="q-vix"><div class="metal-wait">Leyendo histórico Cboe…</div></div></article>
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
@@ -155,8 +190,8 @@
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div>
   </section>
   <div class="commodities-grid" aria-label="Otras materias primas">
-    <section class="panel commodity"><div class="card-heading"><span class="glyph">♨</span><h2>Brent <a href="https://www.tradingview.com/symbols/ICEEUR-BRN1!/" rel="noopener noreferrer" target="_blank" style="font-size:10px;font-weight:400">BRN1! ↗</a></h2><button class="market-inspect" data-inspect="brent">Ampliar ↗</button></div><div class="card-caption">UKOIL · CFD de Brent, no contrato ICE</div><div class="tv-chart" id="chart-brent"><div class="tv-loader">Cargando referencia Brent…</div></div></section>
-    <section class="panel commodity"><div class="card-heading"><span class="glyph">◉</span><h2>Cobre <a href="https://www.tradingview.com/symbols/COMEX-HG1!/" rel="noopener noreferrer" target="_blank" style="font-size:10px;font-weight:400">HG ↗</a></h2><button class="market-inspect" data-inspect="copper">Ampliar ↗</button></div><div class="card-caption">OANDA:XCUUSD · CFD de cobre, no futuro HG</div><div class="tv-chart" id="chart-copper"><div class="tv-loader">Cargando referencia cobre…</div></div></section>
+    <section class="panel commodity commodity-native"><div class="card-heading"><span class="glyph" style="color:var(--gold)">♨</span><h2>Brent · futuro BZ</h2><a href="https://trading-commodity.com/download/bz/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Brent BZ · contrato próximo · cierre USD/bbl</div><div class="quote-slot metal-futures-slot" id="q-brent"><div class="metal-wait">Leyendo BZ…</div></div></section>
+    <section class="panel commodity commodity-native"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><a href="https://trading-commodity.com/download/hg/" class="metal-source-link" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></section>
   </div>
 </main>
 <footer class="footnote"><span></span><span id="version">METALS · V2.0</span></footer>
