@@ -1446,7 +1446,10 @@ function renderVixCard(){
 function renderBrowserQuotes(){
  for(const key of ["dxy","eur"]){
    const data=nativeData[key];
-   if(!data?.points?.length)continue;
+   if(!data?.points?.length){
+    document.getElementById("q-"+key).innerHTML='<div class="metal-error">No hay referencias verificadas de '+FUTURES_PUBLIC[key].code+' para '+activePeriodLabel()+'.</div>';
+    continue;
+   }
    const points=data.points.map(z=>({...z,date:new Date(z.t*1000).toISOString().slice(0,10)}));
    drawFuturesCloseTile(key,points,"XAUS · referencia");
  }
@@ -1573,6 +1576,7 @@ async function fetchNative(period){
  if(period!=="custom")customRange=null;
  persistGlobalPeriod(period);
  const token=++nativeRequest;nativePeriod=period;nativeData={};
+ for(const key of ["dxy","eur"])document.getElementById("q-"+key).innerHTML='<div class="metal-wait">Consultando '+FUTURES_PUBLIC[key].code+' para '+activePeriodLabel()+'…</div>';
  syncMacroToMaster(period);
  renderFuturesCards();
  renderVixCard();
@@ -1735,7 +1739,8 @@ function bootMarket(){
 const macroPlotCache=new Map();
 const MACRO_SHORT_MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 function readableMacroRows(rows,period){
- if(!["2A","5A"].includes(period)||rows.length<60)return rows;
+ const longCustom=nativePeriod==="custom"&&customRange&&(Date.parse(customRange.to)-Date.parse(customRange.from))>650*86400000;
+ if(!["2A","5A"].includes(period)&&!longCustom||rows.length<60)return rows;
  const weeks=new Map();
  for(const row of rows){
   const date=new Date(row.date+"T00:00:00Z"),day=(date.getUTCDay()+6)%7;
@@ -1908,24 +1913,28 @@ function syncMacroToMaster(period){
 }
 function macroWindowRows(rows,what){
  if(!rows.length)return [];
+ if(nativePeriod==="custom"&&customRange)return rows.filter(withinActiveDates);
  const end=rows.at(-1).date,start=windowStart(end,macroWindows[what]||"1M");
  return rows.filter(row=>row.date>=start&&row.date<=end);
 }
 function macroLabels(rows,what){
  const period=macroWindows[what]||"1M";
+ const customDays=nativePeriod==="custom"&&customRange?(Date.parse(customRange.to)-Date.parse(customRange.from))/86400000:0;
  return rows.map(r=>{
-   if(period==="5A"||period==="2A")return r.date.slice(0,7);
-   if(period==="1A")return r.date.slice(2,7);
-   return r.date.slice(5);
+  if(period==="5A"||period==="2A"||customDays>650)return r.date.slice(0,7);
+  if(period==="1A"||customDays>360)return r.date.slice(2,7);
+  return r.date.slice(5);
  });
 }
 function macroCoverageNotice(rows,what){
  if(!rows.length)return "sin observaciones verificables";
  const first=rows[0].date,last=rows.at(-1).date;
- const start=windowStart(last,macroWindows[what]||"1M");
+ const start=nativePeriod==="custom"&&customRange?customRange.from:windowStart(last,macroWindows[what]||"1M");
+ const requestedEnd=nativePeriod==="custom"&&customRange?customRange.to:last;
  const available=Date.parse(last+"T00:00:00Z")-Date.parse(first+"T00:00:00Z");
- const needed=Date.parse(last+"T00:00:00Z")-Date.parse(start+"T00:00:00Z");
- const status=rows.length===1?"una sola observación; no hay evolución":available<needed*.70?"cobertura parcial":"intervalo observado";
+ const needed=Date.parse(requestedEnd+"T00:00:00Z")-Date.parse(start+"T00:00:00Z");
+ const partial=nativePeriod==="custom"&&customRange?(Date.parse(first)-Date.parse(start)>5*86400000||Date.parse(requestedEnd)-Date.parse(last)>5*86400000):available<needed*.70;
+ const status=rows.length===1?"una sola observación; no hay evolución":partial?"cobertura parcial":"intervalo observado";
  return prettyDate(first)+" – "+prettyDate(last)+" · "+rows.length+" obs. · "+status;
 }
 function macroGraphMessage(label,source,previous=null){
@@ -2032,7 +2041,8 @@ function renderReals(){
 }
 function renderPolicy(){
  const keys=["DFEDTARU","ECBDFR"],fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
- const latestF=last(fed),latestB=last(ecb),source=macroSourceLabel(keys),period=macroWindows.policy;
+ const selectedEnd=nativePeriod==="custom"&&customRange?customRange.to:null;
+ const latestF=last(selectedEnd?fed.filter(z=>z.date<=selectedEnd):fed),latestB=last(selectedEnd?ecb.filter(z=>z.date<=selectedEnd):ecb),source=macroSourceLabel(keys),period=macroWindows.policy;
  $("#fed-value").textContent=latestF?fmt(latestF.value)+" %":"—";
  $("#ecb-value").textContent=latestB?fmt(latestB.value)+" %":"—";
  if(!latestF||!latestB){
@@ -2041,7 +2051,13 @@ function renderPolicy(){
    macroPeriodSummary("policy-range-summary",period,["Tipos no disponibles"]);
    return;
  }
- const end=latestF.date>latestB.date?latestF.date:latestB.date,start=windowStart(end,period);
+ const end=selectedEnd|| (latestF.date>latestB.date?latestF.date:latestB.date),start=selectedEnd?customRange.from:windowStart(end,period);
+ if(start===end){
+  $("#policy-graph").innerHTML=macroGraphMessage("Una sola fecha seleccionada ("+start+"). Consulta el último valor oficial publicado hasta ese día; no se simula una evolución temporal.",source);
+  $("#policy-dates").textContent=period+" · Fed "+latestF.date+" / BCE "+latestB.date;
+  macroPeriodSummary("policy-range-summary",period,["Un día seleccionado: sin línea temporal"]);
+  return;
+ }
  // Group by actual publication/observation date, including both endpoints.
  const dates=[...new Set([...fed,...ecb].map(r=>r.date).filter(d=>d>=start&&d<=end))].sort();
  const xDates=[...new Set([start,...dates,end])].sort();
@@ -2251,8 +2267,10 @@ function drawMarketDetail(){
     foot.textContent="Fuente Cboe · histórico no disponible.";
     return;
    }
-   const last=cboeHistory.at(-1),startDate=windowStart(last.date,detailWindow);
-   const pts=cboeHistory.filter(p=>p.date>=startDate&&p.date<=last.date);
+   const overallLast=cboeHistory.at(-1),startDate=nativePeriod==="custom"&&customRange?customRange.from:windowStart(overallLast.date,detailWindow);
+   const endDate=nativePeriod==="custom"&&customRange?customRange.to:overallLast.date;
+   const pts=cboeHistory.filter(p=>p.date>=startDate&&p.date<=endDate);
+   const last=pts.at(-1)||overallLast;
    const first=pts[0]?.date;
    const fullCover=first&&Date.parse(first+"T00:00:00Z")-Date.parse(startDate+"T00:00:00Z")<=8*86400000;
    const gap2026=pts.some(p=>p.date<="2026-09-22")&&pts.some(p=>p.date>="2026-09-30")&&!pts.some(p=>p.date>="2026-09-23"&&p.date<="2026-09-29");
@@ -2261,7 +2279,8 @@ function drawMarketDetail(){
    }else{
     nativeChart("detail-chart",[{label:"VIX · cierre",color:"#fb6571",points:pts.map(x=>x.c)}],pts.map(p=>p.t),"",'<span>Fuente '+cboeHistorySource+' · únicamente cierres diarios verificados.</span>');
    }
-   const coverage=fullCover?"":" · cobertura parcial: el archivo comienza el "+(first||"—");
+   const endCover=pts.length&&Date.parse(endDate)-Date.parse(last.date)>5*86400000;
+   const coverage=fullCover&&!endCover?"":" · cobertura parcial en las fechas seleccionadas";
    const gapNotice=gap2026?" · sin cierres archivados del 23 al 29/09/2026":"";
    foot.textContent=cboeHistorySource+" · "+pts.length+" cierres · "+detailWindow+" · "+(first||"—")+" a "+last.date+coverage+gapNotice+" · no dato intradía.";
  }else if(detailKind==="ratio"){
