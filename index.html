@@ -71,6 +71,40 @@
 .detail-chart .native-canvas{min-height:100%}
 .detail-foot{font-size:11px;color:#92a8bc}
 @media(max-width:780px){.commodity .tv-chart{min-height:170px}.commodities-grid{height:auto;min-height:240px;grid-template-columns:1fr}.commodity{min-height:230px}.detail-box{height:min(780px,94vh);padding:11px}.detail-head h2{font-size:15px}}
+
+/* Featured verified futures closes: two large, date-aware cards with auto-scaled 15-session charts. */
+.top-grid{grid-template-columns:2fr 2fr 1fr 1fr 1fr 1fr;align-items:stretch}
+.top-grid .ticker-card{height:215px;min-width:0}
+.top-grid .ticker-card:not(.metal-feature) .quote-slot{height:calc(100% - 55px);margin-top:8px}
+.top-grid .ticker-card:not(.metal-feature) .native-spark{height:64px;max-height:66px}
+.metal-feature{padding:12px 15px 9px!important;background:radial-gradient(ellipse at 75% 85%,rgba(245,186,60,.065),transparent 70%),linear-gradient(140deg,#0b1823,#071018)!important}
+.metal-feature.silver{background:radial-gradient(ellipse at 75% 85%,rgba(207,224,238,.075),transparent 70%),linear-gradient(140deg,#0b1823,#071018)!important}
+.metal-feature .card-heading h2{font-size:16px}
+.metal-feature .card-caption{font-size:10px;margin-left:30px;color:#8faabb}
+.metal-source-link{margin-left:auto;font-size:10px;color:#9ebfd2;text-decoration:none;border:1px solid #304b60;border-radius:5px;padding:3px 7px;white-space:nowrap}
+.metal-source-link:hover{border-color:#83b8d0}
+.metal-futures-slot{height:160px!important;margin:7px 0 0!important;overflow:visible!important}
+.metal-content{height:100%;display:flex;flex-direction:column;gap:3px}
+.metal-line1{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.metal-main-price{font-size:27px;font-weight:785;letter-spacing:-.65px;color:#f6f8fa;line-height:1.2;font-variant-numeric:tabular-nums}
+.metal-day-change{font-size:12px;font-weight:700;white-space:nowrap}
+.metal-day-change.pos{color:#3ce0a2}.metal-day-change.neg{color:#ff838c}
+.metal-timestamp{font-size:9px;color:#95aab9;display:flex;justify-content:space-between;gap:5px;align-items:center}
+.metal-timestamp .delayed{color:#b7c4ce;font-weight:500}
+.metal-spark-outer{height:80px;flex:1;min-height:67px;position:relative;overflow:hidden;border-radius:7px;background:linear-gradient(180deg,#11202a80,#0a161f40);border:1px solid #26404f}
+.metal-spark-outer svg{width:100%;height:100%;display:block}
+.metal-spark-outer .metal-marker{font-size:9px;fill:#9cb1bd;font-family:Inter,Segoe UI,Arial,sans-serif}
+.metal-spark-outer .metal-hit{fill:transparent;cursor:crosshair}
+.metal-spark-outer .metal-hover{display:none;position:absolute;top:4px;right:7px;background:#091722ee;border:1px solid #456678;color:#e8f1f8;font-size:10px;padding:3px 6px;border-radius:5px;pointer-events:none}
+.metal-spark-outer:hover .metal-hover{display:block}
+.metal-scale{display:flex;justify-content:space-between;align-items:center;gap:5px;font-size:9px;color:#8fa5b7}
+.metal-scale span{white-space:nowrap}
+.metal-wait{font-size:11px;line-height:1.6;color:#97b5c9;padding:12px}
+.metal-error{font-size:11px;line-height:1.6;color:#dbb67d;padding:12px 0}
+.metal-error a{color:#a3d1ed}
+@media(max-width:1280px){.top-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.top-grid .metal-feature{grid-column:span 2}.top-grid .ticker-card:not(.metal-feature){height:135px}.top-grid .ticker-card:not(.metal-feature) .quote-slot{height:70px}}
+@media(max-width:660px){.top-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-grid .metal-feature{grid-column:span 2}.top-grid .ticker-card:not(.metal-feature){height:145px}.metal-main-price{font-size:25px}}
+
 </style>
 </head>
 <body>
@@ -84,8 +118,8 @@
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
-  <article class="ticker-card gold"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · XAU/USD</h2></div><div class="card-caption">Spot indicativo · no futuro GC</div><div class="quote-slot" id="q-gold"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card silver"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · XAG/USD</h2></div><div class="card-caption">Spot indicativo · no futuro SI</div><div class="quote-slot" id="q-silver"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><a class="metal-source-link" href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
+  <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><a class="metal-source-link" href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">Fuente ↗</a></div><div class="card-caption">Contrato próximo (front-month) · USD/oz · cierre</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
   <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio XAU/XAG · fuente única</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">USD Index · datos XAUS</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--silver)">€</span><h2>EUR/USD</h2></div><div class="card-caption">Tipo de cambio</div><div class="quote-slot" id="q-eur"><div class="tv-fallback">Cargando cotización…</div></div></article>
