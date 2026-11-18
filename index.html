@@ -1058,23 +1058,28 @@ function drawFuturesCloseTile(key,rows,note){
    return;
  }
  const recent=pickPeriodRows(full,nativePeriod,conf.kind);
- const last=full.at(-1),prior=full.at(-2),first=recent[0]||last;
+ if(nativePeriod==="custom"&&!recent.length){
+  el.innerHTML='<div class="metal-error">Sin observaciones de '+conf.code+' entre '+customRange.from+' y '+customRange.to+'. No se muestran precios posteriores a la selección.</div>';
+  return;
+ }
+ const last=nativePeriod==="custom"?recent.at(-1):full.at(-1);
+ const prior=nativePeriod==="custom"?recent.at(-2):full.at(-2),first=recent[0]||last;
  const dailyOnly=conf.kind==="futures"||conf.kind==="vix";
  const noIntraday=nativePeriod==="1d"&&dailyOnly;
  const plotReady=recent.length>=2&&!noIntraday;
- const delta=conf.kind==="reference"?(last.c/first.c-1)*100:(last.c/prior.c-1)*100;
+ const delta=recent.length<2?NaN:nativePeriod==="custom"?(last.c/first.c-1)*100:conf.kind==="reference"?(last.c/first.c-1)*100:(last.c/prior.c-1)*100;
  const sign=n=>n>=0?"+":"";
- const meaning=conf.kind==="reference"?"en periodo":"por sesión";
+ const meaning=nativePeriod==="custom"||conf.kind==="reference"?"en periodo":"por sesión";
  const observed=conf.kind==="reference"?"Última obs.":"Cierre";
  const displayDate=z=>z.date||new Date(z.t*1000).toISOString().slice(0,10);
  const dateLabel=date=>new Date(date+"T12:00:00Z").toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"2-digit",timeZone:"UTC"});
  const asOf=displayDate(last);
  const sourceNote=note||"Fuente verificada · cierre diario";
- const coverage=!metricCoversWindow(full,nativePeriod,conf.kind)?"Histórico: "+full.length+" sesiones · "+DISPLAY_PERIOD_LABEL[nativePeriod]+" incompleto":null;
- const freshness=marketFreshnessNotice(asOf,conf.kind);
- const usedNote=freshness||coverage||sourceNote;
+ const coverage=!metricCoversWindow(full,nativePeriod,conf.kind)?"Cobertura parcial · "+activePeriodLabel():null;
+ const freshness=nativePeriod==="custom"?null:marketFreshnessNotice(asOf,conf.kind);
+ const usedNote=coverage||freshness||(nativePeriod==="custom"?"Histórico seleccionado":sourceNote);
  if(!plotReady){
-   const explanation=noIntraday?"Sin gráfico intradía: "+conf.code+" solo tiene cierres diarios.":"Solo "+recent.length+" observación en "+DISPLAY_PERIOD_LABEL[nativePeriod]+".";
+   const explanation=noIntraday?"Sin gráfico intradía: "+conf.code+" solo tiene cierres diarios.":"Solo "+recent.length+" observación en "+activePeriodLabel()+".";
    el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(last.c,conf.decimals)+'</strong>'+
      '<span class="metal-day-change '+(delta>=0?"pos":"neg")+'">'+sign(delta)+fmt(delta,2)+' % <span style="font-weight:450;color:#9eafbd">/ '+meaning+'</span></span></div>'+
      '<div class="metal-timestamp"><span>'+observed+' '+dateLabel(asOf)+'</span><span class="delayed" title="'+usedNote+'">'+usedNote+'</span></div>'+
@@ -1458,7 +1463,8 @@ const COMPARISON_FUTURES=[
 function renderFuturesComparison(){
  const host=document.getElementById("chart-main");
  if(!host)return;
- const label=DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod;
+ marketChartCache.delete("chart-main");
+ const label=activePeriodLabel();
  const sourceLinks=longFuturesProvenance==="aethereal"?'<a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal (GC/SI/HG)</a>':'<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
  if(COMPARISON_FUTURES.some(meta=>(futuresCache[meta.key]||[]).length<2)){
    host.innerHTML='<div class="native-error">No hay cierres de los tres contratos suficientes para calcular rendimientos comparables. No se utilizan precios spot ni curvas inventadas.<span>Fuentes: '+sourceLinks+'</span></div>';
@@ -1475,9 +1481,9 @@ function renderFuturesComparison(){
    return;
  }
  const lastDate=shared.at(-1);
- const limit=DISPLAY_PERIOD_DAYS[nativePeriod]||31;
- const earliest=periodCutoff(Date.parse(lastDate+"T00:00:00Z")/1000,nativePeriod)*1000;
- const selected=shared.filter(date=>Date.parse(date+"T00:00:00Z")>=earliest);
+ const limit=nativePeriod==="custom"?(Date.parse(customRange.to)-Date.parse(customRange.from))/86400000:DISPLAY_PERIOD_DAYS[nativePeriod]||31;
+ const earliest=nativePeriod==="custom"?Date.parse(customRange.from+"T00:00:00Z"):periodCutoff(Date.parse(lastDate+"T00:00:00Z")/1000,nativePeriod)*1000;
+ const selected=shared.filter(date=>Date.parse(date+"T00:00:00Z")>=earliest&&(nativePeriod!=="custom"||date<=customRange.to));
  if(selected.length<2){
    host.innerHTML='<div class="native-error">No hay al menos dos sesiones comunes dentro de '+label+'. Selecciona un periodo mayor para estudiar cierres de futuros comparables.</div>';
    return;
@@ -1488,7 +1494,7 @@ function renderFuturesComparison(){
    return {label:meta.name,color:meta.color,points:selected.map(date=>(m.get(date).c/base-1)*100)};
  });
  const spanDays=(Date.parse(lastDate+"T00:00:00Z")-Date.parse(selected[0]+"T00:00:00Z"))/86400000;
- const incomplete=nativePeriod==="3d"?false:spanDays<limit*.7;
+ const incomplete=nativePeriod==="custom"?(selected[0]>customRange.from||selected.at(-1)<customRange.to&&Date.parse(customRange.to)-Date.parse(selected.at(-1))>4*86400000):nativePeriod==="3d"?false:spanDays<limit*.7;
  const warning=incomplete?'<strong style="color:#ecc17a">Histórico incompleto para '+label+': '+selected.length+' sesiones comunes en '+Math.round(spanDays)+' días; no cubre el periodo seleccionado.</strong>':
    '<span>'+selected.length+' cierres diarios coincidentes · '+label+'.</span>';
  const oldest=selected[0];
@@ -1501,6 +1507,7 @@ function renderFuturesComparison(){
  host.setAttribute("data-observations",String(selected.length));
 }
 function renderRatioPanel(){
+ marketChartCache.delete("chart-ratio");
  const paired=alignMarket();
  if(paired.length>=3){
    const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
@@ -1561,7 +1568,9 @@ function finishRatioDetailLoad(token){
  }
 }
 async function fetchNative(period){
- if(!Object.hasOwn(DISPLAY_PERIOD_LABEL,period))period="1mo";
+ if(period==="custom"&&!customRange)return;
+ if(period!=="custom"&&!Object.hasOwn(DISPLAY_PERIOD_LABEL,period))period="1mo";
+ if(period!=="custom")customRange=null;
  persistGlobalPeriod(period);
  const token=++nativeRequest;nativePeriod=period;nativeData={};
  syncMacroToMaster(period);
@@ -1579,7 +1588,8 @@ async function fetchNative(period){
    document.getElementById("detail-foot").textContent="Consultando el proveedor de la serie seleccionada.";
   }else drawMarketDetail();
  }
- const interval=PERIODS[period]||"1d",apiRange=XAUS_REQUEST_RANGE[period]||period;
+ const requestSettings=period==="custom"?customXausSettings():{range:XAUS_REQUEST_RANGE[period]||period,interval:PERIODS[period]||"1d"};
+ const interval=requestSettings.interval,apiRange=requestSettings.range;
  const pairedKeys=new Set(["gold","silver"]);
  let pairedSettled=0;
  await Promise.all(Object.keys(DATA_SYMBOLS).map(async key=>{
@@ -1587,7 +1597,7 @@ async function fetchNative(period){
      const entry=await fetchValidatedXaus(key,apiRange,interval);
      if(token===nativeRequest){
        const lastPoint=entry.points.at(-1);
-       const clipped=entry.points.filter(p=>p.t>=periodCutoff(lastPoint.t,period));
+       const clipped=period==="custom"?entry.points.filter(p=>withinActiveDates(p.t)):entry.points.filter(p=>p.t>=periodCutoff(lastPoint.t,period));
        nativeData[key]={...entry,points:clipped};
      }
    }catch(e){console.warn("Serie "+key+" no validada; no se inventa dato.",e);}
