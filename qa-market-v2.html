@@ -1,0 +1,12 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>QA temporal fuentes</title><body style="background:#07111a;color:#ddd;font:13px sans-serif"><h1>Pruebas de fuentes de mercado</h1><pre id="result">Consultando...</pre>
+<script>
+(async()=>{
+ const urls=[
+ ["fred-dgs10","https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10&cosd=2021-11-18"],
+ ["fred-fed","https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFEDTARU&cosd=2021-11-18"],
+ ["us-treasury-xml","https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=2025"],
+ ["cboe-vix","https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"]
+ ];
+ const results=await Promise.all(urls.map(async ([name,url])=>{try{const x=await fetch(url,{mode:"cors",credentials:"omit",signal:AbortSignal.timeout(12000)});const t=await x.text();return{name,status:x.status,ok:x.ok,length:t.length,head:t.slice(0,160)}}catch(e){return{name,error:String(e)}}}));
+ document.getElementById("result").textContent=JSON.stringify(results,null,2);
+})();</script></body></html>
