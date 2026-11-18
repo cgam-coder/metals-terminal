@@ -531,6 +531,20 @@
  .top-grid .ticker-card:nth-child(n+4) .metal-source-link{font-size:9px}
 }
 
+
+.mobile-jump-nav{display:none}
+.metal-spark-unavailable{display:flex;align-items:center;justify-content:center;text-align:center;
+ color:#b4cad7;font-size:12px;line-height:1.45;padding:8px 14px}
+@media(max-width:880px){
+ .mobile-jump-nav{display:flex;position:sticky;top:0;z-index:25;gap:5px;justify-content:space-between;
+ margin:0 0 8px;padding:6px 7px;background:#081721f4;
+ border:1px solid #29475b;border-radius:9px;box-shadow:0 4px 12px #0005}
+ .mobile-jump-nav a{flex:1;min-width:0;padding:8px 4px;text-align:center;color:#b7d5e7;
+ text-decoration:none;font-size:11px;font-weight:650;border:1px solid #294759;border-radius:6px}
+ .mobile-jump-nav a:focus-visible,.mobile-jump-nav a:hover{border-color:#86cce9;color:#fff;background:#173446}
+ #mercados,#comparativa,#macroeconomia{scroll-margin-top:58px}
+}
+
 </style>
 </head>
 <body>
@@ -543,7 +557,10 @@
   <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button></div>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
-<section class="top-grid" aria-label="Indicadores de mercado">
+<nav class="mobile-jump-nav" aria-label="Secciones del terminal">
+ <a href="#mercados">Mercados</a><a href="#comparativa">Comparativa</a><a href="#macroeconomia">Macroeconomía</a>
+</nav>
+<section class="top-grid" id="mercados" aria-label="Indicadores de mercado">
   <article class="ticker-card gold metal-feature"><div class="card-heading"><span class="glyph">◆</span><h2>Oro · futuro GC</h2><button class="market-inspect" data-inspect="gold" title="Ampliar oro GC">Ampliar ↗</button><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-gold" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de GC…</div></div></article>
   <article class="ticker-card silver metal-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◆</span><h2>Plata · futuro SI</h2><button class="market-inspect" data-inspect="silver" title="Ampliar plata SI">Ampliar ↗</button><a class="metal-source-link" href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Futuro continuo · cierre USD/oz · proveedor identificado</div><div class="quote-slot metal-futures-slot" id="q-silver" aria-live="polite"><div class="metal-wait">Consultando últimos cierres de SI…</div></div></article>
   <article class="ticker-card metal-feature copper-feature"><div class="card-heading"><span class="glyph" style="color:var(--silver)">◉</span><h2>Cobre · futuro HG</h2><button class="market-inspect" data-inspect="copper" title="Ampliar cobre HG">Ampliar ↗</button><a href="https://dataset.aethereal.top/datasets/commodity-prices" class="metal-source-link" target="_blank" rel="noopener noreferrer">Histórico ↗</a></div><div class="card-caption">Cobre HG · contrato próximo · cierre USD/lb</div><div class="quote-slot metal-futures-slot" id="q-copper"><div class="metal-wait">Leyendo HG…</div></div></article>
@@ -553,7 +570,7 @@
   <article class="ticker-card risk metal-feature market-feature"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX oficial de Cboe">Ampliar ↗</button></div><div class="card-caption">Cboe · índice VIX · último cierre</div><div class="quote-slot metal-futures-slot" id="q-vix"><div class="metal-wait">Leyendo histórico Cboe…</div></div></article>
 </section>
 <main class="dashboard">
-  <section class="panel curve-panel">
+  <section class="panel curve-panel" id="macroeconomia">
     <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button><button type="button" class="macro-expand" data-expand-macro="curve" title="Ampliar los rendimientos">⤢ Ampliar</button></div></div>
     <div class="panel-caption" id="curve-caption">Histórico Treasury · % anual</div><div id="curve-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación del periodo…</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
@@ -561,8 +578,8 @@
     <div class="curve-bottom"><div class="panel-title" style="font-size:14px">Rendimientos del Treasury</div><div class="mini-stats" id="yield-stats"><div>2 años</div><div>—</div><div>10 años</div><div>—</div><div>30 años</div><div>—</div><div>Spread 10Y − 2Y</div><div>—</div></div></div>
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
-  <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div><button class="market-inspect" data-inspect="futures" title="Ampliar comparación de futuros">Ampliar ↗</button></div>
+  <section class="panel main-panel" id="comparativa">
+    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · variación acumulada del precio (%) · no rentabilidad invertible</div></div><button class="market-inspect" data-inspect="futures" title="Ampliar comparación de futuros">Ampliar ↗</button></div>
     <div class="tv-chart" id="chart-main"><div class="native-spinner">Cargando cierres comparables GC, SI y HG…</div></div>
   </section>
   <section class="panel ratio-panel">
@@ -885,11 +902,10 @@ function decodeFuturesCloseTable(markup,code){
 }
 function pickPeriodRows(all,period,kind){
  const sorted=(all||[]).filter(z=>z&&Number.isFinite(z.t)&&Number.isFinite(z.c)&&z.c>0).sort((a,b)=>a.t-b.t);
- if(sorted.length<2)return sorted;
+ if(!sorted.length)return [];
  const cutoff=periodCutoff(sorted.at(-1).t,period);
- const rows=sorted.filter(z=>z.t>=cutoff);
- if(rows.length<2)return sorted.slice(-2);
- return rows;
+ // Never pull earlier observations into the chosen window to draw a curve.
+ return sorted.filter(z=>z.t>=cutoff);
 }
 function metricCoversWindow(all,period,kind){
  const days=DISPLAY_PERIOD_DAYS[period]||31;
@@ -898,6 +914,25 @@ function metricCoversWindow(all,period,kind){
  return span>=days*.7;
 }
 
+/* Publication delay indicator, not an inference that an exchange is open.
+   Ignore weekends; holidays can still explain a delayed official release. */
+function businessDaysSince(iso){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(iso||""))return null;
+ const date=new Date(iso+"T12:00:00Z"),now=new Date();
+ if(!Number.isFinite(date.getTime())||date.getTime()>Date.now()+86400000)return null;
+ const end=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),12);
+ let weekdays=0;
+ for(let t=date.getTime()+86400000;t<=end&&weekdays<1000;t+=86400000){
+   const d=new Date(t).getUTCDay();if(d!==0&&d!==6)weekdays++;
+ }
+ return weekdays;
+}
+function marketFreshnessNotice(iso,kind){
+ const weekdays=businessDaysSince(iso);
+ if(weekdays===null)return null;
+ const threshold=kind==="reference"?2:3;
+ return weekdays>threshold?"Último dato hace "+weekdays+" días hábiles; revisar fuente":null;
+}
 /* All seven quote cards share responsive CSS-pixel chart geometry, readable
    calendar labels and real-closing-value touch inspection. */
 function drawFuturesCloseTile(key,rows,note){
@@ -908,9 +943,11 @@ function drawFuturesCloseTile(key,rows,note){
    el.innerHTML='<div class="metal-error">Sin datos verificables de '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
    return;
  }
- const actual=pickPeriodRows(full,nativePeriod,conf.kind);
- const recent=actual.length>=2?actual:full.slice(-2);
- const last=recent.at(-1),prior=full.at(-2),first=recent[0];
+ const recent=pickPeriodRows(full,nativePeriod,conf.kind);
+ const last=full.at(-1),prior=full.at(-2),first=recent[0]||last;
+ const dailyOnly=conf.kind==="futures"||conf.kind==="vix";
+ const noIntraday=nativePeriod==="1d"&&dailyOnly;
+ const plotReady=recent.length>=2&&!noIntraday;
  const delta=conf.kind==="reference"?(last.c/first.c-1)*100:(last.c/prior.c-1)*100;
  const sign=n=>n>=0?"+":"";
  const meaning=conf.kind==="reference"?"en periodo":"por sesión";
@@ -920,7 +957,17 @@ function drawFuturesCloseTile(key,rows,note){
  const asOf=displayDate(last);
  const sourceNote=note||"Fuente verificada · cierre diario";
  const coverage=!metricCoversWindow(full,nativePeriod,conf.kind)?"Histórico: "+full.length+" sesiones · "+DISPLAY_PERIOD_LABEL[nativePeriod]+" incompleto":null;
- const usedNote=coverage||sourceNote;
+ const freshness=marketFreshnessNotice(asOf,conf.kind);
+ const usedNote=freshness||coverage||sourceNote;
+ if(!plotReady){
+   const explanation=noIntraday?"Sin gráfico intradía: "+conf.code+" solo tiene cierres diarios.":"Solo "+recent.length+" observación en "+DISPLAY_PERIOD_LABEL[nativePeriod]+".";
+   el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(last.c,conf.decimals)+'</strong>'+
+     '<span class="metal-day-change '+(delta>=0?"pos":"neg")+'">'+sign(delta)+fmt(delta,2)+' % <span style="font-weight:450;color:#9eafbd">/ '+meaning+'</span></span></div>'+
+     '<div class="metal-timestamp"><span>'+observed+' '+dateLabel(asOf)+'</span><span class="delayed" title="'+usedNote+'">'+usedNote+'</span></div>'+
+     '<div class="metal-spark-outer metal-spark-unavailable" role="note">'+explanation+'</div>'+
+     '<div class="metal-scale"><span>Último dato verificado: '+dateLabel(asOf)+'</span></div></div>';
+   el.title=conf.code+" · "+explanation+" · "+usedNote;return;
+ }
  const geometry=el.getBoundingClientRect(),W=Math.max(120,Math.round(geometry.width||270));
  const H=Math.max(82,Math.min(140,Math.round(geometry.height||155)-48));
  const left=W>=260?46:8,right=W>=260?10:7,top=10,bottom=22;
@@ -1243,7 +1290,7 @@ function renderFuturesComparison(){
  const warning=incomplete?'<strong style="color:#ecc17a">Histórico incompleto para '+label+': '+selected.length+' sesiones comunes en '+Math.round(spanDays)+' días; no cubre el periodo seleccionado.</strong>':
    '<span>'+selected.length+' cierres diarios coincidentes · '+label+'.</span>';
  const oldest=selected[0];
- const method='Comparación de rentabilidades desde '+oldest+' (base 0 %). Futuros de contrato próximo, cierres diarios, no cotización intradía; posibles efectos de cambios de contrato.';
+ const method='Variación acumulada del precio desde '+oldest+' (base 0 %). No representa rentabilidad obtenible: los cambios de contrato pueden alterar el resultado y la serie no incluye costes ni una metodología de renovación validada.';
  const summary=warning+' <span>'+method+' Fuentes: '+sourceLinks+'</span>';
  nativeChart("chart-main",normalized,dates,"%",summary);
  host.setAttribute("data-market-instrument","GC-SI-HG-front-month");
