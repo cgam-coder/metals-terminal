@@ -386,19 +386,38 @@
 
 .detail-timeframes{flex:0 0 auto;align-self:stretch;justify-content:center;gap:4px;flex-wrap:wrap;padding:5px}
 .detail-timeframes button{flex:0 1 auto;min-height:32px;min-width:42px}
-.custom-date-form{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:5px 8px;background:#0c1e2a;border:1px solid #355569;border-radius:8px;min-width:0}
-#header-dates{flex:1 1 100%;justify-content:flex-end}
-#detail-dates{flex:0 0 auto;align-self:stretch;justify-content:center}
-.custom-date-form.active{border-color:#9b803e}
-.date-range-caption{color:#e5c785;font-size:11px;font-weight:650;white-space:nowrap}
-.custom-date-form label{display:flex;align-items:center;gap:5px;color:#bed1df;font-size:11px}
-.custom-date-form input[type=date]{color-scheme:dark;background:#091923;color:#ecf4fa;border:1px solid #476477;border-radius:6px;padding:6px;font:inherit;font-size:12px;min-width:0;max-width:147px}
-.custom-date-form button{font:600 11px system-ui,sans-serif;border-radius:6px;min-height:30px;padding:6px 10px;cursor:pointer}
-.date-apply{background:#956f17;color:#fff;border:1px solid #b59242}
-.date-reset{background:#122735;color:#c3d6e4;border:1px solid #486679}
-.date-feedback{flex:0 1 100%;color:#a9c8d8;text-align:right;font-size:10px;line-height:1.35;min-height:0}
-.custom-date-form[data-error] .date-feedback{color:#ffd09a}
-@media(max-width:740px){#header-dates,#detail-dates{justify-content:center}.custom-date-form label{flex:1 1 42%;justify-content:space-between}.custom-date-form input[type=date]{width:75%;max-width:none}.custom-date-form button{flex:1 1 35%}.date-feedback{text-align:center}}
+/* Compact, accessible calendar dropdown shared by dashboard and expanded charts. */
+.period-picker{position:relative;flex:0 0 auto;align-self:center;min-width:0;z-index:12}
+.period-picker[open]{z-index:40}
+.period-picker>summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:8px 12px;background:#102534;border:1px solid #426277;border-radius:9px;color:#dcecf7;cursor:pointer;user-select:none;white-space:nowrap;font:600 12px system-ui,-apple-system,"Segoe UI",sans-serif;transition:border-color .15s,background .15s}
+.period-picker>summary::-webkit-details-marker{display:none}
+.period-picker>summary::marker{content:""}
+.period-picker>summary:hover,.period-picker>summary:focus-visible{border-color:#87afc4;background:#183448;outline-offset:2px}
+.period-picker.active>summary{background:#28291c;border-color:#b38b29;color:#ffe4a1}
+.period-picker-icon{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:1.7}
+.period-picker-chevron{font-size:14px;opacity:.78;transition:transform .15s;line-height:1}
+.period-picker[open] .period-picker-chevron{transform:rotate(180deg)}
+.period-picker-selected{font-size:10px;font-weight:500;color:#efce76;white-space:nowrap}
+.period-picker-selected:empty{display:none}
+.period-picker .custom-date-form{position:absolute;top:calc(100% + 9px);right:0;z-index:45;width:340px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;align-items:stretch;gap:11px;padding:16px;background:linear-gradient(155deg,#132838,#081824);border:1px solid #51748b;border-radius:12px;box-shadow:0 18px 50px #000b;color:#deebf3}
+#detail-period-picker{align-self:center}
+#detail-period-picker .custom-date-form{left:50%;right:auto;transform:translateX(-50%)}
+.period-popover-heading{font-size:14px;font-weight:700;color:#f1f7fb}
+.period-popover-caption{font-size:11px;line-height:1.4;color:#9fb8ca}
+.period-date-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.period-date-fields label{display:flex;flex-direction:column;gap:6px;color:#bfd3e0;font-size:11px;font-weight:600}
+.period-date-fields input[type=date]{width:100%;min-width:0;padding:9px 7px;border-radius:7px;border:1px solid #4f7186;background:#071824;color:#f0f7fa;color-scheme:dark;font-size:12px;font-family:inherit}
+.period-date-fields input[type=date]:focus-visible{outline:2px solid #d9a931;outline-offset:1px}
+.period-popover-actions{display:flex;gap:8px}
+.period-popover-actions button{flex:1;min-height:35px;border-radius:7px;padding:8px 10px;font:650 12px system-ui,sans-serif;cursor:pointer}
+.date-apply{background:#986f0f;color:#fff;border:1px solid #bd922e}
+.date-apply:hover{background:#ae861a}
+.date-reset{background:#162c3a;color:#c8dce8;border:1px solid #4d6c7f}
+.date-reset:hover{background:#223c4c}
+.date-feedback{font-size:10px;color:#9cb7c8;line-height:1.45;min-height:15px}
+.custom-date-form[data-error] .date-feedback{color:#ffcd92}
+@media(max-width:740px){.period-picker .custom-date-form{width:min(340px,calc(100vw - 30px))}#detail-period-picker .custom-date-form{left:50%;right:auto;transform:translateX(-50%)}.period-date-fields{grid-template-columns:1fr 1fr}}
+@media(max-width:440px){#header-period-picker{margin-left:auto}.period-picker>summary{padding:8px 10px}.period-picker-selected{max-width:96px;overflow:hidden;text-overflow:ellipsis}.period-date-fields{grid-template-columns:1fr}}
 @media(max-width:780px){
  .detail-timeframes{justify-content:space-between;gap:3px;padding:4px}
  .detail-timeframes button{flex:1 1 16%;min-width:0;padding:8px 3px}
@@ -578,7 +597,7 @@
   <div class="header-space"></div>
   <div class="status"><i class="dot"></i><span>Mercado · datos bajo demanda</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
-  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button><form id="header-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><span class="date-range-caption">Fechas</span><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button><span class="date-feedback" role="status" aria-live="polite"></span></form></div>
+  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="3d">3D</button><button data-global-period="5d">1S</button><button data-global-period="2w">2S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="3mo">3M</button><button data-global-period="6mo">6M</button><button data-global-period="1y">1A</button><button data-global-period="2y">2A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button><details id="header-period-picker" class="period-picker"><summary aria-label="Seleccionar periodo de fechas personalizado"><svg class="period-picker-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span class="period-picker-label">Seleccionar periodo</span><span class="period-picker-selected"></span><span class="period-picker-chevron" aria-hidden="true">⌄</span></summary><form id="header-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><div class="period-popover-heading">Personalizar intervalo</div><div class="period-popover-caption">Elige un día o un rango de fechas entre los últimos cinco años.</div><div class="period-date-fields"><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label></div><div class="period-popover-actions"><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button></div><span class="date-feedback" role="status" aria-live="polite"></span></form></details></div>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <nav class="mobile-jump-nav" aria-label="Secciones del terminal">
@@ -629,7 +648,7 @@
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
   <div id="detail-timeframes" class="global-timeframes detail-timeframes" role="group" aria-label="Intervalo del gráfico ampliado"><button type="button" data-detail-period="1d" class="" aria-pressed="false">1D</button><button type="button" data-detail-period="3d" class="" aria-pressed="false">3D</button><button type="button" data-detail-period="5d" class="" aria-pressed="false">1S</button><button type="button" data-detail-period="2w" class="" aria-pressed="false">2S</button><button type="button" data-detail-period="1mo" class="active" aria-pressed="true">1M</button><button type="button" data-detail-period="3mo" class="" aria-pressed="false">3M</button><button type="button" data-detail-period="6mo" class="" aria-pressed="false">6M</button><button type="button" data-detail-period="1y" class="" aria-pressed="false">1A</button><button type="button" data-detail-period="2y" class="" aria-pressed="false">2A</button><button type="button" data-detail-period="5y" class="" aria-pressed="false">5A</button></div>
-  <form id="detail-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><span class="date-range-caption">Fechas</span><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button><span class="date-feedback" role="status" aria-live="polite"></span></form>
+  <details id="detail-period-picker" class="period-picker"><summary aria-label="Seleccionar periodo de fechas personalizado"><svg class="period-picker-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span class="period-picker-label">Seleccionar periodo</span><span class="period-picker-selected"></span><span class="period-picker-chevron" aria-hidden="true">⌄</span></summary><form id="detail-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><div class="period-popover-heading">Personalizar intervalo</div><div class="period-popover-caption">Elige un día o un rango de fechas entre los últimos cinco años.</div><div class="period-date-fields"><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label></div><div class="period-popover-actions"><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button></div><span class="date-feedback" role="status" aria-live="polite"></span></form></details>
   <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
@@ -938,7 +957,11 @@ function activePeriodLabel(){return nativePeriod==="custom"&&customRange?customR
 function syncCustomDateForms(){
  const active=nativePeriod==="custom"&&!!customRange;
  document.querySelectorAll(".custom-date-form").forEach(form=>{
+  const picker=form.closest(".period-picker");
   form.classList.toggle("active",active);form.removeAttribute("data-error");
+  picker?.classList.toggle("active",active);
+  const selected=picker?.querySelector(".period-picker-selected");
+  if(selected)selected.textContent=active?customRange.from+" – "+customRange.to:"";
   for(const input of form.querySelectorAll('input[type="date"]')){input.min=minCustomDay();input.max=maxCustomDay();input.value=active?customRange[input.name]:"";}
   form.querySelector(".date-feedback").textContent=active?"Rango activo: "+customRange.from+" a "+customRange.to+(customXausSettings().interval==="1wk"?" · XAUS puede ofrecer solo cierres semanales para fechas antiguas.":""):"Hasta cinco años. Datos según fuente y sesiones reales.";
  });
@@ -2347,8 +2370,39 @@ $('#detail-timeframes').addEventListener('click',event=>{
  if(b&&b.dataset.detailPeriod!==nativePeriod)fetchNative(b.dataset.detailPeriod);
 });
 document.querySelectorAll(".custom-date-form").forEach(form=>{
- form.addEventListener("submit",event=>{event.preventDefault();applyCustomDates(form);});
- form.querySelector("[data-reset-dates]").addEventListener("click",()=>fetchNative("1mo"));
+ form.addEventListener("submit",event=>{
+  event.preventDefault();
+  const from=form.querySelector('[name="from"]').value,to=form.querySelector('[name="to"]').value;
+  if(!validIsoDay(from)||!validIsoDay(to)||from>to||from<minCustomDay()||to>maxCustomDay()){
+   applyCustomDates(form);return;
+  }
+  applyCustomDates(form);
+  form.closest(".period-picker").open=false;
+ });
+ form.querySelector("[data-reset-dates]").addEventListener("click",()=>{
+  form.closest(".period-picker").open=false;fetchNative("1mo");
+ });
+});
+document.querySelectorAll(".period-picker").forEach(picker=>{
+ picker.addEventListener("toggle",()=>{
+  if(!picker.open)return;
+  document.querySelectorAll(".period-picker").forEach(other=>{if(other!==picker)other.open=false;});
+  const inputs=picker.querySelectorAll('input[type="date"]');
+  if(!inputs[0].value&&!inputs[1].value){
+   const today=maxCustomDay(),from=new Date(today+"T00:00:00Z");
+   from.setUTCMonth(from.getUTCMonth()-1);
+   inputs[0].value=from.toISOString().slice(0,10);
+   inputs[1].value=today;
+  }
+ });
+});
+document.addEventListener("pointerdown",event=>{
+ document.querySelectorAll(".period-picker[open]").forEach(picker=>{
+  if(!picker.contains(event.target))picker.open=false;
+ });
+});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape")document.querySelectorAll(".period-picker[open]").forEach(picker=>picker.open=false);
 });
 $('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);if(nativePeriod==="custom"&&customRange){url.searchParams.set("from",customRange.from);url.searchParams.set("to",customRange.to);}url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
