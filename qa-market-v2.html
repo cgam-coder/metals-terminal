@@ -9,4 +9,7 @@
  ];
  const results=await Promise.all(urls.map(async ([name,url])=>{try{const x=await fetch(url,{mode:"cors",credentials:"omit",signal:AbortSignal.timeout(12000)});const t=await x.text();return{name,status:x.status,ok:x.ok,length:t.length,head:t.slice(0,160)}}catch(e){return{name,error:String(e)}}}));
  document.getElementById("result").textContent=JSON.stringify(results,null,2);
-})();</script></body></html>
+})();</script><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+  <section style="height:320px"><h2>Cobre derivado OANDA:XCUUSD</h2><div class="tradingview-widget-container" style="height:270px"><div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>{"autosize":true,"symbol":"OANDA:XCUUSD","interval":"D","timezone":"Europe/Madrid","theme":"dark","style":"3","locale":"es","hide_top_toolbar":true,"hide_side_toolbar":true,"allow_symbol_change":false,"hide_volume":true}</script></div></section>
+  <section style="height:320px"><h2>Brent referencia TVC:UKOIL</h2><div class="tradingview-widget-container" style="height:270px"><div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>{"autosize":true,"symbol":"TVC:UKOIL","interval":"D","timezone":"Europe/Madrid","theme":"dark","style":"3","locale":"es","hide_top_toolbar":true,"hide_side_toolbar":true,"allow_symbol_change":false,"hide_volume":true}</script></div></section>
+</div></body></html>
