@@ -1183,7 +1183,88 @@ function sourceCoverageLabel(all,source){
  const first=all?.[0]?.date,last=all?.at(-1)?.date;
  return source+" · "+(all?.length||0)+" ses.";
 }
-async function loadAetherealFiveYears(){
+
+/* Cache only the parsed, provider-identical GC/SI/HG/BZ observations, not the
+   original ~6 MB CSV. IndexedDB is optional and never used as a new price source.
+   On refresh/expiry the browser checks the provider again on-demand. */
+const FUTURES_CACHE_DB="MetalsTerminalVerified",FUTURES_CACHE_STORE="datasets";
+const FUTURES_CACHE_KEY="aethereal-GC-SI-HG-BZ-v1";
+const FUTURES_CACHE_TTL_MS=3*60*60*1000;
+const FORCE_MARKET_RECHECK=(()=>{
+ try{return new URLSearchParams(location.search).has("_refresh");}
+ catch(e){return false;}
+})();
+function openFuturesCacheDb(){
+ return new Promise((resolve,reject)=>{
+  if(typeof indexedDB==="undefined"){reject(new Error("IndexedDB desactivada"));return;}
+  const request=indexedDB.open(FUTURES_CACHE_DB,1);
+  request.onupgradeneeded=()=>{
+   const db=request.result;
+   if(!db.objectStoreNames.contains(FUTURES_CACHE_STORE))db.createObjectStore(FUTURES_CACHE_STORE);
+  };
+  request.onsuccess=()=>resolve(request.result);
+  request.onerror=()=>reject(request.error||new Error("No se puede abrir caché local"));
+  request.onblocked=()=>reject(new Error("Caché bloqueada por otra pestaña"));
+ });
+}
+function validFiveYearCache(payload){
+ if(!payload||payload.version!==1||payload.provider!=="Aethereal"||
+ !Number.isFinite(payload.fetchedAt)||!payload.series)return false;
+ const future=new Date(Date.now()+86400000).toISOString().slice(0,10);
+ const boundary=new Date();boundary.setUTCFullYear(boundary.getUTCFullYear()-5);
+ boundary.setUTCDate(boundary.getUTCDate()+48);
+ const earliest=boundary.toISOString().slice(0,10);
+ return FUTURE_KEYS.every(key=>{
+  const rows=payload.series[key];
+  if(!Array.isArray(rows)||rows.length<1050||rows[0]?.date>earliest||
+     rows.at(-1)?.date>future)return false;
+  const span=(rows.at(-1).t-rows[0].t)/86400;
+  if(span<1730)return false;
+  // Validate all dates and prices, never trust local data blindly.
+  return rows.every((row,i)=>/^\d{4}-\d{2}-\d{2}$/.test(row.date||"")&&
+    Number.isFinite(row.t)&&Number.isFinite(row.c)&&row.c>0&&
+    (i===0||row.date>rows[i-1].date)&&
+    (row.h===undefined||!Number.isFinite(row.h)||row.c<=row.h*1.0001)&&
+    (row.l===undefined||!Number.isFinite(row.l)||row.c>=row.l*.9999));
+ });
+}
+async function readFuturesCache(){
+ let db;
+ try{
+  db=await openFuturesCacheDb();
+  const payload=await new Promise((resolve,reject)=>{
+   const request=db.transaction(FUTURES_CACHE_STORE,"readonly").objectStore(FUTURES_CACHE_STORE).get(FUTURES_CACHE_KEY);
+   request.onsuccess=()=>resolve(request.result||null);
+   request.onerror=()=>reject(request.error||new Error("Lectura fallida"));
+  });
+  return validFiveYearCache(payload)?payload:null;
+ }catch(e){console.warn("Caché histórica desactivada: se consulta proveedor",e);return null;}
+ finally{try{db?.close();}catch(e){}}
+}
+async function writeFuturesCache(series){
+ let db;
+ try{
+  db=await openFuturesCacheDb();
+  const payload={version:1,provider:"Aethereal",fetchedAt:Date.now(),series};
+  await new Promise((resolve,reject)=>{
+   const request=db.transaction(FUTURES_CACHE_STORE,"readwrite").objectStore(FUTURES_CACHE_STORE).put(payload,FUTURES_CACHE_KEY);
+   request.onsuccess=()=>resolve();
+   request.onerror=()=>reject(request.error||new Error("Escritura fallida"));
+  });
+ }catch(e){console.warn("Histórico disponible, pero no se ha podido guardar en este navegador",e);}
+ finally{try{db?.close();}catch(e){}}
+}
+function applyAetherealFutures(series,source){
+ for(const key of FUTURE_KEYS){
+  futuresCache[key]=series[key];
+  futuresFreshness[key]=sourceCoverageLabel(series[key],source);
+ }
+ longFuturesProvenance="aethereal";
+ renderFuturesCards();
+ renderFuturesComparison();
+}
+
+async function loadAetherealFiveYears(previous=null){
  const response=await fetch(LONG_FUTURES_DATASET_URL,{
     mode:"cors",credentials:"omit",cache:"no-cache",signal:AbortSignal.timeout(35000)
  });
@@ -1192,24 +1273,29 @@ async function loadAetherealFiveYears(){
  const raw=await response.text();
  if(raw.length<150000||raw.length>15_000_000)throw Error("Archivo inesperado: "+raw.length+" bytes");
  const data=parseFiveYearCommodityCsv(raw);
- const provenance="Aethereal · futuros históricos (uso personal, no feed CME/ICE)";
- // Commit atomically only after all four have been parsed and validated.
- for(const key of FUTURE_KEYS){
-   futuresCache[key]=data[key];
-   futuresFreshness[key]=sourceCoverageLabel(data[key],"Aethereal");
+ if(previous?.series)for(const key of FUTURE_KEYS){
+   if(data[key].at(-1).date<previous.series[key].at(-1).date)
+     throw Error("La nueva descarga de "+key+" es anterior al histórico verificado local");
  }
- longFuturesProvenance="aethereal";
- renderFuturesCards();
- renderFuturesComparison();
+ applyAetherealFutures(data,"Aethereal");
+ await writeFuturesCache(data);
  return data;
 }
 async function loadFuturesCards(){
  verifiedFallbackFutures(); // Immediate UI: the last dated, verified snapshot.
+ const saved=await readFuturesCache();
+ if(saved){
+  applyAetherealFutures(saved.series,"Aethereal · guardado local");
+  // Avoid repeated ~6 MB transfers when the identical verified series is fresh.
+  // Only "Actualizar todo" forces a new check ahead of the 3h expiry.
+  if(!FORCE_MARKET_RECHECK&&Date.now()-saved.fetchedAt<FUTURES_CACHE_TTL_MS)return;
+ }
  try{
-   await loadAetherealFiveYears();
-   return; // Do NOT also fetch and splice different front-month quote methodologies.
+   await loadAetherealFiveYears(saved);
+   return; // Do NOT splice two different continuous-contract providers.
  }catch(e){
-   console.warn("5 años de futuros no disponibles; conservando cierres verificables separados",e);
+   console.warn("No fue posible renovar el histórico; se conserva el último verificado",e);
+   if(saved)return; // Keep the coherent cached four-series dataset, marked by date.
    longFuturesProvenance="recent-fallback";
  }
  // Fall back only when the five-year dataset cannot be checked. Do not
@@ -1388,6 +1474,7 @@ function persistGlobalPeriod(period){
  try{
   const url=new URL(location.href);
   url.searchParams.set("period",period);
+  url.searchParams.delete("_refresh"); // One-shot forced refresh; don't replay on the next visit.
   history.replaceState(null,"",url.pathname+url.search+url.hash);
  }catch(e){console.warn("No se pudo guardar el periodo en la URL",e);}
 }
