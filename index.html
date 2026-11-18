@@ -35,6 +35,24 @@
 .native-card{height:100%;display:flex;flex-direction:column;gap:1px;padding:0 3px}.native-num{font-size:23px;font-weight:760;color:#eef4f8;letter-spacing:-.5px}.native-meta{display:flex;justify-content:space-between;font-size:10px;color:#9cabb9}.native-positive{color:#4cdb9d}.native-negative{color:#fa858b}.native-spark{width:100%;height:22px;display:block;margin-top:auto}
 .native-canvas{display:flex;flex-direction:column;height:100%;gap:4px;padding:3px}.native-canvas .native-caption{font-size:10px;color:#9bb0c1}.native-canvas .native-series{flex:1;min-height:0;position:relative}.native-canvas svg{display:block;width:100%;height:100%}.native-canvas .native-tip{position:absolute;display:none;top:9px;left:30%;background:#06151eea;border:1px solid #55788a;border-radius:6px;padding:7px 9px;z-index:5;font-size:11px;pointer-events:none;white-space:nowrap}.native-canvas .native-legend{display:flex;flex-wrap:wrap;gap:15px;align-items:center;color:#cdd8df;font-size:11px}.native-canvas .native-legend span{display:inline-flex;gap:6px;align-items:center}.native-dot{width:12px;height:3px;border-radius:2px;display:inline-block}.native-canvas .native-note{display:flex;justify-content:space-between;gap:12px;color:#8ba2b3;font-size:10px;flex-wrap:wrap}.native-note a{color:#91c8ed;text-decoration:none}.native-error{display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;gap:12px;color:#cbb17a;font-size:12px;line-height:1.5;text-align:center;padding:14px}.native-error a{color:#a3d5f4}
 @media(max-width:1100px){.native-num{font-size:19px}.native-range button{font-size:9px;padding:3px 4px}}
+
+/* Time windows and genuinely legible ratio/inspection charts */
+.dashboard{grid-template-rows:315px 245px 250px}
+.ratio-panel .tv-chart{min-height:165px}
+.ratio-panel{padding-bottom:10px}
+.ratio-panel .native-canvas .native-series{min-height:140px}
+.macro-range{display:flex;gap:2px;border:1px solid #2c485b;background:#07141f;border-radius:6px;padding:2px;flex-shrink:0}
+.macro-range button{padding:4px 7px;font-size:10px;color:#aebfcd;background:transparent;border:0;border-radius:4px;white-space:nowrap}
+.macro-range button.active,.macro-range button:hover{background:#7f6123;color:#fff}
+.macro-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.macro-controls .link-small{white-space:nowrap}
+.ratio-view-toggle{font-size:10px;color:#c8dcf0;background:#112330;border:1px solid #3a5c71;border-radius:5px;padding:4px 7px;cursor:pointer}
+.ratio-panel .panel-head{margin-bottom:3px}
+.market-inspect{border:1px solid #4b697a;color:#a6daed;background:#12232e;border-radius:6px;font-size:10px;padding:5px 8px;cursor:pointer}
+.market-inspect:hover{border-color:#86c8e7}
+@media(max-width:1280px){.dashboard{grid-template-rows:335px 240px 275px 210px}}
+@media(max-width:780px){.dashboard{display:flex}.curve-panel,.main-panel{height:400px;min-height:400px}.ratio-panel{height:320px;min-height:320px}.policy-panel{height:350px;min-height:350px}.real-panel{height:315px;min-height:315px}.macro-controls{justify-content:flex-start}}
+@media(max-width:480px){.panel-head{flex-wrap:wrap}.macro-controls{width:100%}.macro-range button{padding:3px 7px}}
 </style>
 </head>
 <body>
@@ -57,7 +75,7 @@
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
-    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div>
+    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><div class="macro-range" data-macro="curve"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
     <div class="panel-caption" id="curve-caption">Comparación de rendimientos en dos fechas · % anual</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
@@ -65,22 +83,22 @@
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro y Plata — Evolución comparada</h2><div class="main-title-extra">XAU/USD y XAG/USD · referencias spot; NO futuros COMEX</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button></div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Oro y Plata — Evolución comparada</h2><div class="main-title-extra">XAU/USD y XAG/USD · referencias spot; NO futuros COMEX</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button><button data-period="5y">5A</button></div></div>
     <div class="tv-chart" id="chart-main"><div class="tv-loader">Cargando series XAU/XAG bajo demanda…</div></div>
   </section>
   <section class="panel ratio-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
+    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><button class="ratio-view-toggle" id="ratio-view-toggle" title="Alternar valor absoluto y variación porcentual">Vista: ratio</button><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><span title="Series no equivalentes: Fed es techo del rango; BCE es facilidad de depósito" class="small-tag">Fed / BCE</span></div>
+    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><div class="macro-range" data-macro="policy"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
     <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="macro-range" data-macro="reals"><button class="active" data-window="1M">1M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div>
   </section>
