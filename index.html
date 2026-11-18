@@ -400,6 +400,65 @@
 .real-panel #real-dates,.policy-panel #policy-dates{font-size:9px;line-height:1.3}
 @media(max-width:900px){.macro-period-bar{font-size:11px}}
 
+
+/* Macro charts: native CSS-pixel viewport, readable axes, weekly samples at 2A/5A.
+   Bigger touch targets and inspectable charts, without adding local time selectors. */
+.macro-expand{
+ background:#132a39;border:1px solid #3e647a;border-radius:7px;color:#bde5f6;
+ font-size:11px;font-weight:650;white-space:nowrap;padding:6px 8px;cursor:pointer;
+}
+.macro-expand:hover,.macro-expand:focus-visible{border-color:#9dcde8;color:white;outline-offset:2px}
+.curve-panel .macro-controls,.policy-panel .macro-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.curve-panel .legend{gap:10px}
+.curve-panel .legend>span{font-size:11px}
+.chart-container svg[data-macro-svg]{display:block;width:100%;height:100%;overflow:hidden;touch-action:pan-y}
+.chart-container .axis-text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12px;font-weight:530;fill:#b6c9d7}
+.chart-container .grid{stroke:#355164;stroke-width:.75;stroke-opacity:.65}
+.chart-container .stroke-cyan,
+.chart-container .stroke-gold,
+.chart-container .stroke-silver,
+.chart-container .stroke-purple{stroke-width:2.1;vector-effect:non-scaling-stroke}
+.chart-container .macro-crosshair,.detail-chart .macro-crosshair{stroke:#a9dcec;stroke-width:1;stroke-dasharray:4 4;pointer-events:none;vector-effect:non-scaling-stroke;opacity:0}
+.macro-hover-tip{
+ position:absolute;z-index:5;top:8px;left:8px;max-width:calc(100% - 16px);
+ background:#041521ee;border:1px solid #66869d;border-radius:8px;
+ color:#eef8ff;font-size:11px;line-height:1.5;font-variant-numeric:tabular-nums;
+ padding:6px 9px;box-shadow:0 6px 16px #0008;pointer-events:none;
+ white-space:normal;display:none
+}
+.macro-hover-tip.visible{display:block}
+.detail-chart.macro-focus-chart{position:relative;min-height:0;flex:1;border:1px solid #2d5268;border-radius:9px;background:#091c27}
+.detail-chart.macro-focus-chart svg{width:100%;height:100%;display:block}
+.detail-chart.macro-focus-chart .axis-text{fill:#c0d5e4;font-size:12px}
+.detail-chart.macro-focus-chart .grid{stroke:#345369;stroke-opacity:.6}
+.detail-chart.macro-focus-chart .stroke-cyan,
+.detail-chart.macro-focus-chart .stroke-gold,
+.detail-chart.macro-focus-chart .stroke-silver,
+.detail-chart.macro-focus-chart .stroke-purple{stroke-width:2.3;vector-effect:non-scaling-stroke}
+@media(min-width:1200px){
+ .dashboard{grid-template-rows:365px 305px}
+ .curve-panel .chart-container,.real-panel .chart-container,.policy-panel .chart-container{min-height:140px}
+}
+@media(max-width:880px){
+ .dashboard .curve-panel{min-height:465px;height:465px}
+ .dashboard .real-panel{min-height:395px;height:395px}
+ .dashboard .policy-panel{min-height:430px;height:430px}
+ .dashboard .curve-panel .chart-container{flex:1 1 195px;min-height:195px;max-height:none}
+ .dashboard .real-panel .chart-container{flex:1 1 207px;min-height:207px;max-height:none}
+ .dashboard .policy-panel .chart-container{flex:1 1 215px;min-height:215px;max-height:none}
+ .chart-container .axis-text{font-size:12px}
+ .curve-panel .panel-head .panel-title,.policy-panel .panel-head .panel-title{font-size:17px}
+ .real-panel .panel-head .panel-title{font-size:16px}
+ .macro-expand{min-height:31px}
+}
+@media(max-width:420px){
+ .dashboard .curve-panel{min-height:480px;height:480px}
+ .dashboard .real-panel{min-height:405px;height:405px}
+ .dashboard .policy-panel{min-height:445px;height:445px}
+ .curve-panel .legend{gap:7px}
+ .curve-panel .legend>span{font-size:10px}
+}
+
 </style>
 </head>
 <body>
@@ -423,10 +482,10 @@
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
-    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button></div></div>
+    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button><button type="button" class="macro-expand" data-expand-macro="curve" title="Ampliar los rendimientos">⤢ Ampliar</button></div></div>
     <div class="panel-caption" id="curve-caption">Histórico Treasury · % anual</div><div id="curve-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación del periodo…</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
-    <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
+    <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span><span id="legend-third"><i class="swatch silver"></i>Treasury 30Y</span></div>
     <div class="curve-bottom"><div class="panel-title" style="font-size:14px">Rendimientos del Treasury</div><div class="mini-stats" id="yield-stats"><div>2 años</div><div>—</div><div>10 años</div><div>—</div><div>30 años</div><div>—</div><div>Spread 10Y − 2Y</div><div>—</div></div></div>
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
@@ -439,14 +498,14 @@
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><span title="Series no equivalentes" class="small-tag">Fed / BCE</span><button type="button" class="macro-expand" data-expand-macro="policy" title="Ampliar los tipos oficiales">⤢ Ampliar</button></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
     <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div><div id="policy-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación de los tipos oficiales…</div><div id="policy-dates" class="macro-caption"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div><button type="button" class="macro-expand" data-expand-macro="reals" title="Ampliar el tipo real y la inflación implícita">⤢ Ampliar</button></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div><div id="real-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación real e implícita…</div><div id="real-dates" class="macro-caption"></div>
   </section>
@@ -1114,41 +1173,120 @@ function bootMarket(){
  fetchNative(getRequestedGlobalPeriod());
 }
 
-function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false,dates=null,xValues=null}){
- const left=47,right=15,top=14,bottom=28,plotW=width-left-right,plotH=height-top-bottom;
- const all=series.flatMap(s=>(s.values||[]).filter(Number.isFinite));
- if(!all.length)return '<div class="native-error">Sin datos contrastados en el periodo seleccionado.</div>';
- const mn=yMin??Math.min(...all),mx=yMax??Math.max(...all),range=Math.max(mx-mn,.025);
- const lower=yMin??mn-range*.16,upper=yMax??mx+range*.16;
+
+/* Native macro SVG: axis font and geometry measured in CSS pixels, not a
+   stretched fixed viewBox. The same dates are used for line coordinates and
+   labels. Price history is unchanged: presentation-only weekly thinning. */
+const macroPlotCache=new Map();
+const MACRO_SHORT_MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function readableMacroRows(rows,period){
+ if(!["2A","5A"].includes(period)||rows.length<60)return rows;
+ const weeks=new Map();
+ for(const row of rows){
+  const date=new Date(row.date+"T00:00:00Z"),day=(date.getUTCDay()+6)%7;
+  const monday=Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()-day);
+  weeks.set(monday,row); // Last real close of each ISO week, never interpolated.
+ }
+ const all=new Map([rows[0],...weeks.values(),rows.at(-1)].map(r=>[r.date,r]));
+ return [...all.values()].sort((a,b)=>a.date.localeCompare(b.date));
+}
+function macroAxisDate(date,spanDays){
+ if(!date)return "";
+ const y=date.slice(0,4),m=Number(date.slice(5,7)),d=Number(date.slice(8,10));
+ if(spanDays>680)return y;
+ if(spanDays>130)return MACRO_SHORT_MONTHS[m-1]+" "+y.slice(2);
+ return d+" "+MACRO_SHORT_MONTHS[m-1];
+}
+function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false,dates=null,xValues=null,targetId=null}){
+ const host=targetId?document.getElementById(targetId):null;
+ const rect=host?.getBoundingClientRect?.();
+ const W=rect&&rect.width>180?Math.round(rect.width):width;
+ const H=rect&&rect.height>95?Math.round(rect.height):height;
+ const left=W<360?53:W<540?58:65,right=W<400?12:20,top=19,bottom=34;
+ const plotW=Math.max(60,W-left-right),plotH=Math.max(42,H-top-bottom);
+ const values=series.flatMap(s=>(s.values||[]).filter(Number.isFinite));
+ if(!values.length)return '<div class="native-error">Sin datos contrastados en el periodo seleccionado.</div>';
+ const mn=yMin??Math.min(...values),mx=yMax??Math.max(...values),range=Math.max(mx-mn,.025);
+ const lower=yMin??mn-range*.15,upper=yMax??mx+range*.15;
  const y=val=>top+(upper-val)/(upper-lower)*plotH;
  const n=Math.max(...series.map(s=>s.values.length),1);
- let stamps=null;
- if(Array.isArray(dates)&&dates.length===n&&dates.every(x=>/^\d{4}-\d\d-\d\d$/.test(x||""))){
-   stamps=dates.map(d=>Date.parse(d+"T00:00:00Z"));
+ const stamped=Array.isArray(dates)&&dates.length===n&&dates.every(x=>/^\d{4}-\d\d-\d\d$/.test(x||""));
+ const stamps=stamped?dates.map(d=>Date.parse(d+"T00:00:00Z")):null;
+ const numbers=Array.isArray(xValues)&&xValues.length===n?xValues:(stamps||null);
+ const xmin=numbers?Math.min(...numbers):null,xmax=numbers?Math.max(...numbers):null;
+ const x=i=>numbers&&xmax>xmin?left+(numbers[i]-xmin)/(xmax-xmin)*plotW:left+i*plotW/Math.max(n-1,1);
+ const spanDays=stamps&&stamps.length>1?(stamps.at(-1)-stamps[0])/86400000:0;
+ let result='<svg data-macro-svg="1" data-left="'+left+'" data-plot-width="'+plotW+'" data-svg-width="'+W+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" tabindex="0" aria-label="Gráfico con fechas y valores verificables. Toca para inspeccionar observaciones.">';
+ const gridCount=5;
+ for(let j=0;j<gridCount;j++){
+  const val=lower+(upper-lower)*j/(gridCount-1),py=y(val);
+  result+='<line class="grid" x1="'+left+'" y1="'+py.toFixed(2)+'" x2="'+(W-right)+'" y2="'+py.toFixed(2)+'"/>';
+  result+='<text class="axis-text" x="'+(left-9)+'" y="'+(py+4).toFixed(2)+'" text-anchor="end">'+fmt(val,2)+' %</text>';
  }
- const xnums=Array.isArray(xValues)&&xValues.length===n?xValues:(stamps||null);
- const xmin=xnums?Math.min(...xnums):null,xmax=xnums?Math.max(...xnums):null;
- const x=i=>xnums&&xmax>xmin?left+(xnums[i]-xmin)/(xmax-xmin)*plotW:left+i*plotW/Math.max(n-1,1);
- let out='<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="Gráfico de datos históricos con fecha de observación">';
- for(let t=0;t<5;t++){const v=lower+(upper-lower)*t/4,pos=y(v);out+='<line class="grid" x1="'+left+'" y1="'+pos.toFixed(2)+'" x2="'+(width-right)+'" y2="'+pos.toFixed(2)+'"/><text class="axis-text" x="'+(left-7)+'" y="'+(pos+3).toFixed(2)+'" text-anchor="end">'+fmt(v,2)+'%</text>';}
- const positions=[...new Set([0,Math.round((n-1)/3),Math.round((n-1)*2/3),n-1])];
- for(const i of positions){const label=xLabels[i]||(stamps?dates[i].slice(2,7):"");out+='<text class="axis-text" x="'+x(i).toFixed(2)+'" y="'+(height-7)+'" text-anchor="middle">'+label+'</text>';}
- series.forEach((ser,idx)=>{
-   const cls=palette[idx]||["stroke-gold","stroke-cyan","stroke-silver"][idx]||"stroke-purple";
-   let path="",previous=null;
-   ser.values.forEach((v,i)=>{
-     if(!Number.isFinite(v)){previous=null;return;}
-     const xx=x(i).toFixed(2),yy=y(v).toFixed(2);
-     if(previous===null)path+="M"+xx+" "+yy;
-     else if(step)path+=" H"+xx+" V"+yy;
-     else path+=" L"+xx+" "+yy;
-     previous=v;
-   });
-   out+='<path d="'+path+'" class="'+cls+'"/>';
-   const lastIndex=ser.values.findLastIndex(Number.isFinite);
-   if(lastIndex>=0)out+='<circle cx="'+x(lastIndex).toFixed(2)+'" cy="'+y(ser.values[lastIndex]).toFixed(2)+'" r="3.7" fill="'+(ser.color||"#38c9e5")+'"/>';
+ const maxTicks=W<330?3:W<530?4:6;
+ const idxs=[...new Set(Array.from({length:Math.min(maxTicks,n)},(_,j)=>Math.round((n-1)*j/(Math.min(maxTicks,n)-1||1))))];
+ idxs.forEach((i,j)=>{
+  const label=(numbers&&stamps)?macroAxisDate(dates[i],spanDays):(xLabels[i]||"");
+  const xCoord=x(i),anchor=j===0?"start":j===idxs.length-1?"end":"middle";
+  result+='<line x1="'+xCoord.toFixed(2)+'" y1="'+top+'" x2="'+xCoord.toFixed(2)+'" y2="'+(H-bottom)+'" stroke="#547086" stroke-opacity=".17" stroke-width=".8"/>';
+  result+='<text class="axis-text" x="'+xCoord.toFixed(2)+'" y="'+(H-10)+'" text-anchor="'+anchor+'">'+label+'</text>';
  });
- return out+'</svg>';
+ series.forEach((ser,index)=>{
+  const cls=palette[index]||["stroke-gold","stroke-cyan","stroke-silver"][index]||"stroke-purple";
+  let path="",prev=false;
+  ser.values.forEach((val,i)=>{
+   if(!Number.isFinite(val)){prev=false;return;}
+   const cx=x(i).toFixed(2),cy=y(val).toFixed(2);
+   path+=prev?(step?" H"+cx+" V"+cy:" L"+cx+" "+cy):"M"+cx+" "+cy;
+   prev=true;
+  });
+  const color=ser.color||["#f4ba3c","#38c9e5","#d7e3ef"][index];
+  result+='<path d="'+path+'" class="'+cls+'" fill="none" stroke="'+color+'" vector-effect="non-scaling-stroke"/>';
+  const lastIndex=ser.values.findLastIndex(Number.isFinite);
+  if(lastIndex>=0)result+='<circle cx="'+x(lastIndex).toFixed(2)+'" cy="'+y(ser.values[lastIndex]).toFixed(2)+'" r="3.4" fill="'+color+'"/>';
+ });
+ result+='<line class="macro-crosshair" x1="'+left+'" x2="'+left+'" y1="'+top+'" y2="'+(H-bottom)+'"/>';
+ result+='</svg>';
+ if(targetId)macroPlotCache.set(targetId,{series,dates,xLabels,xValues,palette,step,width:W,height:H});
+ return result;
+}
+function attachMacroInspector(hostId){
+ const el=document.getElementById(hostId),plot=macroPlotCache.get(hostId),svg=el?.querySelector("svg[data-macro-svg]");
+ if(!el||!svg||!plot?.series?.length)return;
+ const points=plot.dates?.length?plot.dates.map(d=>Date.parse(d+"T00:00:00Z")):(plot.xValues||plot.series[0].values.map((v,i)=>i));
+ if(!points.length)return;
+ const crosshair=svg.querySelector(".macro-crosshair");
+ const tooltip=document.createElement("div");
+ tooltip.className="macro-hover-tip";tooltip.setAttribute("role","status");
+ el.appendChild(tooltip);
+ const left=Number(svg.dataset.left)||50,plotWidth=Number(svg.dataset.plotWidth)||200;
+ const showAt=(e)=>{
+  const r=svg.getBoundingClientRect();
+  if(!r.width)return;
+  const px=(e.clientX-r.left)/r.width*(Number(svg.dataset.svgWidth)||r.width);
+  const f=Math.min(1,Math.max(0,(px-left)/plotWidth));
+  const target=points[0]+f*(points.at(-1)-points[0]);
+  let low=0,high=points.length-1;
+  while(low<high){const mid=(low+high)>>1;if(points[mid]<target)low=mid+1;else high=mid;}
+  const idx=low>0&&Math.abs(points[low-1]-target)<Math.abs(points[low]-target)?low-1:low;
+  const label=plot.dates?.[idx]||plot.xLabels?.[idx]||"Observación";
+  const row=plot.series.map(ser=>ser.name+" "+(Number.isFinite(ser.values[idx])?fmt(ser.values[idx],2)+" %":"sin dato"));
+  tooltip.textContent=label+" · "+row.join(" · ");
+  tooltip.classList.add("visible");
+  const svgX=left+(points[idx]-points[0])/Math.max(1,points.at(-1)-points[0])*plotWidth;
+  crosshair?.setAttribute("x1",svgX.toFixed(2));
+  crosshair?.setAttribute("x2",svgX.toFixed(2));
+  if(crosshair)crosshair.style.opacity="1";
+ };
+ svg.addEventListener("pointermove",showAt,{passive:true});
+ svg.addEventListener("pointerdown",showAt,{passive:true});
+ svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"){tooltip.classList.remove("visible");if(crosshair)crosshair.style.opacity="0";}});
+ svg.addEventListener("keydown",e=>{
+  if(e.key==="Enter"||e.key===" "){
+   e.preventDefault();
+   const r=svg.getBoundingClientRect();showAt({clientX:r.left+r.width*.75});
+  }
+ });
 }
 /* Official macro source of truth: each FRED CSV replaces (never merges ahead of)
    the initial/published fallback for that exact key after schema validation.
