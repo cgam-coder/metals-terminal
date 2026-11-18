@@ -24,11 +24,27 @@ El navegador consulta las fuentes cuando se abre el terminal o se cambia la temp
 
 No hay feed COMEX o ICE intradía en el sitio. Los cierres de GC, SI, HG y BZ son publicados por una fuente externa y no constituyen precios ejecutables ni settlements oficiales de las bolsas. Las tablas públicas contienen solo las últimas 15 sesiones. El terminal muestra las observaciones disponibles para el periodo seleccionado y avisa si este excede la cobertura; nunca crea datos intermedios. Dispone de instantáneas de respaldo, fechadas, para mantener los últimos cierres verificados ante fallos de consultas. El comparativo principal usa solo estos cierres de futuros en fechas comunes. El gráfico inferior de ratio usa spot XAU/XAG y nunca mezcla los instrumentos.
 
-## Periodos
+## Un único selector de periodos
 
-El control principal de Oro, Plata y Cobre ofrece 1D, 1S, 1M, 3M, 6M, 1A y 5A. Sincroniza las tarjetas GC, SI, DXY, EUR/USD, VIX, BZ y HG y los tres gráficos macroeconómicos. Cada gráfico macro conserva además su selector individual. Los futuros solo contienen hasta 15 sesiones en las fuentes integradas, de modo que 1A o 5A sobre ellos se etiquetan expresamente como incompletos. El comparativo de futuros GC/SI/HG solo presenta sesiones comunes verificadas: 1D exige datos intradía no disponibles, y 1M/3M/6M/1A/5A se marcan como incompletos cuando exceden las fechas disponibles. El ratio spot XAU/XAG separado sí ofrece varios años cuando XAUS los publica.
+La cabecera contiene exclusivamente los botones globales **1D · 1S · 1M · 1A · 5A** junto a **Actualizar todo**. No hay botones de tiempo en cada gráfico. Cambiar la temporalidad modifica a la vez la comparación de futuros GC/SI/HG, su ratio spot XAU/XAG, las siete tarjetas superiores, VIX, bonos Treasury, TIPS/breakeven y Fed/BCE. La vista de curva/histórico Treasury y la presentación de la ratio (valor/cambio porcentual) siguen siendo controles de tipo de gráfico, no rangos temporales.
 
-La curva Treasury permite alternar entre curva por vencimientos (2Y, 10Y, 30Y) y su histórico. Los gráficos de mercado y macro muestran la fecha del dato; el eje temporal macro utiliza fechas reales y los tipos oficiales Fed/BCE se dibujan mediante escalones. Si solo existe una observación para un periodo, no se interpreta como evolución histórica.
+**Actualizar todo** recarga la página y consulta los datos desde el navegador, sin activar workflows periódicos ni un servidor intermedio. No equivale a un feed COMEX tick-by-tick. La fuente de futuros incorporada publica cierres diarios, no la curva 1D intradía.
+
+## Cómo habilitar realmente cinco años de futuros
+
+Los **datos de Treasury, TIPS, tipos Fed/BCE y VIX** ya se solicitan con cobertura de hasta cinco años cuando las fuentes los suministran. DXY, EUR/USD y ratio spot XAUS se consultan en el periodo seleccionado. **Los futuros GC, SI, HG y BZ todavía solo tienen las últimas 15 sesiones en las tablas gratuitas integradas**.
+
+El proveedor publica gratuitamente una descarga CSV diaria de varios años en sus páginas para GC, SI, HG y BZ; sin embargo, la descarga utiliza un ticket temporal individual y no hemos podido verificar un endpoint estable que permita recuperar el CSV completo automáticamente desde GitHub Pages. No se elude la protección del proveedor ni se inventan cotizaciones.
+
+Para habilitar hasta cinco años en los cuatro futuros, existe una importación **manual y opcional** bajo **Fuentes → Histórico de futuros**:
+
+1. Descargar los cuatro archivos **Raw contract prices** usando los botones oficiales del proveedor (enlaces en el panel). Son series de contrato próximo; no mezclar con una versión back-adjusted incompatible.
+2. Seleccionarlos juntos o por separado en **Importar CSV históricos**.
+3. Verificar en el mensaje cuántas sesiones y qué fechas se han incorporado. Se guardan únicamente en el almacenamiento local del navegador; no se envían al repositorio ni a ChatGPT.
+
+La importación comprueba nombres de instrumento, fechas, cierres válidos y discrepancias significativas con el histórico reciente. Si rechaza un CSV, no altera los datos verificados. Las observaciones importadas se conservan entre visitas al sitio desde el mismo navegador, sujeto a sus ajustes de privacidad y almacenamiento. Los 15 cierres recientes que se consultan al abrir se integran respetando fechas y sin inventar datos intermedios. Los periodos que excedan la cobertura siguen señalados como **incompletos**.
+
+**La cobertura automática de cinco años para los cuatro futuros sigue pendiente de un proveedor gratuito y autorizado con API apta para uso desde el navegador.** Esta limitación no impide el selector global, pero sí es relevante antes de interpretar las curvas.
 
 ## Macro oficial
 
@@ -51,6 +67,6 @@ Inflación implícita 10Y = DGS10 − DFII10. Incluye primas de mercado y no es 
 
 ## Límites
 
-No se promete cotización futura en tiempo real. La cobertura de futuros es de 15 sesiones; el VIX es de cierre diario. La comparación GC/SI/HG usa futuros; únicamente la ratio XAU/XAG permanece spot. Ante falta de un dato, el terminal lo marca o conserva un cierre verificado fechado; nunca usa una serie sintética ni hace pasar CFD/spot por futuros.
+No se promete cotización futura en tiempo real. La cobertura inicial automática de futuros es de 15 sesiones, ampliable a cinco años mediante importación local de CSV originales; el VIX es de cierre diario. La comparación GC/SI/HG usa futuros; únicamente la ratio XAU/XAG permanece spot. Ante falta de un dato, el terminal lo marca o conserva un cierre verificado fechado; nunca usa una serie sintética ni hace pasar CFD/spot por futuros.
 
 Referencia visual: REFERENCIA_VISUAL_ACORDADA.png.
