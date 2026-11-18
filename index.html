@@ -70,15 +70,6 @@
 .detail-chart{min-height:0;flex:1;overflow:hidden}
 .detail-chart .native-canvas{min-height:100%}
 .detail-foot{font-size:11px;color:#92a8bc}
-.detail-timeframes{flex:0 0 auto;align-self:stretch;justify-content:center;gap:4px;flex-wrap:wrap;padding:5px}
-.detail-timeframes button{flex:0 1 auto;min-height:32px;min-width:42px}
-@media(max-width:780px){
- .detail-timeframes{justify-content:space-between;gap:3px;padding:4px}
- .detail-timeframes button{flex:1 1 16%;min-width:0;padding:8px 3px}
- .detail-head{gap:8px}
- .detail-head h2{min-width:0;line-height:1.25}
- .detail-actions{flex-shrink:0}
-}
 @media(max-width:780px){.commodity .tv-chart{min-height:170px}.commodities-grid{height:auto;min-height:240px;grid-template-columns:1fr}.commodity{min-height:230px}.detail-box{height:min(780px,94vh);padding:11px}.detail-head h2{font-size:15px}}
 
 /* Featured verified futures closes: two large, date-aware cards with auto-scaled 15-session charts. */
@@ -391,6 +382,16 @@
  .global-market-controls{width:100%;justify-content:flex-end}
  .global-timeframes{flex:1 1 100%;justify-content:space-between}
  .global-timeframes button{flex:1 1 35px;min-width:32px}
+}
+
+.detail-timeframes{flex:0 0 auto;align-self:stretch;justify-content:center;gap:4px;flex-wrap:wrap;padding:5px}
+.detail-timeframes button{flex:0 1 auto;min-height:32px;min-width:42px}
+@media(max-width:780px){
+ .detail-timeframes{justify-content:space-between;gap:3px;padding:4px}
+ .detail-timeframes button{flex:1 1 16%;min-width:0;padding:8px 3px}
+ .detail-head{gap:8px}
+ .detail-head h2{min-width:0;line-height:1.25}
+ .detail-actions{flex-shrink:0}
 }
 
 
