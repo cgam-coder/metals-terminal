@@ -1,0 +1,46 @@
+name: Publicar Metals Terminal
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'data/**'
+      - '.github/workflows/pages.yml'
+  workflow_run:
+    workflows: ['Actualizar datos macro oficiales']
+    types: [completed]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: metals-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Obtener versión más reciente de main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Preparar sitio estático
+        run: |
+          mkdir -p _site/data
+          cp index.html _site/index.html
+          cp data/series.json _site/data/series.json
+          touch _site/.nojekyll
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Subir sitio
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Desplegar
+        id: deployment
+        uses: actions/deploy-pages@v4
