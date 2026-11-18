@@ -1156,10 +1156,15 @@ function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],pal
    explicitly disclosed in each panel. Never pad missing Treasury dates. */
 const MACRO_SERIES=["DGS2","DGS10","DGS30","DFII10","DFEDTARU","ECBDFR"];
 const macroOfficialKeys=new Set();
+const macroArchiveKeys=new Set();
 const macroLastError=new Map();
 function macroSourceLabel(keys){
- const fresh=keys.filter(k=>macroOfficialKeys.has(k));
- return fresh.length===keys.length?"FRED directo":fresh.length?("FRED "+fresh.length+"/"+keys.length+" · respaldo parcial"):"instantánea de respaldo";
+ const direct=keys.filter(k=>macroOfficialKeys.has(k)).length;
+ const published=keys.filter(k=>macroArchiveKeys.has(k)).length;
+ if(direct===keys.length)return "FRED directo";
+ if(direct+published===keys.length)return direct?"FRED directo + histórico publicado":"FRED · histórico publicado";
+ if(direct||published)return "FRED "+(direct+published)+"/"+keys.length+" · respaldo parcial";
+ return "instantánea corta de emergencia";
 }
 function macroLastDate(keys){
  const dates=keys.map(k=>v(macro,k).at(-1)?.date).filter(Boolean).sort();
@@ -1357,7 +1362,8 @@ function renderMacro(){
  if(!macro?.series)return;
  const dates=MACRO_SERIES.map(k=>v(macro,k).at(-1)?.date).filter(Boolean).sort();
  const lastDate=dates.at(-1),loaded=macroOfficialKeys.size;
- $("#stamp").textContent="Macro: "+(loaded===6?"FRED oficial":loaded?"FRED "+loaded+"/6 + respaldo":"instantánea")+" · "+prettyDate(lastDate||macro.updated);
+ const archived=macroArchiveKeys.size;
+ $("#stamp").textContent="Macro: "+(loaded===6?"FRED directo · 5A":archived===6?"FRED histórico publicado · 5A":loaded||archived?"FRED parcial · "+(loaded+archived)+"/6":"respaldo corto")+" · "+prettyDate(lastDate||macro.updated);
  renderCurve();renderReals();renderPolicy();
 }
 function parseFredCsv(key,raw){
@@ -1408,19 +1414,48 @@ async function fetchMacroOfficial(){
  }else console.warn("FRED inaccesible: la web usa instantáneas con fechas y origen explícitos.");
  renderMacro();
 }
+
+function validateMacroArchive(candidate){
+ if(!candidate?.series||!candidate?.source)throw Error("Archivo histórico sin estructura de series");
+ const nowDate=new Date(),oldest=new Date(nowDate);
+ oldest.setUTCFullYear(oldest.getUTCFullYear()-5);
+ oldest.setUTCDate(oldest.getUTCDate()+40); // 5Y window plus a small coverage tolerance
+ const earliestLimit=oldest.toISOString().slice(0,10);
+ for(const key of MACRO_SERIES){
+  const rows=candidate.series[key]||[];
+  if(!Array.isArray(rows)||rows.length<1000)throw Error(key+": menos de 1000 observaciones");
+  const first=rows[0]?.date,last=rows.at(-1)?.date;
+  if(!first||!last||first>earliestLimit)throw Error(key+": la serie no alcanza cinco años");
+  if(last>new Date(Date.now()+86400000).toISOString().slice(0,10))throw Error(key+": fecha futura no válida");
+  for(let i=0;i<rows.length;i++){
+   const item=rows[i];
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(item.date||"")||!Number.isFinite(item.value)||item.value< -20||item.value>50||(i>0&&item.date<=rows[i-1].date))throw Error(key+": filas no ordenadas o no válidas");
+  }
+ }
+ return candidate;
+}
 async function bootMacro(){
+ let emergency=null;
  try{
-   const seed=document.getElementById("initial-macro");
-   if(seed){const candidate=JSON.parse(seed.textContent);if(candidate?.series){macro=candidate;renderMacro();}}
- }catch(e){console.warn("Instantánea integrada no válida",e);}
+  const seed=document.getElementById("initial-macro");
+  if(seed){const candidate=JSON.parse(seed.textContent);if(candidate?.series)emergency=candidate;}
+ }catch(e){console.warn("Instantánea de emergencia integrada inválida",e);}
+ // The mobile browser may block cross-site fred.stlouisfed.org. Always load
+ // a complete 5-year, same-origin, verified historical FRED snapshot FIRST.
  try{
-   const res=await fetch("data/series.json",{cache:"no-store"});
-   if(!res.ok)throw Error("HTTP "+res.status);
-   const data=await res.json();
-   if(!data?.series||!data.source)throw Error("Instantánea externa no válida");
-   if(macroOfficialKeys.size===0){macro=data;renderMacro();}
- }catch(e){console.warn("Instantánea publicada no disponible",e);}
- if(!macro)macro={source:"respaldo no disponible",series:{}};
+  const res=await fetch("data/series.json?macro=fred5y-20261118",{cache:"no-store",credentials:"same-origin",signal:AbortSignal.timeout(18000)});
+  if(!res.ok)throw Error("HTTP "+res.status);
+  const checked=validateMacroArchive(await res.json());
+  macro=checked;
+  MACRO_SERIES.forEach(key=>macroArchiveKeys.add(key));
+  renderMacro();
+ }catch(e){
+  console.warn("Histórico FRED completo no disponible, se etiqueta emergencia",e);
+  macro=emergency||{source:"respaldo no disponible",series:{}};
+  renderMacro();
+ }
+ // An authorized direct FRED response may overwrite the same-origin copy
+ // only per-series when it passes the official CSV schema and date checks.
  await fetchMacroOfficial();
 }
 
