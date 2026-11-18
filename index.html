@@ -384,6 +384,22 @@
  .global-timeframes button{flex:1 1 35px;min-width:32px}
 }
 
+
+/* Macro chart diagnostics visible to the user: period-specific moves, not only last rates. */
+.macro-period-bar{flex:0 0 auto;min-height:20px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+ color:#dce9f1;font-size:10px;line-height:1.35;margin:4px 0 6px;padding:4px 7px;
+ background:#112735;border:1px solid #31546a;border-radius:6px;font-variant-numeric:tabular-nums}
+.macro-period-bar .macro-period-tag{font-weight:800;background:#664e1a;color:#ffdf8a;
+ border:1px solid #94712d;border-radius:4px;padding:2px 5px;margin-right:3px}
+.macro-period-bar strong{font-weight:750;color:#eaf6fc}
+.macro-period-bar .macro-up{color:#51dfad}
+.macro-period-bar .macro-down{color:#ff9097}
+.macro-period-bar .macro-flat{color:#bacbd6}
+.curve-panel .chart-container,.real-panel .chart-container,.policy-panel .chart-container{min-height:66px}
+.curve-panel .yield-note{margin-top:auto}
+.real-panel #real-dates,.policy-panel #policy-dates{font-size:9px;line-height:1.3}
+@media(max-width:900px){.macro-period-bar{font-size:11px}}
+
 </style>
 </head>
 <body>
@@ -408,7 +424,7 @@
 <main class="dashboard">
   <section class="panel curve-panel">
     <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button></div></div>
-    <div class="panel-caption" id="curve-caption">Comparación de rendimientos en dos fechas · % anual</div>
+    <div class="panel-caption" id="curve-caption">Histórico Treasury · % anual</div><div id="curve-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación del periodo…</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
     <div class="curve-bottom"><div class="panel-title" style="font-size:14px">Rendimientos del Treasury</div><div class="mini-stats" id="yield-stats"><div>2 años</div><div>—</div><div>10 años</div><div>—</div><div>30 años</div><div>—</div><div>Spread 10Y − 2Y</div><div>—</div></div></div>
@@ -425,14 +441,14 @@
   <section class="panel policy-panel">
     <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
-    <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div><div id="policy-dates" class="macro-caption"></div>
+    <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div><div id="policy-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación de los tipos oficiales…</div><div id="policy-dates" class="macro-caption"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
     <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
-    <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div><div id="real-dates" class="macro-caption"></div>
+    <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div><div id="real-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación real e implícita…</div><div id="real-dates" class="macro-caption"></div>
   </section>
 
 </main>
@@ -1017,6 +1033,8 @@ function renderNative(){
  document.getElementById("market-stamp").textContent="Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
 }
 async function fetchNative(period){
+ if(!Object.hasOwn(DISPLAY_PERIOD_LABEL,period))period="1mo";
+ persistGlobalPeriod(period);
  const token=++nativeRequest;nativePeriod=period;nativeData={};
  syncMacroToMaster(period);
  renderFuturesCards();
@@ -1077,10 +1095,23 @@ async function loadCboeVix(){
  }
 }
 
+function getRequestedGlobalPeriod(){
+ try{
+  const query=new URLSearchParams(location.search).get("period");
+  return query&&Object.hasOwn(DISPLAY_PERIOD_LABEL,query)?query:"1mo";
+ }catch(e){return "1mo";}
+}
+function persistGlobalPeriod(period){
+ try{
+  const url=new URL(location.href);
+  url.searchParams.set("period",period);
+  history.replaceState(null,"",url.pathname+url.search+url.hash);
+ }catch(e){console.warn("No se pudo guardar el periodo en la URL",e);}
+}
 function bootMarket(){
  loadFuturesCards();
  loadCboeVix();
- fetchNative("1mo");
+ fetchNative(getRequestedGlobalPeriod());
 }
 
 function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],palette=[],step=false,dates=null,xValues=null}){
@@ -1194,6 +1225,19 @@ function macroCoverageNotice(rows,what){
 function macroGraphMessage(label,source,previous=null){
  return '<div class="native-error">'+label+'<div style="font-size:11px;margin-top:8px">Fuente: '+source+(previous?'; último dato '+previous:"")+'</div></div>';
 }
+
+function deltaPp(a,b){return Number.isFinite(a)&&Number.isFinite(b)?a-b:null;}
+function deltaMarkup(delta){
+ if(!Number.isFinite(delta))return '<span class="macro-flat">—</span>';
+ const css=delta>0?"macro-up":delta<0?"macro-down":"macro-flat";
+ return '<strong class="'+css+'">'+(delta>0?"+":"")+fmt(delta,2)+' pp</strong>';
+}
+function macroPeriodSummary(id,period,fragments){
+ const el=document.getElementById(id);
+ if(!el)return;
+ el.innerHTML='<span class="macro-period-tag">'+period+'</span>'+fragments.join('<span style="color:#6b8ea5;margin:0 1px">|</span>');
+ el.setAttribute("data-macro-period",period);
+}
 function renderCurve(){
  const keys=["DGS2","DGS10","DGS30"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
  const rows=macroWindowRows(all,"curve"),now=rows.at(-1),then=rows[0];
@@ -1202,9 +1246,16 @@ function renderCurve(){
    $("#curve-graph").innerHTML=macroGraphMessage("Sin rendimientos nominales comunes en "+period+".",source,all.at(-1)?.date);
    $("#curve-caption").textContent="Treasury 2Y/10Y/30Y · "+source+" · sin datos en "+period;
    $("#yield-stamp").textContent="Tesoro de EE. UU. · "+source;
+   macroPeriodSummary("curve-range-summary",period,["No hay cierres verificables en este intervalo"]);
    return;
  }
  $("#yield-stamp").textContent="Treasury · "+source+" · último "+prettyDate(now.date);
+ macroPeriodSummary("curve-range-summary",period,[
+   rows.length+" cierres",
+   "Δ 2Y "+deltaMarkup(deltaPp(now.DGS2,then.DGS2)),
+   "Δ 10Y "+deltaMarkup(deltaPp(now.DGS10,then.DGS10)),
+   "Δ 30Y "+deltaMarkup(deltaPp(now.DGS30,then.DGS30))
+ ]);
  $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
  $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
  $("#curve-caption").textContent=(curveHistorical?"Histórico real 2Y/10Y/30Y":"Curva 2Y/10Y/30Y, inicio y último")+" · "+period+" · "+macroCoverageNotice(rows,"curve");
@@ -1236,11 +1287,18 @@ function renderReals(){
    $("#real-graph").innerHTML=macroGraphMessage("Sin rendimientos nominales y reales coincidentes en "+period+".",source,all.at(-1)?.date);
    $("#tips-value").textContent="—";$("#breakeven-value").textContent="—";
    $("#real-dates").textContent=period+" · "+source+" · sin datos coincidentes";
+   macroPeriodSummary("real-range-summary",period,["No hay cierres TIPS/Treasury coincidentes"]);
    return;
  }
  $("#tips-value").textContent=fmt(now.DFII10)+" %";
  $("#breakeven-value").textContent=fmt(now.DGS10-now.DFII10)+" %";
  $("#real-dates").textContent=period+" · "+source+" · "+macroCoverageNotice(rows,"reals");
+ const firstReal=rows[0],breakeven=r=>r.DGS10-r.DFII10;
+ macroPeriodSummary("real-range-summary",period,[
+   rows.length+" cierres",
+   "Δ TIPS "+deltaMarkup(deltaPp(now.DFII10,firstReal.DFII10)),
+   "Δ implícita "+deltaMarkup(deltaPp(breakeven(now),breakeven(firstReal)))
+ ]);
  if(rows.length<2){
    $("#real-graph").innerHTML=macroGraphMessage("Un único cierre TIPS/Treasury ("+prettyDate(now.date)+"). No existe una evolución temporal en "+period+".",source);
    return;
@@ -1258,6 +1316,7 @@ function renderPolicy(){
  if(!latestF||!latestB){
    $("#policy-graph").innerHTML=macroGraphMessage("Tipos Fed/BCE no disponibles en el origen.",source);
    $("#policy-dates").textContent="Faltan valores verificables de Fed o BCE";
+   macroPeriodSummary("policy-range-summary",period,["Tipos no disponibles"]);
    return;
  }
  const end=latestF.date>latestB.date?latestF.date:latestB.date,start=windowStart(end,period);
@@ -1277,11 +1336,17 @@ function renderPolicy(){
  if(ff.some(r=>!Number.isFinite(r.value))||bb.some(r=>!Number.isFinite(r.value))){
    $("#policy-graph").innerHTML=macroGraphMessage("No existe una base Fed/BCE validada para todo "+period+". No se extienden valores desconocidos.",source);
    $("#policy-dates").textContent=period+" · "+source+" · datos incompletos";
+   macroPeriodSummary("policy-range-summary",period,["Histórico de tipos incompleto"]);
    return;
  }
  // Flat lines are genuine when the official target rate did not change.
  const changes=(values)=>values.reduce((count,el,i)=>count+(i>0&&el.value!==values[i-1].value?1:0),0);
  const changeCount=changes(ff)+changes(bb);
+ macroPeriodSummary("policy-range-summary",period,[
+   changeCount+" cambios",
+   "Δ Fed "+deltaMarkup(deltaPp(ff.at(-1).value,ff[0].value)),
+   "Δ BCE "+deltaMarkup(deltaPp(bb.at(-1).value,bb[0].value))
+ ]);
  $("#policy-graph").innerHTML=svgPlot({series:[
    {name:"Fed techo objetivo",values:ff.map(r=>r.value),color:"#f4ba3c"},
    {name:"BCE facilidad depósito",values:bb.map(r=>r.value),color:"#38c9e5"}
@@ -1413,7 +1478,7 @@ function init(){bootMarket();bootMacro();$('#futures-csv-upload').addEventListen
  const b=event.target.closest('button[data-global-period]');
  if(b)fetchNative(b.dataset.globalPeriod);
 });
-$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
