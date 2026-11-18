@@ -888,60 +888,86 @@ function metricCoversWindow(all,period,kind){
  const span=all.length>1?(all.at(-1).t-all[0].t)/86400:0;
  return span>=days*.7;
 }
+
+/* All seven quote cards share responsive CSS-pixel chart geometry, readable
+   calendar labels and real-closing-value touch inspection. */
 function drawFuturesCloseTile(key,rows,note){
  const conf=FUTURES_PUBLIC[key],el=document.getElementById("q-"+key);
  if(!conf||!el)return;
- const full=(rows||[]).filter(p=>Number.isFinite(p.c)&&Number.isFinite(p.t)).sort((a,b)=>a.t-b.t);
+ const full=(rows||[]).filter(p=>Number.isFinite(p.c)&&Number.isFinite(p.t)&&p.c>0).sort((a,b)=>a.t-b.t);
  if(full.length<2){
-   el.innerHTML='<div class="metal-error">Sin datos verificables para '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
+   el.innerHTML='<div class="metal-error">Sin datos verificables de '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
    return;
  }
  const actual=pickPeriodRows(full,nativePeriod,conf.kind);
  const recent=actual.length>=2?actual:full.slice(-2);
- const p=recent.at(-1),prev=full.at(-2),first=recent[0];
- const delta=conf.kind==="reference"?(p.c/first.c-1)*100:(p.c/prev.c-1)*100;
- const label=conf.kind==="reference"?"en periodo":"por sesión";
+ const last=recent.at(-1),prior=full.at(-2),first=recent[0];
+ const delta=conf.kind==="reference"?(last.c/first.c-1)*100:(last.c/prior.c-1)*100;
  const sign=n=>n>=0?"+":"";
- const color=conf.accent,W=360,H=104,L=9,R=9,T=8,B=17;
- const sampled=recent.length>220?recent.filter((z,i)=>i===0||i===recent.length-1||i%Math.ceil(recent.length/215)===0):recent;
- const values=recent.map(z=>z.c),vmin=Math.min(...values),vmax=Math.max(...values),diff=Math.max(vmax-vmin,p.c*.0005);
- const low=vmin-diff*.13,high=vmax+diff*.13;
- const firstT=sampled[0].t,lastT=sampled.at(-1).t,td=Math.max(1,lastT-firstT);
- const xx=z=>L+(W-L-R)*(z.t-firstT)/td;
- const yy=v=>T+(high-v)/(high-low)*(H-T-B);
- const xy=sampled.map(z=>[xx(z),yy(z.c)]);
- const line=xy.map(([x,y],i)=>(i?"L":"M")+x.toFixed(2)+","+y.toFixed(2)).join(" ");
- const fill=line+"L"+xy.at(-1)[0].toFixed(2)+","+(H-B)+"L"+xy[0][0].toFixed(2)+","+(H-B)+"Z";
- const id="futurefill-"+key;
- const fmtDate=d=>new Date(d+"T12:00:00Z").toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"2-digit",timeZone:"UTC"});
+ const meaning=conf.kind==="reference"?"en periodo":"por sesión";
+ const observed=conf.kind==="reference"?"Última obs.":"Cierre";
  const displayDate=z=>z.date||new Date(z.t*1000).toISOString().slice(0,10);
- const asOf=displayDate(p),observation=conf.kind==="reference"?"Última obs.":"Cierre";
- const caption=conf.kind==="reference"?"Referencia indicativa, no precio ejecutable":conf.kind==="vix"?"Cboe · cierre diario, no intradía":"Futuro próximo · cierre de sesión, no intradía";
- const coverage=!metricCoversWindow(full,nativePeriod,conf.kind)?"Histórico: "+full.length+" sesiones; "+DISPLAY_PERIOD_LABEL[nativePeriod]+" incompleto":null;
- const usedNote=coverage||note||caption;
- const svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Tendencia verificada de '+conf.code+' en '+DISPLAY_PERIOD_LABEL[nativePeriod]+'"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="100%" stop-color="'+color+'" stop-opacity=".01"/></linearGradient></defs>'+
- '<path d="M'+L+','+((T+H-B)/2)+'H'+(W-R)+'" stroke="#365266" stroke-dasharray="3 5" opacity=".65"/>'+
- '<path d="'+fill+'" fill="url(#'+id+')"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="3.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>'+
- '<circle cx="'+xy.at(-1)[0]+'" cy="'+xy.at(-1)[1]+'" r="4.2" fill="'+color+'" stroke="#071018" stroke-width="1.4"/>'+
- '<line data-crosshair x1="0" x2="0" y1="'+T+'" y2="'+(H-B)+'" stroke="#89a5b3" stroke-dasharray="4 4" opacity="0"/>'+
- '<text class="metal-marker" x="'+L+'" y="'+(H-3)+'">'+fmtDate(displayDate(recent[0]))+'</text>'+
- '<text class="metal-marker" x="'+(W-R)+'" y="'+(H-3)+'" text-anchor="end">'+fmtDate(asOf)+'</text></svg>';
- const minPrice=Math.min(...values),maxPrice=Math.max(...values),total=(p.c/first.c-1)*100;
- el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(p.c,conf.decimals)+'</strong><span class="metal-day-change '+(delta>=0?'pos':'neg')+'">'+sign(delta)+fmt(delta,2)+' % <span style="font-weight:450;color:#9eafbd">/ '+label+'</span></span></div>'+
- '<div class="metal-timestamp"><span>'+observation+' '+fmtDate(asOf)+'</span><span class="delayed" title="'+usedNote+'">'+usedNote+'</span></div>'+
- '<div class="metal-spark-outer">'+svg+'<div class="metal-hover">Último '+fmt(p.c,conf.decimals)+'</div></div>'+
- '<div class="metal-scale"><span>Mín: '+fmt(minPrice,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %</span><span>Máx: '+fmt(maxPrice,conf.decimals)+'</span></div></div>';
- const plot=el.querySelector(".metal-spark-outer"),cross=plot.querySelector("[data-crosshair]"),tip=plot.querySelector(".metal-hover");
- plot.addEventListener("pointermove",event=>{
-   const rect=plot.getBoundingClientRect(),time=Math.max(0,Math.min(1,(event.clientX-rect.left)/Math.max(1,rect.width)));
-   const timestamp=firstT+time*td;
-   let near=sampled[0];
-   for(const z of sampled)if(Math.abs(z.t-timestamp)<Math.abs(near.t-timestamp))near=z;
-   tip.textContent=fmtDate(displayDate(near))+" · "+fmt(near.c,conf.decimals);
-   cross.setAttribute("x1",xx(near));cross.setAttribute("x2",xx(near));cross.setAttribute("opacity","1");
- });
- plot.addEventListener("pointerleave",()=>cross.setAttribute("opacity","0"));
- el.title=conf.code+" · "+caption+" · última observación "+asOf+" · "+usedNote;
+ const dateLabel=date=>new Date(date+"T12:00:00Z").toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"2-digit",timeZone:"UTC"});
+ const asOf=displayDate(last);
+ const sourceNote=note||"Fuente verificada · cierre diario";
+ const coverage=!metricCoversWindow(full,nativePeriod,conf.kind)?"Histórico: "+full.length+" sesiones · "+DISPLAY_PERIOD_LABEL[nativePeriod]+" incompleto":null;
+ const usedNote=coverage||sourceNote;
+ const geometry=el.getBoundingClientRect(),W=Math.max(120,Math.round(geometry.width||270));
+ const H=Math.max(82,Math.min(140,Math.round(geometry.height||155)-48));
+ const left=W>=260?46:8,right=W>=260?10:7,top=10,bottom=22;
+ const availableWidth=Math.max(40,W-left-right),availableHeight=Math.max(35,H-top-bottom);
+ const dates=recent.map(z=>z.t),indexes=marketSampleIndexes(dates),sampled=indexes.map(i=>recent[i]);
+ const values=recent.map(z=>z.c),min=Math.min(...values),max=Math.max(...values);
+ const spread=Math.max(max-min,Math.abs(last.c)*.0005),lo=min-spread*.12,hi=max+spread*.12;
+ const startT=sampled[0].t,endT=sampled.at(-1).t,span=Math.max(1,endT-startT);
+ const X=z=>left+(z.t-startT)/span*availableWidth;
+ const Y=z=>top+(hi-z)/(hi-lo)*availableHeight;
+ const coords=sampled.map(z=>[X(z).toFixed(2),Y(z.c).toFixed(2)]);
+ const path=coords.map(([x,y],i)=>(i?"L":"M")+x+" "+y).join(" ");
+ const area=path+" L"+coords.at(-1)[0]+" "+(H-bottom)+" L"+coords[0][0]+" "+(H-bottom)+" Z";
+ const gradientId="market-gradient-"+key;
+ let svg='<svg data-market-tile-svg="1" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="Cierres históricos de '+conf.code+' en '+DISPLAY_PERIOD_LABEL[nativePeriod]+'. Toca para inspeccionar las fechas.">';
+ svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+conf.accent+'" stop-opacity=".26"/><stop offset="100%" stop-color="'+conf.accent+'" stop-opacity=".015"/></linearGradient></defs>';
+ for(let i=0;i<3;i++){
+   const val=lo+(hi-lo)*i/2,cy=Y(val);
+   svg+='<line class="market-grid" x1="'+left+'" x2="'+(W-right)+'" y1="'+cy.toFixed(2)+'" y2="'+cy.toFixed(2)+'"/>';
+   if(W>=260)svg+='<text class="market-axis" x="'+(left-6)+'" y="'+(cy+3).toFixed(2)+'" text-anchor="end">'+fmt(val,Math.min(conf.decimals,2))+'</text>';
+ }
+ const compact=W<208;
+ const dateSpan=endT-startT;
+ const xTickCount=compact?2:W<340?3:4;
+ for(let j=0;j<xTickCount;j++){
+   const fraction=j/(xTickCount-1),ts=startT+dateSpan*fraction,x=left+availableWidth*fraction;
+   const lbl=marketAxisLabel(ts,dateSpan,nativePeriod);
+   svg+='<text class="market-axis" x="'+x.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(j===0?"start":j===xTickCount-1?"end":"middle")+'">'+lbl+'</text>';
+ }
+ svg+='<path d="'+area+'" fill="url(#'+gradientId+')"/>';
+ svg+='<path d="'+path+'" stroke="'+conf.accent+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" fill="none"/>';
+ svg+='<circle cx="'+coords.at(-1)[0]+'" cy="'+coords.at(-1)[1]+'" r="3.4" fill="'+conf.accent+'" stroke="#061622" stroke-width="1"/>';
+ svg+='<line data-crosshair x1="'+left+'" x2="'+left+'" y1="'+top+'" y2="'+(H-bottom)+'" stroke="#b2d9ec" stroke-dasharray="3 3" stroke-width="1" opacity="0" vector-effect="non-scaling-stroke"/></svg>';
+ const total=(last.c/first.c-1)*100;
+ el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(last.c,conf.decimals)+'</strong><span class="metal-day-change '+(delta>=0?"pos":"neg")+'">'+sign(delta)+fmt(delta,2)+' % <span style="font-weight:450;color:#9eafbd">/ '+meaning+'</span></span></div>'+
+ '<div class="metal-timestamp"><span>'+observed+' '+dateLabel(asOf)+'</span><span class="delayed" title="'+usedNote+'">'+usedNote+'</span></div>'+
+ '<div class="metal-spark-outer">'+svg+'<div class="metal-hover" role="status" aria-live="polite"></div></div>'+
+ '<div class="metal-scale"><span>Mín: '+fmt(min,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %</span><span>Máx: '+fmt(max,conf.decimals)+'</span></div></div>';
+ const plot=el.querySelector(".metal-spark-outer"),shape=plot.querySelector("svg[data-market-tile-svg]"),cross=plot.querySelector("[data-crosshair]"),tip=plot.querySelector(".metal-hover");
+ const inspect=(event)=>{
+   const rect=shape.getBoundingClientRect();if(!rect.width)return;
+   const nx=(event.clientX-rect.left)/rect.width*W;
+   const target=startT+Math.max(0,Math.min(1,(nx-left)/availableWidth))*span;
+   let l=0,h=sampled.length-1;
+   while(l<h){const m=(l+h)>>1;if(sampled[m].t<target)l=m+1;else h=m;}
+   const j=l>0&&Math.abs(sampled[l-1].t-target)<Math.abs(sampled[l].t-target)?l-1:l;
+   const value=sampled[j],x=X(value);
+   tip.textContent=dateLabel(displayDate(value))+" · "+fmt(value.c,conf.decimals);
+   tip.classList.add("visible");
+   cross.setAttribute("x1",x.toFixed(2));cross.setAttribute("x2",x.toFixed(2));cross.setAttribute("opacity","1");
+ };
+ shape.addEventListener("pointermove",inspect,{passive:true});
+ shape.addEventListener("pointerdown",inspect,{passive:true});
+ shape.addEventListener("pointerleave",ev=>{if(ev.pointerType==="mouse"){tip.classList.remove("visible");cross.setAttribute("opacity","0");}});
+ shape.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();const r=shape.getBoundingClientRect();inspect({clientX:r.left+r.width*.7});}});
+ el.title=conf.code+" · "+usedNote+" · última fecha: "+asOf;
 }
 function renderFuturesCards(){
  for(const key of FUTURE_KEYS){
