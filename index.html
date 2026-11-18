@@ -266,6 +266,7 @@ async function fetchNative(period){
  if(token===nativeRequest)renderNative();
 }
 
+let cboeHistory=[];let detailKind=null;let detailWindow='1A';
 async function loadCboeVix(){
  // Cboe publishes daily historical VIX closes as a downloadable public CSV.
  // This does not provide real-time VIX index streaming.
@@ -279,7 +280,7 @@ async function loadCboeVix(){
    const iDate=header.indexOf("DATE"),iClose=header.indexOf("CLOSE");
    if(iDate<0||iClose<0)throw Error("Esquema Cboe desconocido");
    const pts=[];
-   for(const line of lines.slice(-350)){
+   for(const line of lines.slice(-1800)){
      const cols=line.replace(/"/g,"").split(",");
      const dm=(cols[iDate]||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
      if(!dm)continue;
@@ -288,6 +289,7 @@ async function loadCboeVix(){
      pts.push({t,c:close});
    }
    pts.sort((a,b)=>a.t-b.t);
+   cboeHistory=pts;
    if(pts.length<4)throw Error("Histórico reciente insuficiente");
    const last=pts.at(-1),prev=pts.at(-2),change=(last.c/prev.c-1)*100;
    const spark=pts.slice(-30),values=spark.map(p=>p.c),low=Math.min(...values),span=Math.max(.001,Math.max(...values)-low);
@@ -295,6 +297,7 @@ async function loadCboeVix(){
    const node=document.getElementById(id),sign=change>=0?"+":"";
    node.innerHTML='<div class="native-card"><div class="native-num">'+fmt(last.c,2)+'</div><div class="native-meta"><span class="'+(change>=0?"native-positive":"native-negative")+'">'+sign+fmt(change,2)+' % · sesión</span><span>Cboe</span></div><svg class="native-spark" viewBox="0 0 100 22" preserveAspectRatio="none"><polyline points="'+coords+'" stroke="#fb6571" stroke-width="1.7" fill="none" vector-effect="non-scaling-stroke"/></svg></div>';
    node.title="VIX oficial Cboe · cierre diario "+new Date(last.t*1000).toLocaleDateString("es-ES",{timeZone:"UTC"})+" · NO tiempo real";
+   if(detailKind==='vix'&&!document.getElementById('detail-overlay').hidden)drawMarketDetail();
  }catch(e){
    console.warn("Cboe VIX diario no disponible",e);
    restrictedCard("vix",id);
@@ -303,8 +306,8 @@ async function loadCboeVix(){
 
 function bootMarket(){
  restrictedCard("vix","q-vix");
- restrictedCard("copper","q-copper");
- quote("q-brent",MARKET.brent);
+ advanced("chart-copper","OANDA:XCUUSD",[],"1M","3");
+ advanced("chart-brent","TVC:UKOIL",[],"1M","3");
  fetchNative("1mo");
  loadCboeVix();
 }
@@ -429,7 +432,48 @@ async function bootMacro(){
  if(!macro)macro={source:'FRED',series:{}};
  await fetchMacroOfficial();
 }
-function init(){bootMarket();bootMacro();$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+
+function openMarketDetail(kind){
+ detailKind=kind;detailWindow='1A';
+ const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title'),controls=document.getElementById('detail-ranges');
+ root.hidden=false;document.body.style.overflow="hidden";
+ const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · CFD XCUUSD · OANDA",brent:"Brent · CFD UKOIL · TVC"};
+ title.textContent=names[kind]||"Gráfico de mercado";
+ controls.hidden=kind!=="vix";
+ controls.querySelectorAll('button').forEach(x=>x.classList.toggle("active",x.dataset.detailRange==="1A"));
+ drawMarketDetail();
+}
+function closeMarketDetail(){
+ const el=document.getElementById('detail-overlay');el.hidden=true;
+ document.getElementById('detail-chart').innerHTML='';
+ document.body.style.overflow='';detailKind=null;
+}
+function drawMarketDetail(){
+ const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
+ if(detailKind==="vix"){
+   if(cboeHistory.length<3){host.innerHTML='<div class="native-error">VIX aún no disponible: descargando histórico oficial de Cboe.</div>';return;}
+   const last=cboeHistory.at(-1),end=new Date(last.t*1000),start=new Date(end);
+   if(detailWindow==="1M")start.setUTCMonth(start.getUTCMonth()-1);
+   else start.setUTCFullYear(start.getUTCFullYear()-(detailWindow==="5A"?5:1));
+   const pts=cboeHistory.filter(p=>p.t>=start.getTime()/1000);
+   nativeChart("detail-chart",[{label:"VIX · cierre",color:"#fb6571",points:pts.map(x=>x.c)}],pts.map(p=>p.t),"",'<span>Fuente Cboe · VIX de cierre diario, no dato intradía.</span>');
+   foot.textContent='Cboe · '+pts.length+' cierres históricos · última sesión '+new Date(last.t*1000).toLocaleDateString('es-ES',{timeZone:'UTC'})+' · no feed de tiempo real';
+ }else if(detailKind==="ratio"){
+   const obs=alignMarket();
+   if(obs.length<3){host.innerHTML='<div class="native-error">Ratio no disponible sin datos XAU y XAG con fechas comparables.</div>';return;}
+   const ratio=obs.map(p=>p.g/p.s),percent=ratioDisplay==="percent";
+   nativeChart("detail-chart",[{label:percent?"Δ ratio":"XAU/XAG",color:"#38c9e5",points:percent?ratio.map(r=>(r/ratio[0]-1)*100):ratio}],obs.map(p=>p.t),percent?"%":"",'<span>Observaciones de referencia XAUS · '+nativePeriod+' · ratio no basada en futuros GC/SI</span>');
+   foot.textContent='Fuente XAUS · escala propia y seguimiento de valores al pasar el cursor. Cambia el rango en el panel principal.';
+ }else if(detailKind==="copper"){
+   advanced("detail-chart","OANDA:XCUUSD",[],"12M","3");
+   foot.textContent='OANDA · CFD de cobre XCUUSD · diferente del futuro COMEX HG. Herramientas temporales dentro del gráfico.';
+ }else if(detailKind==="brent"){
+   advanced("detail-chart","TVC:UKOIL",[],"12M","3");
+   foot.textContent='TVC · CFD sobre Brent UKOIL · diferente del futuro ICE BRN1!. Herramientas temporales dentro del gráfico.';
+ }
+}
+
+function init(){bootMarket();bootMacro();document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});$('#detail-ranges').addEventListener('click',e=>{const b=e.target.closest('button[data-detail-range]');if(!b)return;detailWindow=b.dataset.detailRange;$('#detail-ranges').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));drawMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
