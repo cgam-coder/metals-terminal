@@ -1101,7 +1101,7 @@ function drawFuturesCloseTile(key,rows,note){
  const path=coords.map(([x,y],i)=>(i?"L":"M")+x+" "+y).join(" ");
  const area=path+" L"+coords.at(-1)[0]+" "+(H-bottom)+" L"+coords[0][0]+" "+(H-bottom)+" Z";
  const gradientId="market-gradient-"+key;
- let svg='<svg data-market-tile-svg="1" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="Cierres históricos de '+conf.code+' en '+DISPLAY_PERIOD_LABEL[nativePeriod]+'. Toca para inspeccionar las fechas.">';
+ let svg='<svg data-market-tile-svg="1" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="Cierres históricos de '+conf.code+' en '+activePeriodLabel()+'. Toca para inspeccionar las fechas.">';
  svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+conf.accent+'" stop-opacity=".26"/><stop offset="100%" stop-color="'+conf.accent+'" stop-opacity=".015"/></linearGradient></defs>';
  for(let i=0;i<3;i++){
    const val=lo+(hi-lo)*i/2,cy=Y(val);
@@ -1497,7 +1497,7 @@ function renderFuturesComparison(){
    return {label:meta.name,color:meta.color,points:selected.map(date=>(m.get(date).c/base-1)*100)};
  });
  const spanDays=(Date.parse(lastDate+"T00:00:00Z")-Date.parse(selected[0]+"T00:00:00Z"))/86400000;
- const incomplete=nativePeriod==="custom"?(selected[0]>customRange.from||selected.at(-1)<customRange.to&&Date.parse(customRange.to)-Date.parse(selected.at(-1))>4*86400000):nativePeriod==="3d"?false:spanDays<limit*.7;
+ const incomplete=nativePeriod==="custom"?(Date.parse(selected[0])-Date.parse(customRange.from)>4*86400000||Date.parse(customRange.to)-Date.parse(selected.at(-1))>4*86400000):nativePeriod==="3d"?false:spanDays<limit*.7;
  const warning=incomplete?'<strong style="color:#ecc17a">Histórico incompleto para '+label+': '+selected.length+' sesiones comunes en '+Math.round(spanDays)+' días; no cubre el periodo seleccionado.</strong>':
    '<span>'+selected.length+' cierres diarios coincidentes · '+label+'.</span>';
  const oldest=selected[0];
@@ -1555,7 +1555,7 @@ function finishReferenceDetailLoad(key,token){
  try{drawMarketDetail();}
  catch(error){
   console.warn("No se pudo dibujar la referencia XAUS "+key,error);
-  document.getElementById("detail-chart").innerHTML='<div class="native-error" role="status">Error al representar la referencia en '+(DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod)+'. Prueba otro intervalo o actualiza los datos.</div>';
+  document.getElementById("detail-chart").innerHTML='<div class="native-error" role="status">Error al representar la referencia en '+activePeriodLabel()+'. Prueba otro intervalo o actualiza los datos.</div>';
   document.getElementById("detail-foot").textContent="No se muestran observaciones ficticias.";
  }
 }
