@@ -1054,7 +1054,10 @@ function drawFuturesCloseTile(key,rows,note){
  if(!conf||!el)return;
  const full=(rows||[]).filter(p=>Number.isFinite(p.c)&&Number.isFinite(p.t)&&p.c>0).sort((a,b)=>a.t-b.t);
  if(full.length<2){
-   el.innerHTML='<div class="metal-error">Sin datos verificables de '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
+   if(nativePeriod==="custom"&&full.length===1){
+    const z=full[0],date=z.date||isoDay(z.t);
+    el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(z.c,conf.decimals)+'</strong></div><div class="metal-timestamp">Observación del '+date+'</div><div class="metal-spark-outer metal-spark-unavailable" role="note">Una sola observación real; no se dibuja una curva temporal.</div></div>';
+   }else el.innerHTML='<div class="metal-error">Sin datos verificables de '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
    return;
  }
  const recent=pickPeriodRows(full,nativePeriod,conf.kind);
@@ -1531,7 +1534,7 @@ function renderNative(){
  renderFuturesComparison();
  renderRatioPanel();
  const dates=Object.values(nativeData).map(x=>x.asOf).filter(Boolean).sort(),stamp=dates.at(-1);
- document.getElementById("market-stamp").textContent="Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
+ document.getElementById("market-stamp").textContent=nativePeriod==="custom"?"Mercados · histórico del "+customRange.from+" al "+customRange.to:"Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
 }
 // A network stall in any ancillary asset must not block the ratio inspection.
 async function fetchValidatedXaus(key,range,interval){
