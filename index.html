@@ -278,6 +278,70 @@
  .dashboard .policy-panel .chart-container{min-height:130px}
 }
 
+
+/* V3.3: Treasury above TIPS; the comparison and ratio reclaim TIPS' former width. */
+.dashboard{
+ display:grid;
+ grid-template-columns:minmax(0,1.06fr) minmax(0,2.85fr) minmax(0,1.07fr);
+ grid-template-areas:
+   "curve main policy"
+   "reals ratio policy";
+ grid-template-rows:300px 235px;
+ gap:var(--gap);
+ align-items:stretch;
+}
+.dashboard > .panel{min-width:0;min-height:0;height:auto}
+.curve-panel{grid-area:curve}
+.real-panel{grid-area:reals}
+.main-panel{grid-area:main}
+.ratio-panel{grid-area:ratio}
+.policy-panel{grid-area:policy}
+.curve-panel .chart-container{min-height:92px;flex:1 1 auto;max-height:none}
+.curve-panel .panel-head{margin-bottom:4px}
+.curve-panel .panel-caption{font-size:10px;margin:3px 0 5px}
+.curve-panel .legend{margin:4px 0 3px;gap:7px;font-size:10px}
+.curve-panel .curve-bottom{margin-top:2px;padding-top:5px}
+.curve-panel .curve-bottom .panel-title{font-size:11px!important}
+.curve-panel .mini-stats{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;
+ gap:3px 5px;
+ font-size:10px;
+ margin-top:4px;
+}
+.curve-panel .mini-stats div:nth-child(2n){white-space:nowrap}
+.curve-panel .yield-note{font-size:9px;margin-top:5px}
+.real-panel .panel-head{margin-bottom:3px;row-gap:4px}
+.real-panel .panel-head .panel-title{font-size:15px}
+.real-panel .real-top-stats{font-size:10px;gap:9px}
+.real-panel .real-top-stats strong{font-size:11px}
+.real-panel .legend{margin:3px 0 5px;gap:7px}
+.real-panel .legend span{font-size:10px}
+.real-panel .chart-container{min-height:85px;flex:1 1 auto;max-height:none}
+.real-panel .macro-caption{font-size:9px}
+.policy-panel .chart-container{min-height:120px;flex:1 1 auto;max-height:none}
+@media(max-width:1199px) and (min-width:881px){
+ .dashboard{
+  grid-template-columns:minmax(0,1fr) minmax(0,1.65fr);
+  grid-template-areas:"curve main" "reals ratio" "policy policy";
+  grid-template-rows:300px 235px 180px;
+ }
+ .policy-panel .chart-container{min-height:65px;max-height:none;flex:1 1 auto}
+ .policy-panel .source-meta{margin-top:3px;padding:4px 7px}
+ .policy-panel .policy-legend{margin-top:3px;padding-top:4px}
+}
+@media(max-width:880px){
+ .dashboard{display:flex;flex-direction:column;gap:var(--gap)}
+ .dashboard .main-panel{order:0;min-height:385px;height:385px}
+ .dashboard .ratio-panel{order:1;min-height:290px;height:290px}
+ .dashboard .curve-panel{order:2;min-height:365px;height:365px}
+ .dashboard .real-panel{order:3;min-height:285px;height:285px}
+ .dashboard .policy-panel{order:4;min-height:355px;height:355px}
+ .dashboard .curve-panel .chart-container{min-height:120px}
+ .dashboard .real-panel .chart-container{min-height:130px}
+ .dashboard .policy-panel .chart-container{min-height:105px}
+}
+
 </style>
 </head>
 <body>
