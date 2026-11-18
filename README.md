@@ -1,72 +1,50 @@
-# Metals Terminal V3.0 — Oro, plata y contexto macro
+# Metals Terminal V3.4 — Histórico de cinco años
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
-## Arquitectura y estado
+Terminal personal estático (HTML/CSS/JS/SVG), con selector global de periodos 1D, 1S, 1M, 1A y 5A junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
-Terminal estático de gráficos nativos SVG/JavaScript. Publicado en GitHub Pages con coste incremental cero en la modalidad gratuita. Se comprobó en navegador el 18/11/2026: cinco tarjetas superiores, dos de materias primas, ratio única, curva Treasury, política monetaria y TIPS. No se detectaron solapamientos ni errores gráficos durante la auditoría visual.
+## Histórico real de cinco años: 18 de noviembre de 2026
 
-El navegador consulta las fuentes cuando se abre el terminal o se cambia la temporalidad. No hay actualizaciones de mercado programadas ni dependencia operativa de NagameAlert. El workflow de datos macro solo tiene activación manual; el workflow de Pages publica cambios de código/datos.
+El terminal consulta directamente desde el navegador el dataset Commodity Prices de Aethereal, gratuito para investigación y educación: https://dataset.aethereal.top/datasets/commodity-prices
 
-## Instrumentos y fuentes
+CSV original: https://dataset.aethereal.top/files/commodity-prices.csv
 
-| Elemento | Dato | Fuente |
-|---|---|---|
-| Oro | GC, futuro próximo: cierre diario | https://trading-commodity.com/download/gc/ |
-| Plata | SI, futuro próximo: cierre diario | https://trading-commodity.com/download/si/ |
-| Cobre | HG, futuro próximo: cierre diario | https://trading-commodity.com/download/hg/ |
-| Brent | BZ, futuro próximo: cierre diario | https://trading-commodity.com/download/bz/ |
-| DXY | Referencia indicativa del USD Index | https://xaus.com/api/ |
-| EUR/USD | Referencia indicativa de divisas | https://xaus.com/api/ |
-| VIX | Cierre diario oficial del índice | https://www.cboe.com/tradable-products/vix/vix-historical-data/ |
-| Oro, Plata y Cobre comparados | GC/SI/HG, cierres futuros del contrato próximo en fechas comunes, base 0 % | https://trading-commodity.com/download/ |
-| Ratio oro/plata | XAU/XAG spot, separada de los futuros | https://xaus.com/api/ |
+Se descarga una sola vez al abrir la página (aproximadamente 6,3 MB) y se extraen cuatro símbolos. Se validan todos antes de sustituir las series de respaldo. Los valores no se inventan ni se redistribuye el CSV en GitHub.
 
-No hay feed COMEX o ICE intradía en el sitio. Los cierres de GC, SI, HG y BZ son publicados por una fuente externa y no constituyen precios ejecutables ni settlements oficiales de las bolsas. Las tablas públicas contienen solo las últimas 15 sesiones. El terminal muestra las observaciones disponibles para el periodo seleccionado y avisa si este excede la cobertura; nunca crea datos intermedios. Dispone de instantáneas de respaldo, fechadas, para mantener los últimos cierres verificados ante fallos de consultas. El comparativo principal usa solo estos cierres de futuros en fechas comunes. El gráfico inferior de ratio usa spot XAU/XAG y nunca mezcla los instrumentos.
+| Instrumento | Símbolo CSV | Cierres 17/11/2021–17/11/2026 | Último cierre comprobado (17/11/2026) |
+|---|---|---:|---:|
+| Oro GC | GC=F | 1258 | 3823,8 USD/oz |
+| Plata SI | SI=F | 1257 | 46,720 USD/oz |
+| Cobre HG | HG=F | 1258 | 5,9975 USD/lb |
+| Brent BZ | BZ=F | 1258 | 93,18 USD/barril |
 
-## Un único selector de periodos
+El código incluye alrededor de dos semanas anteriores adicionales para cubrir el periodo de 5A. La web publicada pasó una prueba real en navegador: las cuatro tarjetas mostraron aproximadamente 1265–1266 sesiones, y el gráfico comparado GC/SI/HG representó tres líneas de rendimientos normalizados al 0 % con cierres de las mismas fechas. El gráfico de 1M se filtró a unas 22 observaciones comunes.
 
-La cabecera contiene exclusivamente los botones globales **1D · 1S · 1M · 1A · 5A** junto a **Actualizar todo**. No hay botones de tiempo en cada gráfico. Cambiar la temporalidad modifica a la vez la comparación de futuros GC/SI/HG, su ratio spot XAU/XAG, las siete tarjetas superiores, VIX, bonos Treasury, TIPS/breakeven y Fed/BCE. La vista de curva/histórico Treasury y la presentación de la ratio (valor/cambio porcentual) siguen siendo controles de tipo de gráfico, no rangos temporales.
+**Diferencias de metodología:** Aethereal etiqueta las series como futuros de contrato próximo, pero no detalla un calendario de rollover ni el método exacto de ajuste. Pueden existir saltos por cambios de contrato. No se trata de cotizaciones oficiales en tiempo real, settlements oficiales de CME/ICE ni precios de ejecución. Los cierres de Aethereal difieren algo de los publicados por trading-commodity.com (aproximadamente 1,05 % para GC y 1,35 % para SI en el corte comprobado). Los proveedores **no se empalman**.
 
-**Actualizar todo** recarga la página y consulta los datos desde el navegador, sin activar workflows periódicos ni un servidor intermedio. No equivale a un feed COMEX tick-by-tick. La fuente de futuros incorporada publica cierres diarios, no la curva 1D intradía.
+### Respaldo
 
-## Cómo habilitar realmente cinco años de futuros
+Si la descarga o validación del CSV de cinco años falla, se conservan los últimos 15 cierres verificados del proveedor alternativo trading-commodity.com, con fecha y aviso de histórico incompleto. También existe una importación manual opcional de CSV desde «Fuentes»; los archivos importados se almacenan localmente en el navegador, no en GitHub.
 
-Los **datos de Treasury, TIPS, tipos Fed/BCE y VIX** ya se solicitan con cobertura de hasta cinco años cuando las fuentes los suministran. DXY, EUR/USD y ratio spot XAUS se consultan en el periodo seleccionado. **Los futuros GC, SI, HG y BZ todavía solo tienen las últimas 15 sesiones en las tablas gratuitas integradas**.
+## El resto de indicadores
 
-El proveedor publica gratuitamente una descarga CSV diaria de varios años en sus páginas para GC, SI, HG y BZ; sin embargo, la descarga utiliza un ticket temporal individual y no hemos podido verificar un endpoint estable que permita recuperar el CSV completo automáticamente desde GitHub Pages. No se elude la protección del proveedor ni se inventan cotizaciones.
+- VIX: cierres históricos oficiales diarios de Cboe, no intradía.
+- DXY, EUR/USD y ratio XAU/XAG: API XAUS, referencias indicativas; la ratio sigue siendo spot, no la ratio de futuros GC/SI.
+- Treasury 2Y, 10Y y 30Y: series FRED DGS2/DGS10/DGS30, con curva de vencimientos e histórico temporal.
+- Tipo real TIPS 10Y: serie FRED DFII10.
+- Inflación implícita: DGS10 − DFII10. Contiene primas de riesgo y liquidez; no es una predicción pura de IPC.
+- Fed: DFEDTARU (límite superior del rango oficial). BCE: ECBDFR (facilidad de depósito).
 
-Para habilitar hasta cinco años en los cuatro futuros, existe una importación **manual y opcional** bajo **Fuentes → Histórico de futuros**:
+El selector global sincroniza las tarjetas, el comparativo, la ratio y todos los gráficos macro. **1D no significa futuros intradía**: Aethereal publica cierres diarios y el terminal no simula una curva de ticks que no posee.
 
-1. Descargar los cuatro archivos **Raw contract prices** usando los botones oficiales del proveedor (enlaces en el panel). Son series de contrato próximo; no mezclar con una versión back-adjusted incompatible.
-2. Seleccionarlos juntos o por separado en **Importar CSV históricos**.
-3. Verificar en el mensaje cuántas sesiones y qué fechas se han incorporado. Se guardan únicamente en el almacenamiento local del navegador; no se envían al repositorio ni a ChatGPT.
+## Coste y seguridad
 
-La importación comprueba nombres de instrumento, fechas, cierres válidos y discrepancias significativas con el histórico reciente. Si rechaza un CSV, no altera los datos verificados. Las observaciones importadas se conservan entre visitas al sitio desde el mismo navegador, sujeto a sus ajustes de privacidad y almacenamiento. Los 15 cierres recientes que se consultan al abrir se integran respetando fechas y sin inventar datos intermedios. Los periodos que excedan la cobertura siguen señalados como **incompletos**.
+- GitHub Pages gratuito dentro de su modalidad pública; sin backend, bases de datos ni claves.
+- La web consulta el dataset una vez por visita y al pulsar «Actualizar todo» (recarga). No ejecuta jobs de GitHub al abrirse.
+- Despliegue Pages solo ante cambios de archivos; actualización macro por GitHub Actions es manual, no tiene cron.
+- No se comparten recursos, secretos, D1 ni procesos de NagameAlert.
+- Aethereal declara licencia gratuita para investigación y educación, no una autorización ilimitada de redistribución comercial; el archivo se consulta directamente en origen sin copiarse al repositorio.
+- La validez del histórico de cinco años no garantiza continuidad contractual ajustada ni rentabilidad real de estrategias apalancadas.
 
-**La cobertura automática de cinco años para los cuatro futuros sigue pendiente de un proveedor gratuito y autorizado con API apta para uso desde el navegador.** Esta limitación no impide el selector global, pero sí es relevante antes de interpretar las curvas.
-
-## Macro oficial
-
-Series FRED consultadas desde el navegador:
-- DGS2, DGS10, DGS30: rendimientos nominales Treasury.
-- DFII10: TIPS real a 10 años.
-- DFEDTARU: techo del rango objetivo de los fondos federales.
-- ECBDFR: facilidad de depósito del BCE.
-
-Inflación implícita 10Y = DGS10 − DFII10. Incluye primas de mercado y no es una previsión pura de IPC. Si la consulta falla, se conserva una instantánea fechada, indicando cobertura insuficiente si faltan años.
-
-## Operativa de coste cero y seguridad
-
-- Web pública estática: repositorio cgam-coder/metals-terminal.
-- Sin base de datos, procesos continuos, claves API, ni automatizaciones recurrentes.
-- Publicación en GitHub Pages tras cambios. Actualización macro manual opcional por GitHub Actions, sin cron.
-- Sin vinculación al proyecto NagameAlert.
-- Las fuentes externas reciben solicitudes del navegador al abrir la página.
-- Que una web sea accesible y permita CORS no constituye automáticamente una licencia de redistribución. Uso personal; revisar condiciones del proveedor antes de una distribución pública amplia o comercial.
-
-## Límites
-
-No se promete cotización futura en tiempo real. La cobertura inicial automática de futuros es de 15 sesiones, ampliable a cinco años mediante importación local de CSV originales; el VIX es de cierre diario. La comparación GC/SI/HG usa futuros; únicamente la ratio XAU/XAG permanece spot. Ante falta de un dato, el terminal lo marca o conserva un cierre verificado fechado; nunca usa una serie sintética ni hace pasar CFD/spot por futuros.
-
-Referencia visual: REFERENCIA_VISUAL_ACORDADA.png.
+Referencia estética: REFERENCIA_VISUAL_ACORDADA.png.
