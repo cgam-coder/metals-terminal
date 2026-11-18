@@ -223,6 +223,61 @@
  .top-grid .market-feature .metal-main-price{font-size:20px}
 }
 
+
+/* V3.2 — Compact second-row arrangement: Treasury and TIPS flank the stacked
+   gold/silver comparison; Fed/BCE stays visible without a third dashboard row. */
+.dashboard{
+ display:grid;
+ grid-template-columns:minmax(0,1.08fr) minmax(0,1.18fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr);
+ grid-template-areas:
+   "curve reals main main policy"
+   "curve reals ratio ratio policy";
+ grid-template-rows:300px 235px;
+ gap:var(--gap);
+ align-items:stretch;
+}
+.dashboard > .panel{min-width:0;min-height:0;height:auto}
+.curve-panel{grid-area:curve}
+.real-panel{grid-area:reals}
+.main-panel{grid-area:main}
+.ratio-panel{grid-area:ratio}
+.policy-panel{grid-area:policy}
+.curve-panel .chart-container{min-height:180px;flex:1 1 auto;max-height:none}
+.real-panel .chart-container{min-height:205px;flex:1 1 auto;max-height:none}
+.policy-panel .chart-container{min-height:180px;flex:1 1 auto;max-height:none}
+.real-panel .panel-head{align-items:flex-start}
+.real-panel .real-top-stats{margin-left:0}
+.real-panel .legend{margin-top:5px;margin-bottom:8px;gap:9px}
+.real-panel .legend span{font-size:10px}
+.curve-panel .panel-head,.real-panel .panel-head,.policy-panel .panel-head{row-gap:6px}
+.curve-panel .panel-head .panel-title,.real-panel .panel-head .panel-title,.policy-panel .panel-head .panel-title{font-size:17px}
+.curve-panel .macro-controls,.policy-panel .macro-controls{justify-content:flex-start}
+@media(max-width:1480px) and (min-width:881px){
+ .dashboard{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr) minmax(0,1.15fr);
+  grid-template-areas:
+    "curve reals main main"
+    "curve reals ratio ratio"
+    "policy policy policy policy";
+  grid-template-rows:290px 230px 220px;
+ }
+ .policy-panel{display:flex;flex-direction:column}
+ .policy-panel .chart-container{min-height:85px;max-height:none;flex:1}
+ .policy-panel .source-meta{margin-top:6px;padding:5px 8px}
+ .policy-panel .policy-legend{margin-top:3px;padding-top:4px}
+}
+@media(max-width:880px){
+ .dashboard{display:flex;flex-direction:column;gap:var(--gap)}
+ .dashboard .main-panel{order:0;min-height:385px;height:385px}
+ .dashboard .ratio-panel{order:1;min-height:290px;height:290px}
+ .dashboard .curve-panel{order:2;min-height:410px;height:410px}
+ .dashboard .real-panel{order:3;min-height:360px;height:360px}
+ .dashboard .policy-panel{order:4;min-height:365px;height:365px}
+ .dashboard .curve-panel .chart-container{min-height:145px}
+ .dashboard .real-panel .chart-container{min-height:165px}
+ .dashboard .policy-panel .chart-container{min-height:130px}
+}
+
 </style>
 </head>
 <body>
