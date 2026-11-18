@@ -145,9 +145,9 @@ function restrictedCard(key,id){const item=OFFSITE[key],node=document.getElement
 /* Own SVG renderer. XAUS permits direct browser use without an API key.
    The provider labels XAU/XAG indicative references; NEVER label as GC/SI futures. */
 const DATA_API="https://xaus.com/api/v1/chart";
-const PERIODS={"1d":"5m","5d":"30m","1mo":"1d","3mo":"1d","6mo":"1d","1y":"1d"};
+const PERIODS={"1d":"5m","5d":"30m","1mo":"1d","3mo":"1d","6mo":"1d","1y":"1d","5y":"1wk"};
 const DATA_SYMBOLS={gold:"xau",silver:"silver",dxy:"dxy",eur:"eurusd"};
-let nativeData={},nativePeriod="1mo",nativeRequest=0;
+let nativeData={},nativePeriod="1mo",nativeRequest=0,ratioDisplay="absolute";
 const maxAgeMinutes=10;
 function marketValidate(json,symbol){
  if(!json||json.symbol!==symbol||!Array.isArray(json.points))throw Error("Símbolo distinto o respuesta inválida");
@@ -214,7 +214,9 @@ function renderNative(){
  if(paired.length>=3){
    nativeChart("chart-main",[{label:"Oro",color:"#f4ba3c",points:paired.map(x=>(x.g/paired[0].g-1)*100)},{label:"Plata",color:"#d7e3ef",points:paired.map(x=>(x.s/paired[0].s-1)*100)}],paired.map(x=>x.t),"%",'<span>Rendimiento normalizado, base 0 % · Serie indicativa XAUS · No GC/SI</span><span>'+link+'</span>');
    const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
-   nativeChart("chart-ratio",[{label:"XAU / XAG",color:"#38c9e5",points:ratios.map(x=>x.c)}],ratios.map(x=>x.t),"",'<span>Ratio calculada con dos series de referencia del mismo proveedor.</span>');
+   const change=ratioDisplay==="percent";
+   const vals=change?ratios.map(r=>(r.c/ratios[0].c-1)*100):ratios.map(r=>r.c);
+   nativeChart("chart-ratio",[{label:change?"Variación de ratio":"XAU / XAG",color:"#38c9e5",points:vals}],ratios.map(x=>x.t),change?"%":"",'<span>'+(change?"Variación porcentual desde el inicio del periodo.":"Ratio XAU/XAG absoluta; eje vertical adaptado al rango.")+' · Ratio calculada con ambas series del mismo proveedor.</span>');
    quoteNative("q-ratio",ratios,2,"#38c9e5","Calculada");
  }else{
    document.getElementById("chart-main").innerHTML='<div class="native-error">No se dispone de oro y plata con fechas coincidentes.<span>'+link+'</span></div>';
@@ -405,7 +407,7 @@ async function bootMacro(){
  if(!macro)macro={source:'FRED',series:{}};
  await fetchMacroOfficial();
 }
-function init(){bootMarket();bootMacro();document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+function init(){bootMarket();bootMacro();$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
