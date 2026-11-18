@@ -342,6 +342,17 @@
  .dashboard .policy-panel .chart-container{min-height:105px}
 }
 
+
+.global-market-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.global-timeframes{display:flex;gap:2px;align-items:center;padding:3px;background:#081722;border:1px solid #344e60;border-radius:9px}
+.global-timeframes button{font-size:11px;font-weight:650;min-width:32px;padding:7px 9px;border:0;background:transparent;border-radius:5px;color:#b8cddd}
+.global-timeframes button.active,.global-timeframes button:hover{color:white;background:linear-gradient(130deg,#a37d2c,#71521a)}
+.global-timeframes button:focus-visible{outline:2px solid #89b8d2}
+.global-market-controls .header-action{white-space:nowrap}
+@media(max-width:1480px){.header{height:auto;min-height:74px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;gap:11px}.global-market-controls{margin-left:auto}}
+@media(max-width:930px){.global-market-controls{order:4;width:100%;justify-content:flex-end}}
+@media(max-width:510px){.global-market-controls{justify-content:space-between}.global-timeframes button{min-width:30px;padding:6px}.header .global-market-controls .header-action{padding:8px 9px}}
+
 </style>
 </head>
 <body>
@@ -351,7 +362,7 @@
   <div class="header-space"></div>
   <div class="status"><i class="dot"></i><span>Mercado · consulta únicamente al abrir</span></div>
   <div class="status" id="stamp">Macro: datos oficiales</div>
-  <button class="outline-button header-action" id="refresh" title="Recargar datos publicados"><span>↻</span> Recargar</button>
+  <div class="global-market-controls"><div id="global-timeframes" class="global-timeframes" role="group" aria-label="Temporalidad global de los gráficos"><button data-global-period="1d">1D</button><button data-global-period="5d">1S</button><button data-global-period="1mo" class="active" aria-pressed="true">1M</button><button data-global-period="1y">1A</button><button data-global-period="5y">5A</button></div><button class="outline-button header-action" id="refresh" title="Volver a consultar todos los datos"><span>↻</span> Actualizar todo</button></div>
   <button class="outline-button header-action" id="method-button">ⓘ Fuentes</button>
 </header>
 <section class="top-grid" aria-label="Indicadores de mercado">
@@ -365,7 +376,7 @@
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
-    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><div class="macro-range" data-macro="curve"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
+    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
     <div class="panel-caption" id="curve-caption">Comparación de rendimientos en dos fechas · % anual</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
@@ -373,7 +384,7 @@
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div><div id="market-ranges" class="native-range" role="group" aria-label="Periodo de mercado"><button data-period="1d">1D</button><button data-period="5d">1S</button><button data-period="1mo" class="active">1M</button><button data-period="3mo">3M</button><button data-period="6mo">6M</button><button data-period="1y">1A</button><button data-period="5y">5A</button></div></div>
+    <div class="panel-head"><div><h2 class="panel-title">Oro, Plata y Cobre — Futuros comparados</h2><div class="main-title-extra">GC · SI · HG · cierres del contrato próximo; rentabilidad normalizada</div></div></div>
     <div class="tv-chart" id="chart-main"><div class="native-spinner">Cargando cierres comparables GC, SI y HG…</div></div>
   </section>
   <section class="panel ratio-panel">
@@ -381,14 +392,14 @@
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><div class="macro-range" data-macro="policy"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><span title="Series no equivalentes" class="small-tag">Fed / BCE</span></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
     <div class="chart-container" id="policy-graph" aria-label="Evolución Fed y BCE"></div><div id="policy-dates" class="macro-caption"></div>
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
   <section class="panel real-panel">
-    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="macro-range" data-macro="reals"><button data-window="1D">1D</button><button data-window="1S">1S</button><button class="active" data-window="1M">1M</button><button data-window="3M">3M</button><button data-window="6M">6M</button><button data-window="1A">1A</button><button data-window="5A">5A</button></div><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
+    <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div><div id="real-dates" class="macro-caption"></div>
   </section>
@@ -397,7 +408,7 @@
 <footer class="footnote"><span></span><span id="version">METALS · V3.0</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
-  <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><div id="detail-ranges" class="macro-range" hidden><button data-detail-range="1M" class="active">1M</button><button data-detail-range="1A">1A</button><button data-detail-range="5A">5A</button></div><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
+  <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><span id="detail-period" class="small-tag">1M</span><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
   <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
@@ -770,7 +781,7 @@ async function fetchNative(period){
  syncMacroToMaster(period);
  renderFuturesCards();
  renderVixCard();
- document.querySelectorAll("#market-ranges button").forEach(x=>x.classList.toggle("active",x.dataset.period===period));
+
  renderFuturesComparison();
  document.getElementById("chart-ratio").innerHTML='<div class="native-error">Esperando datos comparables…</div>';
  const interval=PERIODS[period]||"1d";
@@ -878,10 +889,14 @@ function windowStart(end,window){
 }
 function syncMacroToMaster(period){
  const range=DISPLAY_PERIOD_LABEL[period]||"1M";
- for(const group of document.querySelectorAll(".macro-range[data-macro]")){
-   macroWindows[group.dataset.macro]=range;
-   group.querySelectorAll("button[data-window]").forEach(button=>button.classList.toggle("active",button.dataset.window===range));
- }
+ for(const key of Object.keys(macroWindows))macroWindows[key]=range;
+ document.querySelectorAll("#global-timeframes button").forEach(button=>{
+  const active=button.dataset.globalPeriod===period;
+  button.classList.toggle("active",active);
+  button.setAttribute("aria-pressed",active?"true":"false");
+ });
+ const detail=document.getElementById("detail-period");
+ if(detail)detail.textContent=range;
  if(macro?.series)renderMacro();
 }
 function macroWindowRows(rows,what){
@@ -1005,13 +1020,12 @@ async function bootMacro(){
 }
 
 function openMarketDetail(kind){
- detailKind=kind;detailWindow='1A';
- const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title'),controls=document.getElementById('detail-ranges');
+ detailKind=kind;detailWindow=DISPLAY_PERIOD_LABEL[nativePeriod]||"1M";
+ const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
  const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario"};
  title.textContent=names[kind]||"Gráfico de mercado";
- controls.hidden=kind!=="vix";
- controls.querySelectorAll('button').forEach(x=>x.classList.toggle("active",x.dataset.detailRange==="1A"));
+ document.getElementById("detail-period").textContent=detailWindow;
  drawMarketDetail();
 }
 function closeMarketDetail(){
@@ -1024,10 +1038,14 @@ function drawMarketDetail(){
  if(detailKind==="vix"){
    if(cboeHistory.length<3){host.innerHTML='<div class="native-error">VIX aún no disponible: descargando histórico oficial de Cboe.</div>';return;}
    const last=cboeHistory.at(-1),end=new Date(last.t*1000),start=new Date(end);
-   if(detailWindow==="1M")start.setUTCMonth(start.getUTCMonth()-1);
+   if(detailWindow==="1D")start.setUTCDate(start.getUTCDate()-1);
+   else if(detailWindow==="1S")start.setUTCDate(start.getUTCDate()-7);
+   else if(detailWindow==="1M")start.setUTCMonth(start.getUTCMonth()-1);
    else start.setUTCFullYear(start.getUTCFullYear()-(detailWindow==="5A"?5:1));
    const pts=cboeHistory.filter(p=>p.t>=start.getTime()/1000);
+   if(pts.length<3){host.innerHTML='<div class="native-error">Sin suficientes cierres de VIX para trazar este periodo. No se inventan cotizaciones intradía.</div>';} else {
    nativeChart("detail-chart",[{label:"VIX · cierre",color:"#fb6571",points:pts.map(x=>x.c)}],pts.map(p=>p.t),"",'<span>Fuente Cboe · VIX de cierre diario, no dato intradía.</span>');
+   }
    foot.textContent='Cboe · '+pts.length+' cierres históricos · última sesión '+new Date(last.t*1000).toLocaleDateString('es-ES',{timeZone:'UTC'})+' · no feed de tiempo real';
  }else if(detailKind==="ratio"){
    const obs=alignMarket();
@@ -1047,7 +1065,11 @@ function drawMarketDetail(){
  }
 }
 
-function init(){bootMarket();bootMacro();document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});$('#detail-ranges').addEventListener('click',e=>{const b=e.target.closest('button[data-detail-range]');if(!b)return;detailWindow=b.dataset.detailRange;$('#detail-ranges').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));drawMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});document.querySelectorAll('.macro-range').forEach(group=>group.addEventListener('click',e=>{const b=e.target.closest('button[data-window]');if(!b)return;const name=group.dataset.macro;macroWindows[name]=b.dataset.window;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));({curve:renderCurve,policy:renderPolicy,reals:renderReals})[name]();}));$('#market-ranges').addEventListener('click',e=>{const btn=e.target.closest('button[data-period]');if(btn)fetchNative(btn.dataset.period);});$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+function init(){bootMarket();bootMacro();document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});$('#global-timeframes').addEventListener('click',event=>{
+ const b=event.target.closest('button[data-global-period]');
+ if(b)fetchNative(b.dataset.globalPeriod);
+});
+$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
