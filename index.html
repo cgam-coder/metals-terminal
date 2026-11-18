@@ -1437,11 +1437,7 @@ function renderFuturesComparison(){
  host.setAttribute("data-covered-to",lastDate);
  host.setAttribute("data-observations",String(selected.length));
 }
-function renderNative(){
- renderBrowserQuotes();
- renderFuturesCards();
- renderVixCard();
- renderFuturesComparison();
+function renderRatioPanel(){
  const paired=alignMarket();
  if(paired.length>=3){
    const ratios=paired.map(x=>({t:x.t,c:x.g/x.s}));
@@ -1449,10 +1445,48 @@ function renderNative(){
    const vals=change?ratios.map(r=>(r.c/ratios[0].c-1)*100):ratios.map(r=>r.c);
    nativeChart("chart-ratio",[{label:change?"Variación de ratio":"XAU / XAG",color:"#38c9e5",points:vals}],ratios.map(x=>x.t),change?"%":"",'<span>Ratio SPOT XAU/XAG de la misma fuente y fechas comparables · NO cociente de futuros GC/SI.</span>');
  }else{
-   document.getElementById("chart-ratio").innerHTML='<div class="native-error">Ratio spot no disponible: faltan datos XAU/XAG con fechas coincidentes.</div>';
+   document.getElementById("chart-ratio").innerHTML='<div class="native-error" role="status">Ratio spot no disponible: faltan datos XAU y XAG con fechas coincidentes en el intervalo seleccionado.</div>';
  }
+}
+function renderNative(){
+ renderBrowserQuotes();
+ renderFuturesCards();
+ renderVixCard();
+ renderFuturesComparison();
+ renderRatioPanel();
  const dates=Object.values(nativeData).map(x=>x.asOf).filter(Boolean).sort(),stamp=dates.at(-1);
  document.getElementById("market-stamp").textContent="Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
+}
+// A network stall in any ancillary asset must not block the ratio inspection.
+async function fetchValidatedXaus(key,range,interval){
+ const controller=new AbortController();
+ let timeoutId;
+ const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range,interval}).toString();
+ try{
+   const request=(async()=>{
+     const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"default",signal:controller.signal});
+     if(!res.ok)throw Error("HTTP "+res.status);
+     return marketValidate(await res.json(),DATA_SYMBOLS[key]);
+   })();
+   const deadline=new Promise((_,reject)=>{
+     timeoutId=setTimeout(()=>{controller.abort();reject(Error("Tiempo de espera agotado (16 s)"));},16000);
+   });
+   return await Promise.race([request,deadline]);
+ }finally{clearTimeout(timeoutId);}
+}
+function finishRatioDetailLoad(token){
+ if(token!==nativeRequest)return;
+ try{
+   renderRatioPanel();
+   if(detailKind==="ratio"&&!document.getElementById("detail-overlay").hidden)drawMarketDetail();
+ }catch(error){
+   console.warn("No se pudo dibujar la ratio XAU/XAG",error);
+   if(detailKind==="ratio"&&!document.getElementById("detail-overlay").hidden){
+     const chart=document.getElementById("detail-chart");
+     chart.innerHTML='<div class="native-error" role="status">No se ha podido representar la ratio para este intervalo. Los datos no se completan artificialmente. Prueba otro periodo o pulsa «Actualizar todo».</div>';
+     document.getElementById("detail-foot").textContent="Error de visualización; no se han sustituido ni interpolado precios.";
+   }
+ }
 }
 async function fetchNative(period){
  if(!Object.hasOwn(DISPLAY_PERIOD_LABEL,period))period="1mo";
@@ -1474,22 +1508,37 @@ async function fetchNative(period){
   }else drawMarketDetail();
  }
  const interval=PERIODS[period]||"1d",apiRange=XAUS_REQUEST_RANGE[period]||period;
+ const pairedKeys=new Set(["gold","silver"]);
+ let pairedSettled=0;
  await Promise.all(Object.keys(DATA_SYMBOLS).map(async key=>{
    try{
-     const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range:apiRange,interval}).toString();
-     const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(16000)});
-     if(!res.ok)throw Error("HTTP "+res.status);
-     const entry=marketValidate(await res.json(),DATA_SYMBOLS[key]);
+     const entry=await fetchValidatedXaus(key,apiRange,interval);
      if(token===nativeRequest){
        const lastPoint=entry.points.at(-1);
        const clipped=entry.points.filter(p=>p.t>=periodCutoff(lastPoint.t,period));
        nativeData[key]={...entry,points:clipped};
      }
    }catch(e){console.warn("Serie "+key+" no validada; no se inventa dato.",e);}
+   finally{
+     if(pairedKeys.has(key)){
+       pairedSettled++;
+       // Gold and silver are enough: do not wait for DXY or EUR/USD.
+       if(pairedSettled===2)finishRatioDetailLoad(token);
+     }
+   }
  }));
  if(token===nativeRequest){
-  renderNative();
-  if(detailKind&&!document.getElementById("detail-overlay").hidden)drawMarketDetail();
+   try{renderNative();}
+   catch(error){console.warn("No se pudieron actualizar todos los gráficos de mercado",error);}
+   finally{
+     if(detailKind&&!document.getElementById("detail-overlay").hidden){
+       try{drawMarketDetail();}
+       catch(error){
+         console.warn("No se pudo actualizar el gráfico ampliado",error);
+         if(detailKind==="ratio")finishRatioDetailLoad(token);
+       }
+     }
+   }
  }
 }
 
@@ -2082,10 +2131,14 @@ function drawMarketDetail(){
    foot.textContent='Cboe · '+pts.length+' cierres históricos · última sesión '+new Date(last.t*1000).toLocaleDateString('es-ES',{timeZone:'UTC'})+' · no feed de tiempo real';
  }else if(detailKind==="ratio"){
    const obs=alignMarket();
-   if(obs.length<3){host.innerHTML='<div class="native-error">Ratio no disponible sin datos XAU y XAG con fechas comparables.</div>';return;}
+   if(obs.length<3){
+    host.innerHTML='<div class="native-error" role="status">No hay suficientes observaciones coincidentes de XAU y XAG para '+detailWindow+'. La consulta ha terminado, pero no es posible calcular una ratio histórica fiable con los datos recibidos.</div>';
+    foot.textContent="Fuente: XAUS · ambos metales requieren fechas comparables; no se inventan ni interpolan precios.";
+    return;
+   }
    const ratio=obs.map(p=>p.g/p.s),percent=ratioDisplay==="percent";
    nativeChart("detail-chart",[{label:percent?"Δ ratio":"XAU/XAG",color:"#38c9e5",points:percent?ratio.map(r=>(r/ratio[0]-1)*100):ratio}],obs.map(p=>p.t),percent?"%":"",'<span>Observaciones de referencia XAUS · '+nativePeriod+' · ratio no basada en futuros GC/SI</span>');
-   foot.textContent='Fuente XAUS · escala propia y seguimiento de valores al pasar el cursor. Cambia el rango en el panel principal.';
+   foot.textContent='Fuente XAUS · '+obs.length+' fechas XAU/XAG comparables · periodo '+detailWindow+' · cambia el intervalo en esta ventana o en la cabecera.';
  }else if(["gold","silver","copper","brent"].includes(detailKind)){
    const cfg=FUTURES_PUBLIC[detailKind],all=futuresCache[detailKind]||[];
    const rows=pickPeriodRows(all,nativePeriod,"futures");
