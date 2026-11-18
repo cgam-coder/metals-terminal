@@ -10,9 +10,9 @@ Primera versión operativa de una web estática y gratuita, construida siguiendo
 
 ## Publicar a 0 € en GitHub Pages
 
-El repositorio público es `cgam-coder/metals-terminal`. En **Settings → Pages → Build and deployment → Source** selecciona **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica la web y vuelve a desplegarla después de cada actualización diaria. URL prevista: `https://cgam-coder.github.io/metals-terminal/`.
+El repositorio público es `cgam-coder/metals-terminal`. En **Settings → Pages → Build and deployment → Source** selecciona **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica la web tras cambios de código/datos o una ejecución manual. No hay actualizaciones programadas. URL prevista: `https://cgam-coder.github.io/metals-terminal/`.
 
-La acción `Actualizar datos macro oficiales` se ejecuta de lunes a viernes a las 06:15 UTC (el dato macro puede aún no ser el último cierre de EE. UU. a esa hora; se capturará al día siguiente). Se puede ejecutar manualmente desde la pestaña Actions. Los cron de GitHub Actions no están garantizados al minuto, pueden retrasarse o desactivarse según el uso del repositorio. Requiere permisos de escritura adecuados para `GITHUB_TOKEN`.
+La acción `Actualizar datos macro oficiales` ya **no tiene cron**. Solo puede ejecutarse manualmente desde GitHub Actions (con permisos de escritura adecuados para `GITHUB_TOKEN`). Abrir el sitio **no ejecuta GitHub Actions** ni actualiza automáticamente las series oficiales; descarga la última instantánea guardada y muestra su fecha. Los widgets de mercado que están autorizados cargan cuando se abre la web, sujetos a sus propias licencias y frecuencia de datos. Se evaluará una consulta directa desde el navegador únicamente para fuentes que permitan acceso programático y CORS.
 
 Si el workflow falla, **mantiene la última serie confirmada**; no inserta valores estimados. Verifica ocasionalmente la marca de fecha de la esquina superior derecha.
 
@@ -43,9 +43,9 @@ Si el workflow falla, **mantiene la última serie confirmada**; no inserta valor
 
 - `index.html`: diseño e interacciones en un único HTML, sin frameworks.
 - `data/series.json`: instantánea de series oficiales.
-- `scripts/update_data.py`: actualización reproducible sin claves, usando solo Python estándar.
-- `.github/workflows/update-data.yml`: actualización macro automática gratuita.
-- `.github/workflows/pages.yml`: despliegue desde GitHub Actions tras cambios o actualización macro.
+- `scripts/update_data.py`: actualización manual reproducible sin claves, usando solo Python estándar.
+- `.github/workflows/update-data.yml`: actualización macro **solo manual**; sin cron.
+- `.github/workflows/pages.yml`: despliegue tras cambios de código/datos o ejecución manual, no periódico.
 
 ## Referencia estética
 
