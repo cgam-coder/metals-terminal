@@ -79,3 +79,12 @@ Este repositorio incluye `.nojekyll` para servir archivos estáticos literalment
 - Brent: gráfico embebido funcional `TVC:UKOIL`, **CFD distinto del futuro ICE BRN1!**, con enlace al instrumento de referencia y ampliación.
 
 Datos siempre fechados o etiquetados según instrumento. No se garantiza precio de ejecución, feed COMEX oficial ni puntualidad tick-by-tick. No se crea ninguna tarea recurrente.
+
+## Tarjetas de futuros GC y SI (18/11/2026)
+
+Las dos tarjetas destacadas de la cabecera muestran directamente el **último cierre publicado del futuro front-month** GC (oro) y SI (plata), no XAU/USD ni XAG/USD spot. El navegador solicita **una vez por apertura** las tablas HTML públicas de `https://trading-commodity.com/download/gc/` y `/si/` y valida instrumento, columnas, fechas y precios antes de dibujar los 15 últimos cierres.
+
+- Los gráficos muestran el movimiento real de los **cierres de las 15 últimas sesiones** con escala vertical automática, fecha inicial y final, máximos y mínimos de cierre, rendimiento de esas sesiones y variación respecto al cierre anterior. Incluyen punto final y lectura al pasar el cursor.
+- El precio está identificado como **cierre diario del contrato próximo**, no como cotización intradía ni *settlement* oficial de CME. La tabla se actualiza tras el cierre estadounidense según su proveedor; se muestra siempre la fecha observada y un aviso de antigüedad cuando corresponde.
+- Las series históricas XAU/XAG utilizadas en el gráfico comparativo y en la ratio permanecen separadas, expresamente etiquetadas **spot** para que no se mezclen con futuros.
+- No se añade una tarea programada, una API privada ni un servicio de pago. En caso de fallo de consulta no se sustituye el futuro por el precio spot, ni se inventa un cierre.
