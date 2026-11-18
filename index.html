@@ -407,7 +407,7 @@
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
-    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar representación">Curva ↔ Histórico</button></div></div>
+    <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button></div></div>
     <div class="panel-caption" id="curve-caption">Comparación de rendimientos en dos fechas · % anual</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span></div>
@@ -509,7 +509,7 @@ if(new URLSearchParams(location.search).has("datasetqa")){
 'use strict';
 const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'TVC:DXY',eur:'FX:EURUSD',vix:'TVC:VIX',brent:'TVC:UKOIL',copper:'COMEX:HG1!'};
 const sources={q:'https://www.tradingview.com/widget-docs/',rates:'https://home.treasury.gov/resource-center/data-chart-center/interest-rates'};
-let macro=null;let curveHistorical=false;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
+let macro=null;let curveHistorical=true;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const fmt=(v,dec=2)=>Number.isFinite(v)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v):'—';
 const prettyDate=s=>s?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z')):'—';
@@ -1413,7 +1413,7 @@ function init(){bootMarket();bootMacro();$('#futures-csv-upload').addEventListen
  const b=event.target.closest('button[data-global-period]');
  if(b)fetchNative(b.dataset.globalPeriod);
 });
-$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
+$('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>location.reload());const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
 </body></html>
