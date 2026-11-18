@@ -44,7 +44,9 @@ def fetch_series(key, start):
 
 def main():
     obj=json.loads(TARGET.read_text(encoding='utf-8')) if TARGET.exists() else {'series':{}}
-    start=(dt.date.today()-dt.timedelta(days=400)).isoformat()
+    # Keep more than five calendar years so all 5A charts have a true first observation.
+    # The former 400-day window silently erased the 5Y historical archive.
+    start=(dt.date.today()-dt.timedelta(days=5*366+45)).isoformat()
     good=[];bad=[]
     for key in SERIES:
         try:
