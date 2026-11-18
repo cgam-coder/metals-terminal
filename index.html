@@ -363,6 +363,16 @@
 .historical-import .import-note{font-size:11px;color:#b5a887}
 .modal-card{max-height:92vh;overflow-y:auto}
 
+
+/* Compact top tile: show source label legibly without pushing charts out. */
+.top-grid .ticker-card .metal-timestamp{min-width:0;overflow:hidden;gap:4px}
+.top-grid .ticker-card .metal-timestamp span{min-width:0}
+.top-grid .ticker-card .metal-timestamp .delayed{
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ max-width:53%;flex:0 1 auto;text-align:right;
+}
+.top-grid .ticker-card .metal-timestamp > span:first-child{white-space:nowrap}
+
 </style>
 </head>
 <body>
@@ -842,7 +852,7 @@ function parseFiveYearCommodityCsv(text){
 }
 function sourceCoverageLabel(all,source){
  const first=all?.[0]?.date,last=all?.at(-1)?.date;
- return source+" · "+(all?.length||0)+" sesiones · "+first+" a "+last;
+ return source+" · "+(all?.length||0)+" ses.";
 }
 async function loadAetherealFiveYears(){
  const response=await fetch(LONG_FUTURES_DATASET_URL,{
