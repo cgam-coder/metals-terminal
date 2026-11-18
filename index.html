@@ -522,6 +522,15 @@
  .top-grid .ticker-card .metal-marker{font-size:10.5px}
 }
 
+
+/* On small two-column tiles keep expand action discoverable without crowding source link. */
+@media(max-width:660px){
+ .top-grid .ticker-card:nth-child(n+4) .market-inspect{font-size:0!important;min-width:26px;padding:4px 5px!important}
+ .top-grid .ticker-card:nth-child(n+4) .market-inspect::before{content:"⤢";font-size:14px;line-height:1}
+ .top-grid .ticker-card:nth-child(n+4) .card-heading{gap:4px}
+ .top-grid .ticker-card:nth-child(n+4) .metal-source-link{font-size:9px}
+}
+
 </style>
 </head>
 <body>
@@ -574,7 +583,7 @@
   </section>
 
 </main>
-<footer class="footnote"><span></span><span id="version">METALS · V3.6</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V3.7</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><span id="detail-period" class="small-tag">1M</span><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1201,7 +1210,7 @@ function renderFuturesComparison(){
  const host=document.getElementById("chart-main");
  if(!host)return;
  const label=DISPLAY_PERIOD_LABEL[nativePeriod]||nativePeriod;
- const sourceLinks='<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
+ const sourceLinks=longFuturesProvenance==="aethereal"?'<a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal (GC/SI/HG)</a>':'<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
  if(COMPARISON_FUTURES.some(meta=>(futuresCache[meta.key]||[]).length<2)){
    host.innerHTML='<div class="native-error">No hay cierres de los tres contratos suficientes para calcular rendimientos comparables. No se utilizan precios spot ni curvas inventadas.<span>Fuentes: '+sourceLinks+'</span></div>';
    return;
