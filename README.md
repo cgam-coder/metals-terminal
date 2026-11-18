@@ -1,4 +1,4 @@
-# Metals Terminal V3.7 — Histórico de cinco años
+# Metals Terminal V3.8 — Histórico de cinco años
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
@@ -10,7 +10,7 @@ El terminal consulta directamente desde el navegador el dataset Commodity Prices
 
 CSV original: https://dataset.aethereal.top/files/commodity-prices.csv
 
-Se descarga una sola vez al abrir la página (aproximadamente 6,3 MB) y se extraen cuatro símbolos. Se validan todos antes de sustituir las series de respaldo. Los valores no se inventan ni se redistribuye el CSV en GitHub.
+En la primera consulta sin caché se descarga el CSV original (aproximadamente 6,3 MB) y se extraen cuatro símbolos. Los cierres se validan en conjunto y se conservan opcionalmente en IndexedDB local durante tres horas. Una nueva apertura durante ese plazo reutiliza únicamente esos registros verificados; al vencer o pulsar «Actualizar todo» se comprueba el proveedor de nuevo. El fichero completo no se redistribuye en GitHub.
 
 | Instrumento | Símbolo CSV | Cierres 17/11/2021–17/11/2026 | Último cierre comprobado (17/11/2026) |
 |---|---|---:|---:|
@@ -19,7 +19,7 @@ Se descarga una sola vez al abrir la página (aproximadamente 6,3 MB) y se extra
 | Cobre HG | HG=F | 1258 | 5,9975 USD/lb |
 | Brent BZ | BZ=F | 1258 | 93,18 USD/barril |
 
-El código incluye alrededor de dos semanas anteriores adicionales para cubrir el periodo de 5A. La web publicada pasó una prueba real en navegador: las cuatro tarjetas mostraron aproximadamente 1265–1266 sesiones, y el gráfico comparado GC/SI/HG representó tres líneas de rendimientos normalizados al 0 % con cierres de las mismas fechas. El gráfico de 1M se filtró a unas 22 observaciones comunes.
+El código incluye alrededor de dos semanas anteriores adicionales para cubrir el periodo de 5A. La web publicada pasó una prueba real en navegador: las cuatro tarjetas mostraron aproximadamente 1265–1266 sesiones, y el gráfico comparado GC/SI/HG representó tres líneas de variación acumulada de precios, normalizadas al 0 % con cierres de las mismas fechas. El gráfico de 1M se filtró a unas 22 observaciones comunes.
 
 **Diferencias de metodología:** Aethereal etiqueta las series como futuros de contrato próximo, pero no detalla un calendario de rollover ni el método exacto de ajuste. Pueden existir saltos por cambios de contrato. No se trata de cotizaciones oficiales en tiempo real, settlements oficiales de CME/ICE ni precios de ejecución. Los cierres de Aethereal difieren algo de los publicados por trading-commodity.com (aproximadamente 1,05 % para GC y 1,35 % para SI en el corte comprobado). Los proveedores **no se empalman**.
 
@@ -111,10 +111,19 @@ Además de Treasury, TIPS y Fed/BCE, las **siete tarjetas superiores** (GC, SI, 
 
 Limitación: algunos cierres proceden de fuentes indicativas (DXY/EUR/USD, ratio spot) y otros de futuros próximos (GC/SI/HG/BZ). La mejora de presentación no cambia su naturaleza, antigüedad, ni disponibilidad intradía.
 
+## V3.8 — Cuatro mejoras aplicadas (18/11/2026)
+
+1. **Ventanas temporales estrictas y 1D.** El código no recupera cierres anteriores al intervalo solicitado para forzar una línea. Cuando GC, SI, HG, BZ o VIX solo tienen cierres diarios y se pulsa 1D, muestran el último precio y la fecha, con un mensaje que explica la ausencia de cotización intradía. Para un rango con un único cierre no se simula una tendencia. DXY/EUR/USD sí pueden trazar una serie intradía si XAUS la proporciona.
+2. **Terminología financiera.** El comparativo de futuros GC/SI/HG indica «variación acumulada del precio (%)», no rentabilidad invertible. Es una serie de contratos próximos con posible distorsión por rollovers, sin conocer por completo el ajuste de continuidad, comisiones, financiación y resultados reales de mantenimiento de posiciones.
+3. **Navegación móvil.** Tres accesos internos discretos y fijos mientras se desplaza la página: Mercados, Comparativa y Macroeconomía. No añaden otro selector de tiempo ni afectan al tamaño del histórico. No aparecen en pantallas de escritorio.
+4. **Caché y frescura.** El navegador guarda opcionalmente en IndexedDB las series verificadas de los cuatro futuros durante tres horas, ahorrando transferencias repetidas del CSV de unos 6,3 MB. La caché se comprueba por esquema, fecha, cobertura de cinco años, orden y precios válidos; si es inválida se ignora. Pulsar «Actualizar todo» fuerza una nueva consulta aunque la caché no haya vencido; la URL elimina el marcador temporal tras usarlo. Si la red falla, se conservan los datos validados con su última fecha publicada. Los avisos de retraso aparecen únicamente después de más de tres días hábiles en futuros/VIX, más de dos en referencias de mercado o más de cuatro en macro FRED. Se indica «comprobar publicación» porque los festivos pueden explicarlo.
+
+Sin cron, nuevas suscripciones, telemetría, almacenamiento en servidor ni dependencia de NagameAlert.
+
 ## Coste y seguridad
 
 - GitHub Pages gratuito dentro de su modalidad pública; sin backend, bases de datos ni claves.
-- La web consulta el dataset una vez por visita y al pulsar «Actualizar todo» (recarga). No ejecuta jobs de GitHub al abrirse.
+- La web consulta los históricos al abrir cuando no hay caché validada reciente; IndexedDB guarda las cuatro series parseadas durante tres horas. «Actualizar todo» obliga a renovarlas. No se ejecutan trabajos de GitHub al abrirla.
 - Despliegue Pages solo ante cambios de archivos; actualización macro por GitHub Actions es manual, no tiene cron.
 - No se comparten recursos, secretos, D1 ni procesos de NagameAlert.
 - Aethereal declara licencia gratuita para investigación y educación, no una autorización ilimitada de redistribución comercial; el archivo se consulta directamente en origen sin copiarse al repositorio.
