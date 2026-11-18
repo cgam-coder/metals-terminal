@@ -53,6 +53,24 @@
 @media(max-width:1280px){.dashboard{grid-template-rows:335px 240px 275px 210px}}
 @media(max-width:780px){.dashboard{display:flex}.curve-panel,.main-panel{height:400px;min-height:400px}.ratio-panel{height:320px;min-height:320px}.policy-panel{height:350px;min-height:350px}.real-panel{height:315px;min-height:315px}.macro-controls{justify-content:flex-start}}
 @media(max-width:480px){.panel-head{flex-wrap:wrap}.macro-controls{width:100%}.macro-range button{padding:3px 7px}}
+
+/* Expandable analytical market charts; no third-party API keys or scheduled jobs */
+.commodity .tv-chart{flex:1;min-height:165px;width:100%;margin-top:6px}
+.commodity .card-heading{justify-content:space-between}
+.commodity .card-caption{margin-left:0;white-space:normal;line-height:1.5}
+.commodity .card-heading h2{font-size:14px;display:flex;gap:6px;align-items:center}
+.market-inspect{background:#132733;color:#b5daee;border:1px solid #3b667b;border-radius:6px;padding:4px 7px;font-size:10px;white-space:nowrap;cursor:pointer}
+.market-inspect:hover{background:#234356}
+.detail-overlay[hidden]{display:none}
+.detail-overlay{position:fixed;inset:0;z-index:100;background:#000c;display:grid;place-items:center;padding:15px}
+.detail-box{width:min(1100px,98vw);height:min(750px,92vh);min-height:380px;background:linear-gradient(145deg,#0d1e2a,#07131d);border:1px solid #466577;box-shadow:0 20px 55px #000c;border-radius:14px;display:flex;flex-direction:column;padding:18px;gap:10px}
+.detail-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.detail-head h2{font-size:20px;margin:0}
+.detail-actions{display:flex;align-items:center;gap:9px}
+.detail-chart{min-height:0;flex:1;overflow:hidden}
+.detail-chart .native-canvas{min-height:100%}
+.detail-foot{font-size:11px;color:#92a8bc}
+@media(max-width:780px){.commodity .tv-chart{min-height:170px}.commodities-grid{height:auto;min-height:240px;grid-template-columns:1fr}.commodity{min-height:230px}.detail-box{height:min(780px,94vh);padding:11px}.detail-head h2{font-size:15px}}
 </style>
 </head>
 <body>
@@ -71,7 +89,7 @@
   <article class="ticker-card ratio"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">⚖</span><h2>Ratio oro/plata</h2></div><div class="card-caption">Ratio XAU/XAG · fuente única</div><div class="quote-slot" id="q-ratio"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--cyan)">◎</span><h2>DXY</h2></div><div class="card-caption">USD Index · datos XAUS</div><div class="quote-slot" id="q-dxy"><div class="tv-fallback">Cargando cotización…</div></div></article>
   <article class="ticker-card currency"><div class="card-heading"><span class="glyph" style="color:var(--silver)">€</span><h2>EUR/USD</h2></div><div class="card-caption">Tipo de cambio</div><div class="quote-slot" id="q-eur"><div class="tv-fallback">Cargando cotización…</div></div></article>
-  <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2></div><div class="card-caption">Cboe VIX · último cierre diario</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
+  <article class="ticker-card risk"><div class="card-heading"><span class="glyph" style="color:var(--red)">〽</span><h2>VIX</h2><button class="market-inspect" data-inspect="vix" title="Abrir gráfico VIX de Cboe">Gráfico ↗</button></div><div class="card-caption">Cboe VIX · último cierre diario</div><div class="quote-slot" id="q-vix"><div class="tv-fallback">Cargando cotización…</div></div></article>
 </section>
 <main class="dashboard">
   <section class="panel curve-panel">
@@ -87,7 +105,7 @@
     <div class="tv-chart" id="chart-main"><div class="tv-loader">Cargando series XAU/XAG bajo demanda…</div></div>
   </section>
   <section class="panel ratio-panel">
-    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><button class="ratio-view-toggle" id="ratio-view-toggle" title="Alternar valor absoluto y variación porcentual">Vista: ratio</button><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
+    <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><button class="ratio-view-toggle" id="ratio-view-toggle" title="Alternar valor absoluto y variación porcentual">Vista: ratio</button><button class="market-inspect" data-inspect="ratio" title="Ampliar ratio oro-plata">Ampliar ↗</button><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
   <section class="panel policy-panel">
@@ -103,11 +121,15 @@
     <div class="chart-container" id="real-graph" aria-label="TIPS e inflación implícita"></div>
   </section>
   <div class="commodities-grid" aria-label="Otras materias primas">
-    <section class="panel commodity"><div class="card-heading"><span class="glyph">♨</span><h2>Brent <a href="https://www.tradingview.com/symbols/ICEEUR-BRN1!/" rel="noopener noreferrer" target="_blank" style="font-size:10px;font-weight:400">BRN1! ↗</a></h2></div><div class="card-caption">Referencia derivada UKOIL · NO futuro ICE</div><div class="quote-slot" id="q-brent"><div class="tv-fallback">Cargando cotización…</div></div></section>
-    <section class="panel commodity"><div class="card-heading"><span class="glyph">◉</span><h2>Cobre (HG)</h2></div><div class="card-caption">Futuro continuo COMEX · USD/lb</div><div class="quote-slot" id="q-copper"><div class="tv-fallback">Cargando cotización…</div></div></section>
+    <section class="panel commodity"><div class="card-heading"><span class="glyph">♨</span><h2>Brent <a href="https://www.tradingview.com/symbols/ICEEUR-BRN1!/" rel="noopener noreferrer" target="_blank" style="font-size:10px;font-weight:400">BRN1! ↗</a></h2><button class="market-inspect" data-inspect="brent">Ampliar ↗</button></div><div class="card-caption">UKOIL · CFD de Brent, no contrato ICE</div><div class="tv-chart" id="chart-brent"><div class="tv-loader">Cargando referencia Brent…</div></div></section>
+    <section class="panel commodity"><div class="card-heading"><span class="glyph">◉</span><h2>Cobre <a href="https://www.tradingview.com/symbols/COMEX-HG1!/" rel="noopener noreferrer" target="_blank" style="font-size:10px;font-weight:400">HG ↗</a></h2><button class="market-inspect" data-inspect="copper">Ampliar ↗</button></div><div class="card-caption">OANDA:XCUUSD · CFD de cobre, no futuro HG</div><div class="tv-chart" id="chart-copper"><div class="tv-loader">Cargando referencia cobre…</div></div></section>
   </div>
 </main>
 <footer class="footnote"><span></span><span id="version">METALS · V2.0</span></footer>
+</div>
+<div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
+  <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><div id="detail-ranges" class="macro-range" hidden><button data-detail-range="1M" class="active">1M</button><button data-detail-range="1A">1A</button><button data-detail-range="5A">5A</button></div><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
+  <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los símbolos de futuros COMEX GC1!, SI1! y HG1! no se pueden incrustar aquí mediante los widgets gratuitos probados. Los gráficos propios de XAU/XAG, DXY y EUR/USD se calculan con XAUS (no son futuros COMEX); el VIX utiliza cierres diarios de Cboe. Algunos módulos conservan widgets externos de <a target="_blank" rel="noopener" href="https://www.tradingview.com/widget-docs/">TradingView</a>. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
