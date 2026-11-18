@@ -1,4 +1,4 @@
-# Metals Terminal · Oro y Plata · V2.0 (gráficos propios)
+# Metals Terminal · Oro y Plata · V2.1 (periodos ampliados)
 
 Primera versión operativa de una web estática y gratuita, construida siguiendo la maqueta acordada. **No requiere Cloudflare, registro en nuevas APIs ni servidores de pago.**
 
@@ -66,3 +66,16 @@ Este repositorio incluye `.nojekyll` para servir archivos estáticos literalment
 - Al abrir la web, el navegador solicita las series de mercado seleccionadas a `https://xaus.com/api/v1/chart` y muestra su último dato, fecha y procedencia.
 - Cambiar el periodo repite únicamente las consultas de ese periodo. Cerrar la pestaña detiene toda actividad del terminal.
 - El proveedor limita y cachea los datos. «Consulta en apertura» no equivale a tick-by-tick ni a tiempo real oficial de futuros.
+
+## Periodos y vistas gráficas (18/11/2026)
+
+- Oro/plata: selector **1D, 1S, 1M, 3M, 6M, 1A y 5A**. Para 5A, la API XAUS devuelve barras semanales; su endpoint diario limita el historial a dos años.
+- Curva Treasury, tipos Fed/BCE y tipo real TIPS/breakeven: **1M, 1A y 5A**, independientemente por panel. Los seis CSV de FRED se consultan directamente desde el navegador al entrar; comprobados permisos CORS desde GitHub Pages. Sin cron.
+- Treasury permite alternar **Curva** (comparación con el inicio del periodo elegido) e **Histórico** (2Y/10Y/30Y en el tiempo).
+- Fed/BCE: gráficos en escalón, adecuados para los tipos oficiales discretos. La serie Fed representa el techo del rango y BCE la facilidad de depósito; son indicadores distintos.
+- Ratio oro/plata: panel de mayor altura con selector **Vista: ratio / Vista: cambio %** y botón **Ampliar**. Su base son XAU/USD y XAG/USD del mismo proveedor y marcas temporales comparables.
+- VIX: último cierre y minigráfico con **vista ampliada histórica (1M, 1A, 5A)**. Fuente: CSV Cboe de cierres diarios, nunca una cotización VIX intradía.
+- Cobre: gráfico embebido funcional `OANDA:XCUUSD`, un **CFD en USD/lb distinto del futuro HG**. Se mantiene acceso al futuro HG en TradingView. El panel admite ampliación.
+- Brent: gráfico embebido funcional `TVC:UKOIL`, **CFD distinto del futuro ICE BRN1!**, con enlace al instrumento de referencia y ampliación.
+
+Datos siempre fechados o etiquetados según instrumento. No se garantiza precio de ejecución, feed COMEX oficial ni puntualidad tick-by-tick. No se crea ninguna tarea recurrente.
