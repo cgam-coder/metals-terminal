@@ -2,7 +2,7 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
-Terminal personal estático (HTML/CSS/JS/SVG), con selector global de periodos 1D, 1S, 1M, 1A y 5A junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
+Terminal personal estático (HTML/CSS/JS/SVG), con selector global de diez periodos **1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A** junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
 ## Histórico real de cinco años: 18 de noviembre de 2026
 
@@ -36,7 +36,7 @@ Si la descarga o validación del CSV de cinco años falla, se conservan los últ
 - Inflación implícita: DGS10 − DFII10. Contiene primas de riesgo y liquidez; no es una predicción pura de IPC.
 - Fed: DFEDTARU (límite superior del rango oficial). BCE: ECBDFR (facilidad de depósito).
 
-El selector global sincroniza las tarjetas, el comparativo, la ratio y todos los gráficos macro. **1D no significa futuros intradía**: Aethereal publica cierres diarios y el terminal no simula una curva de ticks que no posee.
+El selector global sincroniza las tarjetas, el comparativo, la ratio y todos los gráficos macro. Para 3D y 2S la API XAUS proporciona un intervalo superior (5D o 1M), que el navegador recorta exactamente a los últimos 3 o 14 días; 2A utiliza la opción 2y que la API documenta. Los periodos de 3/6 meses y 2 años se calculan con fechas de calendario, no redondeos de días. En días no hábiles, las series de cierres diarios muestran únicamente las sesiones realmente negociadas, sin inventar barras. **1D no significa futuros intradía**: Aethereal publica cierres diarios y el terminal no simula una curva de ticks que no posee.
 
 ## Coste y seguridad
 
