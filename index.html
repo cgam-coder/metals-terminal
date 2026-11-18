@@ -677,7 +677,19 @@ if(new URLSearchParams(location.search).has("datasetqa")){
 const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'TVC:DXY',eur:'FX:EURUSD',vix:'TVC:VIX',brent:'TVC:UKOIL',copper:'COMEX:HG1!'};
 const sources={q:'https://www.tradingview.com/widget-docs/',rates:'https://home.treasury.gov/resource-center/data-chart-center/interest-rates'};
 let macro=null;let curveHistorical=true;let selectedPeriod='12M';const macroWindows={curve:"1M",policy:"1M",reals:"1M"};let macroLive=false;
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s),$=s=>[...document.querySelectorAll(s)];
+// Only one chart may retain its inspected point across interactions.
+let activeChartInspector=null;
+function activateChartInspector(chart,clear){
+ if(activeChartInspector?.chart!==chart)activeChartInspector?.clear();
+ activeChartInspector={chart,clear};
+}
+function clearChartInspector(chart){
+ if(activeChartInspector?.chart===chart){
+  activeChartInspector.clear();
+  activeChartInspector=null;
+ }
+}
 const fmt=(v,dec=2)=>Number.isFinite(v)?new Intl.NumberFormat('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v):'—';
 const prettyDate=s=>s?new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z')):'—';
 const last=a=>(a||[]).filter(x=>Number.isFinite(x.value)).at(-1);
@@ -818,9 +830,11 @@ function nativeChart(id,lines,dates,unit,sub){
  frame.insertAdjacentHTML("afterbegin",svg);
  const shape=frame.querySelector("svg[data-market-svg]"),cross=frame.querySelector(".market-crosshair");
  marketChartCache.set(id,{lines,dates,unit,sub,displayCount:indexes.length});
+ const clearInspection=()=>{tip.classList.remove("visible");tip.style.display="none";cross.style.opacity="0";};
  const inspect=(event)=>{
    const rect=shape.getBoundingClientRect();
    if(rect.width<=0)return;
+   activateChartInspector(shape,clearInspection);
    const xOnCanvas=(event.clientX-rect.left)/rect.width*W;
    const target=firstT+Math.max(0,Math.min(1,(xOnCanvas-L)/pw))*timeRange;
    let low=0,high=plotDates.length-1;
@@ -835,7 +849,7 @@ function nativeChart(id,lines,dates,unit,sub){
  };
  shape.addEventListener("pointermove",inspect,{passive:true});
  shape.addEventListener("pointerdown",inspect,{passive:true});
- shape.addEventListener("pointerleave",event=>{if(event.pointerType==="mouse"){tip.classList.remove("visible");tip.style.display="none";cross.style.opacity="0";}});
+ shape.addEventListener("pointerleave",event=>{if(event.pointerType==="mouse")clearChartInspector(shape);});
  shape.addEventListener("keydown",event=>{
   if(event.key==="Enter"||event.key===" "){event.preventDefault();const r=shape.getBoundingClientRect();inspect({clientX:r.left+r.width*.65});}
  });
@@ -1010,8 +1024,10 @@ function drawFuturesCloseTile(key,rows,note){
  '<div class="metal-spark-outer">'+svg+'<div class="metal-hover" role="status" aria-live="polite"></div></div>'+
  '<div class="metal-scale"><span>Mín: '+fmt(min,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %</span><span>Máx: '+fmt(max,conf.decimals)+'</span></div></div>';
  const plot=el.querySelector(".metal-spark-outer"),shape=plot.querySelector("svg[data-market-tile-svg]"),cross=plot.querySelector("[data-crosshair]"),tip=plot.querySelector(".metal-hover");
+ const clearInspection=()=>{tip.classList.remove("visible");cross.setAttribute("opacity","0");};
  const inspect=(event)=>{
    const rect=shape.getBoundingClientRect();if(!rect.width)return;
+   activateChartInspector(shape,clearInspection);
    const nx=(event.clientX-rect.left)/rect.width*W;
    const target=startT+Math.max(0,Math.min(1,(nx-left)/availableWidth))*span;
    let l=0,h=sampled.length-1;
@@ -1024,7 +1040,7 @@ function drawFuturesCloseTile(key,rows,note){
  };
  shape.addEventListener("pointermove",inspect,{passive:true});
  shape.addEventListener("pointerdown",inspect,{passive:true});
- shape.addEventListener("pointerleave",ev=>{if(ev.pointerType==="mouse"){tip.classList.remove("visible");cross.setAttribute("opacity","0");}});
+ shape.addEventListener("pointerleave",ev=>{if(ev.pointerType==="mouse")clearChartInspector(shape);});
  shape.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();const r=shape.getBoundingClientRect();inspect({clientX:r.left+r.width*.7});}});
  el.title=conf.code+" · "+usedNote+" · última fecha: "+asOf;
 }
@@ -1579,10 +1595,12 @@ function attachMacroInspector(hostId){
  const tooltip=document.createElement("div");
  tooltip.className="macro-hover-tip";tooltip.setAttribute("role","status");
  el.appendChild(tooltip);
+ const clearInspection=()=>{tooltip.classList.remove("visible");if(crosshair)crosshair.style.opacity="0";};
  const left=Number(svg.dataset.left)||50,plotWidth=Number(svg.dataset.plotWidth)||200;
  const showAt=(e)=>{
   const r=svg.getBoundingClientRect();
   if(!r.width)return;
+  activateChartInspector(svg,clearInspection);
   const px=(e.clientX-r.left)/r.width*(Number(svg.dataset.svgWidth)||r.width);
   const f=Math.min(1,Math.max(0,(px-left)/plotWidth));
   const target=points[0]+f*(points.at(-1)-points[0]);
@@ -1600,7 +1618,7 @@ function attachMacroInspector(hostId){
  };
  svg.addEventListener("pointermove",showAt,{passive:true});
  svg.addEventListener("pointerdown",showAt,{passive:true});
- svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"){tooltip.classList.remove("visible");if(crosshair)crosshair.style.opacity="0";}});
+ svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")clearChartInspector(svg);});
  svg.addEventListener("keydown",e=>{
   if(e.key==="Enter"||e.key===" "){
    e.preventDefault();
