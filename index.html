@@ -1401,23 +1401,32 @@ function renderCurve(){
  ]);
  $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
  $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
+ document.getElementById("legend-third").style.display=curveHistorical?"flex":"none";
  $("#curve-caption").textContent=(curveHistorical?"Histórico real 2Y/10Y/30Y":"Curva 2Y/10Y/30Y, inicio y último")+" · "+period+" · "+macroCoverageNotice(rows,"curve");
  if(curveHistorical){
    if(rows.length<2){
      $("#curve-graph").innerHTML=macroGraphMessage("Solo hay un cierre Treasury en "+period+": "+prettyDate(now.date)+". No se puede dibujar una evolución temporal.",source);
    }else{
-     $("#curve-graph").innerHTML=svgPlot({series:[
-       {name:"Treasury 10Y",values:rows.map(r=>r.DGS10),color:"#38c9e5"},
-       {name:"Treasury 2Y",values:rows.map(r=>r.DGS2),color:"#f4ba3c"},
-       {name:"Treasury 30Y",values:rows.map(r=>r.DGS30),color:"#d7e3ef"}
-     ],xLabels:macroLabels(rows,"curve"),palette:["stroke-cyan","stroke-gold","stroke-silver"],width:390,height:222,dates:rows.map(r=>r.date)});
+     const plotted=readableMacroRows(rows,period);
+     const series=[
+       {name:"Treasury 10Y",values:plotted.map(r=>r.DGS10),color:"#38c9e5"},
+       {name:"Treasury 2Y",values:plotted.map(r=>r.DGS2),color:"#f4ba3c"},
+       {name:"Treasury 30Y",values:plotted.map(r=>r.DGS30),color:"#d7e3ef"}
+     ];
+     $("#curve-graph").innerHTML=svgPlot({
+       series,xLabels:macroLabels(plotted,"curve"),palette:["stroke-cyan","stroke-gold","stroke-silver"],
+       width:390,height:222,dates:plotted.map(r=>r.date),targetId:"curve-graph"
+     });
+     attachMacroInspector("curve-graph");
+     if(plotted.length<rows.length)$("#curve-caption").textContent+=" · trazado semanal (cierres reales)";
    }
  }else{
    // This is a yield curve by *maturity*, not a historical time-series plot.
    // A single date yields one curve: never fabricate an "earlier" comparison.
    const series=[{name:"Último "+now.date,values:[now.DGS2,now.DGS10,now.DGS30],color:"#38c9e5"}];
    if(then.date!==now.date)series.push({name:"Inicio "+then.date,values:[then.DGS2,then.DGS10,then.DGS30],color:"#f4ba3c"});
-   $("#curve-graph").innerHTML=svgPlot({series,xLabels:["2Y","10Y","30Y"],palette:["stroke-cyan","stroke-gold"],width:390,height:222,xValues:[2,10,30]});
+   $("#curve-graph").innerHTML=svgPlot({series,xLabels:["2Y","10Y","30Y"],palette:["stroke-cyan","stroke-gold"],width:390,height:222,xValues:[2,10,30],targetId:"curve-graph"});
+   attachMacroInspector("curve-graph");
  }
  const spread=now.DGS10-now.DGS2;
  $("#yield-stats").innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?"var(--green)":"var(--red)")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</div>';
@@ -1446,10 +1455,17 @@ function renderReals(){
    $("#real-graph").innerHTML=macroGraphMessage("Un único cierre TIPS/Treasury ("+prettyDate(now.date)+"). No existe una evolución temporal en "+period+".",source);
    return;
  }
- $("#real-graph").innerHTML=svgPlot({series:[
-   {name:"TIPS 10Y",values:rows.map(r=>r.DFII10),color:"#b88aff"},
-   {name:"Breakeven 10Y",values:rows.map(r=>r.DGS10-r.DFII10),color:"#f4ba3c"}
- ],xLabels:macroLabels(rows,"reals"),palette:["stroke-purple","stroke-gold"],width:830,height:180,dates:rows.map(r=>r.date)});
+ const plotted=readableMacroRows(rows,period);
+ const lines=[
+   {name:"TIPS 10Y",values:plotted.map(r=>r.DFII10),color:"#b88aff"},
+   {name:"Inflación implícita 10Y",values:plotted.map(r=>r.DGS10-r.DFII10),color:"#f4ba3c"}
+ ];
+ $("#real-graph").innerHTML=svgPlot({
+   series:lines,xLabels:macroLabels(plotted,"reals"),palette:["stroke-purple","stroke-gold"],
+   width:830,height:180,dates:plotted.map(r=>r.date),targetId:"real-graph"
+ });
+ attachMacroInspector("real-graph");
+ if(plotted.length<rows.length)$("#real-dates").textContent+=" · trazado semanal (cierres reales)";
 }
 function renderPolicy(){
  const keys=["DFEDTARU","ECBDFR"],fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
@@ -1490,10 +1506,23 @@ function renderPolicy(){
    "Δ Fed "+deltaMarkup(deltaPp(ff.at(-1).value,ff[0].value)),
    "Δ BCE "+deltaMarkup(deltaPp(bb.at(-1).value,bb[0].value))
  ]);
- $("#policy-graph").innerHTML=svgPlot({series:[
-   {name:"Fed techo objetivo",values:ff.map(r=>r.value),color:"#f4ba3c"},
-   {name:"BCE facilidad depósito",values:bb.map(r=>r.value),color:"#38c9e5"}
- ],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:["stroke-gold","stroke-cyan"],width:290,height:280,step:true,dates:xDates});
+ // The raw FRED Fed/ECB files repeat unchanged rates daily. For plotting,
+ // retain only exact official change dates + endpoints (no data interpolation).
+ const changedIndices=[0];
+ for(let i=1;i<xDates.length;i++){
+   if(i===xDates.length-1||ff[i].value!==ff[i-1].value||bb[i].value!==bb[i-1].value)changedIndices.push(i);
+ }
+ const plotDates=changedIndices.map(i=>xDates[i]);
+ const lines=[
+   {name:"Fed techo objetivo",values:changedIndices.map(i=>ff[i].value),color:"#f4ba3c"},
+   {name:"BCE depósito",values:changedIndices.map(i=>bb[i].value),color:"#38c9e5"}
+ ];
+ $("#policy-graph").innerHTML=svgPlot({
+   series:lines,xLabels:macroLabels(plotDates.map(date=>({date})),"policy"),
+   palette:["stroke-gold","stroke-cyan"],width:290,height:280,step:true,
+   dates:plotDates,targetId:"policy-graph"
+ });
+ attachMacroInspector("policy-graph");
  $("#policy-dates").textContent=period+" · "+source+" · "+prettyDate(start)+" – "+prettyDate(end)+" · "+changeCount+" cambios oficiales · Fed "+latestF.date+" / BCE "+latestB.date;
 }
 function renderMacro(){
@@ -1603,18 +1632,36 @@ function openMarketDetail(kind){
  detailKind=kind;detailWindow=DISPLAY_PERIOD_LABEL[nativePeriod]||"1M";
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
- const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario"};
+ const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",copper:"Cobre · futuro HG · cierre diario",brent:"Brent · futuro BZ · cierre diario","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=names[kind]||"Gráfico de mercado";
  document.getElementById("detail-period").textContent=detailWindow;
  drawMarketDetail();
 }
 function closeMarketDetail(){
  const el=document.getElementById('detail-overlay');el.hidden=true;
- document.getElementById('detail-chart').innerHTML='';
+ const chart=document.getElementById('detail-chart');
+ chart.innerHTML='';chart.classList.remove("macro-focus-chart");
  document.body.style.overflow='';detailKind=null;
 }
 function drawMarketDetail(){
  const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
+ if(detailKind&&detailKind.startsWith("macro-")){
+   const sourceId={"macro-curve":"curve-graph","macro-reals":"real-graph","macro-policy":"policy-graph"}[detailKind];
+   const state=macroPlotCache.get(sourceId);
+   host.classList.add("macro-focus-chart");
+   if(!state||!state.series?.length){
+     host.innerHTML='<div class="native-error">No hay histórico oficial trazado para esta temporalidad.</div>';
+     foot.textContent="Selecciona otra temporalidad en la cabecera si solo hay un cierre";
+     return;
+   }
+   host.innerHTML=svgPlot({...state,targetId:"detail-chart",width:930,height:490});
+   attachMacroInspector("detail-chart");
+   const keys=detailKind==="macro-curve"?["DGS2","DGS10","DGS30"]:detailKind==="macro-reals"?["DGS10","DFII10"]:["DFEDTARU","ECBDFR"];
+   const lastDate=state.dates?.at(-1)||macroLastDate(keys);
+   foot.textContent=macroSourceLabel(keys)+" · "+detailWindow+" · "+(state.dates?.length||state.series[0].values.length)+" fechas reales trazadas · última "+lastDate+" · toca o pasa el cursor sobre las curvas para ver los valores exactos.";
+   return;
+ }
+ host.classList.remove("macro-focus-chart");
  if(detailKind==="vix"){
    if(cboeHistory.length<3){host.innerHTML='<div class="native-error">VIX aún no disponible: descargando histórico oficial de Cboe.</div>';return;}
    const last=cboeHistory.at(-1),end=new Date(last.t*1000),start=new Date(end);
@@ -1649,7 +1696,17 @@ function drawMarketDetail(){
  }
 }
 
-function init(){bootMarket();bootMacro();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});$('#global-timeframes').addEventListener('click',event=>{
+function init(){bootMarket();bootMacro();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
+window.addEventListener('resize',()=>{
+ const nextWidth=window.innerWidth;
+ if(Math.abs(nextWidth-lastMacroWidth)<9)return;
+ lastMacroWidth=nextWidth;
+ if(macro?.series){
+   renderCurve();renderReals();renderPolicy();
+   if(detailKind&&detailKind.startsWith("macro-"))drawMarketDetail();
+ }
+});
+$('#global-timeframes').addEventListener('click',event=>{
  const b=event.target.closest('button[data-global-period]');
  if(b)fetchNative(b.dataset.globalPeriod);
 });
