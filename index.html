@@ -353,6 +353,16 @@
 @media(max-width:930px){.global-market-controls{order:4;width:100%;justify-content:flex-end}}
 @media(max-width:510px){.global-market-controls{justify-content:space-between}.global-timeframes button{min-width:30px;padding:6px}.header .global-market-controls .header-action{padding:8px 9px}}
 
+
+/* Optional one-time historical data ingestion, inside methodology only. */
+.historical-import{margin-top:18px;border-top:1px solid #3d5260;padding-top:13px}
+.historical-import h3{font-size:14px;margin:0 0 5px;color:#e6eff5}
+.historical-import label{display:block;font-size:12px;color:#f3cf85;font-weight:650;margin:10px 0 6px}
+.historical-import input[type=file]{display:block;max-width:100%;color:#d0dbe4;background:#0b1c27;border:1px solid #426174;border-radius:7px;padding:8px;font-size:11px}
+.historical-import-status{font-size:11px;color:#b6c9d7;margin-top:9px;white-space:pre-wrap}
+.historical-import .import-note{font-size:11px;color:#b5a887}
+.modal-card{max-height:92vh;overflow-y:auto}
+
 </style>
 </head>
 <body>
@@ -418,6 +428,14 @@
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El VIX muestra únicamente el <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data/" target="_blank" rel="noopener noreferrer">cierre diario Cboe</a>; no contiene datos en vivo del índice. Se consulta cuando abres el terminal, sin cron.</p>
 <p>El archivo <code>data/series.json</code> es una instantánea que se descarga al abrir la página; solo cambia cuando se ejecuta manualmente su actualización y se publica. No hay tareas programadas de GitHub. Sin conexión o sin publicación, el panel conserva la instantánea oficial integrada con fecha visible. El HTML no usa claves API, no ejecuta operaciones y no recopila datos personales.</p>
+<section class="historical-import" aria-labelledby="import-title">
+ <h3 id="import-title">Histórico de futuros de hasta cinco años</h3>
+ <p>Las tablas gratuitas integradas solo exponen 15 sesiones. Para habilitar periodos largos con futuros reales, descarga una vez los CSV <strong>«Raw contract prices»</strong> en las páginas públicas <a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a>, <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a>, <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a> y <a href="https://trading-commodity.com/download/bz/" target="_blank" rel="noopener noreferrer">BZ</a>. Importa aquí esos cuatro CSV, juntos o por separado. El terminal conservará los cierres en el almacenamiento local de <strong>este navegador</strong>, sin subirlos a GitHub.</p>
+ <label for="futures-csv-upload">Importar CSV históricos GC / SI / HG / BZ</label>
+ <input id="futures-csv-upload" type="file" accept=".csv,text/csv" multiple />
+ <div id="futures-import-status" class="historical-import-status" aria-live="polite">No se ha importado ningún archivo en esta sesión.</div>
+ <p class="import-note">No se admiten series fabricadas ni se mezclan roll-adjusted con raw si difieren de los cierres recientes. Si el proveedor cambia sus condiciones, utiliza únicamente la descarga autorizada.</p>
+</section>
 </div></div></div>
 <script type="application/json" id="initial-macro">{"source":"U.S. Department of the Treasury (CMT y TIPS), Fed, BCE vía FRED","updated":"2026-11-17","note":"Instantánea inicial verificada. Datos macro cargados de instantánea publicada; GitHub Actions desactivado para cron, ejecución manual si se requiere. Datos no intradía.","links":{"nominal":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value_month=202611","real":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_real_yield_curve&field_tdr_date_value_month=202611","fed":"https://fred.stlouisfed.org/series/DFEDTARU","ecb":"https://fred.stlouisfed.org/series/ECBDFR"},"series":{"DGS2":[{"date":"2026-11-02","value":4.59},{"date":"2026-11-03","value":4.61},{"date":"2026-11-04","value":4.58},{"date":"2026-11-05","value":4.46},{"date":"2026-11-06","value":4.51},{"date":"2026-11-09","value":4.56},{"date":"2026-11-10","value":4.73},{"date":"2026-11-12","value":4.86},{"date":"2026-11-13","value":4.88},{"date":"2026-11-16","value":4.83},{"date":"2026-11-17","value":4.8}],"DGS10":[{"date":"2026-11-02","value":4.91},{"date":"2026-11-03","value":4.95},{"date":"2026-11-04","value":4.9},{"date":"2026-11-05","value":4.84},{"date":"2026-11-06","value":4.86},{"date":"2026-11-09","value":4.88},{"date":"2026-11-10","value":4.98},{"date":"2026-11-12","value":5.1},{"date":"2026-11-13","value":5.15},{"date":"2026-11-16","value":5.12},{"date":"2026-11-17","value":5.1}],"DGS30":[{"date":"2026-11-02","value":5.28},{"date":"2026-11-03","value":5.32},{"date":"2026-11-04","value":5.28},{"date":"2026-11-05","value":5.25},{"date":"2026-11-06","value":5.26},{"date":"2026-11-09","value":5.26},{"date":"2026-11-10","value":5.35},{"date":"2026-11-12","value":5.43},{"date":"2026-11-13","value":5.47},{"date":"2026-11-16","value":5.46},{"date":"2026-11-17","value":5.46}],"DFII10":[{"date":"2026-11-02","value":2.62},{"date":"2026-11-03","value":2.65},{"date":"2026-11-04","value":2.64},{"date":"2026-11-05","value":2.6},{"date":"2026-11-06","value":2.63},{"date":"2026-11-09","value":2.66},{"date":"2026-11-10","value":2.78},{"date":"2026-11-12","value":2.86},{"date":"2026-11-13","value":2.91},{"date":"2026-11-16","value":2.92},{"date":"2026-11-17","value":2.89}],"DFEDTARU":[{"date":"2026-11-16","value":4.0},{"date":"2026-11-17","value":4.0}],"ECBDFR":[{"date":"2026-11-16","value":2.5},{"date":"2026-11-17","value":2.5}]}}</script>
 <script type="application/json" id="verified-vix-snapshot">{"source":"Cboe VIX History","rows":[{"date":"2026-09-30","t":1790802000,"c":16.34},{"date":"2026-10-01","t":1790888400,"c":16.39},{"date":"2026-10-02","t":1790974800,"c":15.31},{"date":"2026-10-05","t":1791234000,"c":15.52},{"date":"2026-10-06","t":1791320400,"c":15.01},{"date":"2026-10-07","t":1791406800,"c":15.08},{"date":"2026-10-08","t":1791493200,"c":15.41},{"date":"2026-10-09","t":1791579600,"c":14.84},{"date":"2026-10-12","t":1791838800,"c":15.21},{"date":"2026-10-13","t":1791925200,"c":15.27},{"date":"2026-10-14","t":1792011600,"c":16.87},{"date":"2026-10-15","t":1792098000,"c":16.46},{"date":"2026-10-16","t":1792184400,"c":19.99},{"date":"2026-10-19","t":1792443600,"c":18.44},{"date":"2026-10-20","t":1792530000,"c":17.31},{"date":"2026-10-21","t":1792616400,"c":16.68},{"date":"2026-10-22","t":1792702800,"c":19.03},{"date":"2026-10-23","t":1792789200,"c":19.45},{"date":"2026-10-26","t":1793048400,"c":18.39},{"date":"2026-10-27","t":1793134800,"c":17.52},{"date":"2026-10-28","t":1793221200,"c":16.91},{"date":"2026-10-29","t":1793307600,"c":17.2},{"date":"2026-10-30","t":1793394000,"c":19.42},{"date":"2026-11-02","t":1793653200,"c":21.15},{"date":"2026-11-03","t":1793739600,"c":20.83},{"date":"2026-11-04","t":1793826000,"c":16.61},{"date":"2026-11-05","t":1793912400,"c":28.18},{"date":"2026-11-06","t":1793998800,"c":25.64},{"date":"2026-11-09","t":1794258000,"c":19.92},{"date":"2026-11-10","t":1794344400,"c":19.46},{"date":"2026-11-11","t":1794430800,"c":17.49},{"date":"2026-11-12","t":1794517200,"c":18.7},{"date":"2026-11-13","t":1794603600,"c":19.3},{"date":"2026-11-16","t":1794862800,"c":22.91},{"date":"2026-11-17","t":1794949200,"c":25.46}]}</script>
@@ -631,7 +649,102 @@ function renderFuturesCards(){
    if(rows?.length)drawFuturesCloseTile(key,rows,futuresFreshness[key]);
  }
 }
+
+/* Explicit user-supplied historical CSV import: offline, only this browser.
+   CSV is obtained by the visitor from the provider's normal download controls.
+   Never guess or automate one-use ticket links and never publish CSV to GitHub. */
+const IMPORT_KEY_PREFIX="metals-terminal-futures-history-v1-";
+function mergeFuturesHistory(older,newer){
+ const map=new Map((older||[]).filter(z=>z?.date&&Number.isFinite(z.c)&&z.c>0).map(z=>[z.date,z]));
+ for(const z of newer||[])if(z?.date&&Number.isFinite(z.c)&&z.c>0)map.set(z.date,z);
+ const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-5);cutoff.setUTCDate(cutoff.getUTCDate()-16);
+ const minDate=cutoff.toISOString().slice(0,10);
+ return [...map.values()].filter(z=>z.date>=minDate).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function detectCsvFuturesSymbol(filename){
+ const m=String(filename).toUpperCase().match(/(?:^|[^A-Z0-9])(GC|SI|HG|BZ)(?:[^A-Z0-9]|$)/);
+ return m?m[1]:null;
+}
+function parseCsvRecord(line){
+ const out=[];let buffer="",quoted=false;
+ for(let i=0;i<line.length;i++){
+  const ch=line[i];
+  if(ch==='"'){if(quoted&&line[i+1]==='"'){buffer+='"';i++;}else quoted=!quoted;}
+  else if(ch===","&&!quoted){out.push(buffer.trim());buffer="";}
+  else buffer+=ch;
+ }
+ out.push(buffer.trim());return out;
+}
+function parseImportedFuturesCsv(contents,code){
+ const lines=contents.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);
+ if(lines.length<4)throw Error("El CSV está vacío");
+ const head=parseCsvRecord(lines[0]).map(s=>s.toLowerCase().trim());
+ const iDate=head.indexOf("date"),iClose=head.indexOf("close"),iOpen=head.indexOf("open"),iHigh=head.indexOf("high"),iLow=head.indexOf("low");
+ if([iDate,iClose].some(i=>i<0))throw Error("Faltan columnas date/close");
+ const map=new Map();
+ const now=Date.now()/1000,cutoff=Date.now()/1000-86400*1870;
+ for(const line of lines.slice(1)){
+  const cols=parseCsvRecord(line),date=cols[iDate];
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date||""))continue;
+  const t=Date.parse(date+"T17:00:00Z")/1000,c=Number(String(cols[iClose]).replace(/,/g,""));
+  if(!Number.isFinite(t)||t<cutoff||t>now+86400||!Number.isFinite(c)||c<=0)continue;
+  const record={date,t,c};
+  for(const [index,field] of [[iOpen,"o"],[iHigh,"h"],[iLow,"l"]]){
+   if(index<0)continue;
+   const value=Number(String(cols[index]).replace(/,/g,""));
+   if(Number.isFinite(value)&&value>0)record[field]=value;
+  }
+  if(record.h&&record.l&&(record.h<record.l||c>record.h*1.015||c<record.l*.985))continue;
+  map.set(date,record);
+ }
+ const rows=[...map.values()].sort((a,b)=>a.t-b.t);
+ if(rows.length<20)throw Error("Menos de 20 cierres verificables para "+code);
+ return rows;
+}
+function loadImportedFuturesHistory(){
+ try{
+  for(const key of FUTURE_KEYS){
+   const code=FUTURES_PUBLIC[key].code,raw=localStorage.getItem(IMPORT_KEY_PREFIX+code);
+   if(!raw)continue;
+   const parsed=JSON.parse(raw);
+   if(parsed.code!==code||!Array.isArray(parsed.rows)||parsed.rows.length<20)continue;
+   futuresCache[key]=mergeFuturesHistory(futuresCache[key],parsed.rows);
+   futuresFreshness[key]="Histórico importado · "+parsed.rows.length+" sesiones";
+  }
+ }catch(e){console.warn("No se pudo leer el histórico privado del navegador",e);}
+}
+async function importFuturesCsvFiles(files){
+ const status=document.getElementById("futures-import-status");
+ const summaries=[];
+ for(const file of Array.from(files||[])){
+  const code=detectCsvFuturesSymbol(file.name),key=FUTURE_KEYS.find(x=>FUTURES_PUBLIC[x].code===code);
+  if(!code||!key){summaries.push("Archivo "+file.name+": símbolo GC/SI/HG/BZ no identificable en el nombre.");continue;}
+  if(file.size>5_000_000){summaries.push(code+": archivo demasiado grande para el almacenamiento local.");continue;}
+  try{
+   const rows=parseImportedFuturesCsv(await file.text(),code);
+   const known=futuresCache[key]||[];
+   const same=new Map(known.map(r=>[r.date,r.c]));
+   const overlaps=rows.filter(r=>same.has(r.date));
+   if(overlaps.length>=2){
+    const divergence=Math.max(...overlaps.map(r=>Math.abs(r.c/same.get(r.date)-1)));
+    if(divergence>.025)throw Error("Cierres divergentes "+fmt(divergence*100,2)+" % respecto a los datos ya verificados. Comprueba que descargas 'Raw contract prices', no una serie ajustada distinta.");
+   }
+   const previous=localStorage.getItem(IMPORT_KEY_PREFIX+code);
+   const saved={code,source:"Archivo CSV obtenido por el usuario",rows};
+   try{localStorage.setItem(IMPORT_KEY_PREFIX+code,JSON.stringify(saved));}
+   catch(e){if(previous!==null)try{localStorage.setItem(IMPORT_KEY_PREFIX+code,previous)}catch(_){}throw Error("No hay almacenamiento local suficiente; no se ha guardado el CSV.");}
+   futuresCache[key]=mergeFuturesHistory(rows,known);
+   futuresFreshness[key]="CSV local "+rows.length+" sesiones + últimos cierres";
+   summaries.push(code+": "+rows.length+" cierres importados ("+rows[0].date+" a "+rows.at(-1).date+").");
+  }catch(e){summaries.push(code+": no importado — "+e.message);}
+ }
+ status.textContent=summaries.join("\n")||"No se seleccionaron CSV.";
+ renderFuturesCards();renderFuturesComparison();
+ document.getElementById("futures-csv-upload").value="";
+}
+
 function verifiedFallbackFutures(){
+ loadImportedFuturesHistory();
  try{
    const node=document.getElementById("verified-futures-snapshot");
    if(!node)throw Error("Sin respaldo");
@@ -639,8 +752,8 @@ function verifiedFallbackFutures(){
    for(const key of FUTURE_KEYS){
      const code=FUTURES_PUBLIC[key].code,rows=data[code];
      if(Array.isArray(rows)&&rows.length>=8&&rows.every(z=>Number.isFinite(z.c)&&Number.isFinite(z.t))){
-       futuresCache[key]=rows.slice().sort((a,b)=>a.t-b.t);
-       futuresFreshness[key]="Verificado "+rows.at(-1).date+" · sin actualización";
+       futuresCache[key]=mergeFuturesHistory(futuresCache[key],rows);
+       futuresFreshness[key]=futuresCache[key].length>rows.length?"CSV local + cierre verificado "+rows.at(-1).date:"Verificado "+rows.at(-1).date+" · sin actualización";
      }
    }
    renderFuturesCards();
@@ -657,8 +770,8 @@ async function loadFuturesCards(){
      const fresh=decodeFuturesCloseTable(await r.text(),conf.code);
      const prev=futuresCache[key]?.at(-1)?.date;
      if(prev&&fresh.at(-1)?.date<prev)throw Error("Cierre más antiguo que instantánea");
-     futuresCache[key]=fresh;
-     futuresFreshness[key]="Último "+fresh.at(-1).date;
+     futuresCache[key]=mergeFuturesHistory(futuresCache[key],fresh);
+     futuresFreshness[key]=futuresCache[key].length>fresh.length?"Histórico local + último "+fresh.at(-1).date:"Último "+fresh.at(-1).date;
      drawFuturesCloseTile(key,fresh,futuresFreshness[key]);
      if(key==="gold"||key==="silver"||key==="copper")renderFuturesComparison();
    }catch(e){
@@ -1043,7 +1156,7 @@ function drawMarketDetail(){
  }
 }
 
-function init(){bootMarket();bootMacro();document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});$('#global-timeframes').addEventListener('click',event=>{
+function init(){bootMarket();bootMacro();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});$('#global-timeframes').addEventListener('click',event=>{
  const b=event.target.closest('button[data-global-period]');
  if(b)fetchNative(b.dataset.globalPeriod);
 });
