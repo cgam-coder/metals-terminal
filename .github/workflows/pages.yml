@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'qa-market-v2.html'
       - 'data/**'
       - '.github/workflows/pages.yml'
   workflow_run:
@@ -33,6 +34,7 @@ jobs:
         run: |
           mkdir -p _site/data
           cp index.html _site/index.html
+          if [ -f qa-market-v2.html ]; then cp qa-market-v2.html _site/qa-market-v2.html; fi
           cp data/series.json _site/data/series.json
           touch _site/.nojekyll
       - name: Configurar Pages
