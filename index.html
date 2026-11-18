@@ -1119,8 +1119,32 @@ function svgPlot({series,width=390,height=200,yMin=null,yMax=null,xLabels=[],pal
  });
  return out+'</svg>';
 }
-function getRows(){const keys=['DGS2','DGS10','DGS30','DFII10'];const d=new Map();for(const k of keys){for(const row of v(macro,k)){if(!d.has(row.date))d.set(row.date,{date:row.date});d.get(row.date)[k]=row.value;}}return [...d.values()].sort((a,b)=>a.date.localeCompare(b.date));}
-
+/* Official macro source of truth: each FRED CSV replaces (never merges ahead of)
+   the initial/published fallback for that exact key after schema validation.
+   Chart windows are anchored to the last *actual observation* per group,
+   explicitly disclosed in each panel. Never pad missing Treasury dates. */
+const MACRO_SERIES=["DGS2","DGS10","DGS30","DFII10","DFEDTARU","ECBDFR"];
+const macroOfficialKeys=new Set();
+const macroLastError=new Map();
+function macroSourceLabel(keys){
+ const fresh=keys.filter(k=>macroOfficialKeys.has(k));
+ return fresh.length===keys.length?"FRED directo":fresh.length?("FRED "+fresh.length+"/"+keys.length+" · respaldo parcial"):"instantánea de respaldo";
+}
+function macroLastDate(keys){
+ const dates=keys.map(k=>v(macro,k).at(-1)?.date).filter(Boolean).sort();
+ return dates.at(-1)||null;
+}
+function getRows(){
+ const keys=["DGS2","DGS10","DGS30","DFII10"],d=new Map();
+ for(const k of keys){
+   for(const row of v(macro,k)){
+     if(!row||!Number.isFinite(row.value)||!/^\d{4}-\d{2}-\d{2}$/.test(row.date||""))continue;
+     if(!d.has(row.date))d.set(row.date,{date:row.date});
+     d.get(row.date)[k]=row.value;
+   }
+ }
+ return [...d.values()].sort((a,b)=>a.date.localeCompare(b.date));
+}
 function windowStart(end,window){
  const dt=new Date(end+"T00:00:00Z");
  if(window==="1D")dt.setUTCDate(dt.getUTCDate()-1);
@@ -1147,121 +1171,191 @@ function syncMacroToMaster(period){
 }
 function macroWindowRows(rows,what){
  if(!rows.length)return [];
- const start=windowStart(rows.at(-1).date,macroWindows[what]||"1M");
- return rows.filter(x=>x.date>=start);
+ const end=rows.at(-1).date,start=windowStart(end,macroWindows[what]||"1M");
+ return rows.filter(row=>row.date>=start&&row.date<=end);
 }
 function macroLabels(rows,what){
- const window=macroWindows[what]||"1M";
+ const period=macroWindows[what]||"1M";
  return rows.map(r=>{
-   if(window==="5A")return r.date.slice(0,7);
-   if(window==="1A")return r.date.slice(2,7);
+   if(period==="5A"||period==="2A")return r.date.slice(0,7);
+   if(period==="1A")return r.date.slice(2,7);
    return r.date.slice(5);
  });
 }
 function macroCoverageNotice(rows,what){
- if(!rows.length)return "Sin observaciones";
- const first=rows[0].date,last=rows.at(-1).date,want=windowStart(last,macroWindows[what]||"1M");
- const desired=Date.parse(last+"T00:00:00Z")-Date.parse(want+"T00:00:00Z");
+ if(!rows.length)return "sin observaciones verificables";
+ const first=rows[0].date,last=rows.at(-1).date;
+ const start=windowStart(last,macroWindows[what]||"1M");
  const available=Date.parse(last+"T00:00:00Z")-Date.parse(first+"T00:00:00Z");
- return (available<desired*.55?"Cobertura parcial: ":"Datos: ")+prettyDate(first)+" – "+prettyDate(last)+(rows.length===1?" · una única observación":"");
+ const needed=Date.parse(last+"T00:00:00Z")-Date.parse(start+"T00:00:00Z");
+ const status=rows.length===1?"una sola observación; no hay evolución":available<needed*.70?"cobertura parcial":"intervalo observado";
+ return prettyDate(first)+" – "+prettyDate(last)+" · "+rows.length+" obs. · "+status;
+}
+function macroGraphMessage(label,source,previous=null){
+ return '<div class="native-error">'+label+'<div style="font-size:11px;margin-top:8px">Fuente: '+source+(previous?'; último dato '+previous:"")+'</div></div>';
 }
 function renderCurve(){
- const all=getRows().filter(r=>[r.DGS2,r.DGS10,r.DGS30].every(Number.isFinite));
+ const keys=["DGS2","DGS10","DGS30"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
  const rows=macroWindowRows(all,"curve"),now=rows.at(-1),then=rows[0];
- if(!now){$('#curve-graph').innerHTML='<div class="native-error">Sin datos Treasury verificados para este periodo.</div>';return;}
- $('#yield-stamp').textContent='Tesoro EE. UU. · Último dato: '+prettyDate(now.date);
- $('#legend-today').textContent=curveHistorical?'Treasury 10Y':'Último · '+prettyDate(now.date);
- $('#legend-before').textContent=curveHistorical?'Treasury 2Y':'Inicio · '+prettyDate(then.date);
- $('#curve-caption').textContent=(curveHistorical?'Histórico 2Y/10Y/30Y':'Curva por vencimientos')+' · '+macroWindows.curve+' · '+macroCoverageNotice(rows,'curve');
- if(!curveHistorical){
-   $('#curve-graph').innerHTML=svgPlot({series:[{values:[now.DGS2,now.DGS10,now.DGS30],color:'#38c9e5'},{values:[then.DGS2,then.DGS10,then.DGS30],color:'#f4ba3c'}],xLabels:['2Y','10Y','30Y'],palette:['stroke-cyan','stroke-gold'],width:390,height:222,xValues:[2,10,30]});
+ const source=macroSourceLabel(keys),period=macroWindows.curve;
+ if(!now){
+   $("#curve-graph").innerHTML=macroGraphMessage("Sin rendimientos nominales comunes en "+period+".",source,all.at(-1)?.date);
+   $("#curve-caption").textContent="Treasury 2Y/10Y/30Y · "+source+" · sin datos en "+period;
+   $("#yield-stamp").textContent="Tesoro de EE. UU. · "+source;
+   return;
+ }
+ $("#yield-stamp").textContent="Treasury · "+source+" · último "+prettyDate(now.date);
+ $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
+ $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
+ $("#curve-caption").textContent=(curveHistorical?"Histórico real 2Y/10Y/30Y":"Curva 2Y/10Y/30Y, inicio y último")+" · "+period+" · "+macroCoverageNotice(rows,"curve");
+ if(curveHistorical){
+   if(rows.length<2){
+     $("#curve-graph").innerHTML=macroGraphMessage("Solo hay un cierre Treasury en "+period+": "+prettyDate(now.date)+". No se puede dibujar una evolución temporal.",source);
+   }else{
+     $("#curve-graph").innerHTML=svgPlot({series:[
+       {name:"Treasury 10Y",values:rows.map(r=>r.DGS10),color:"#38c9e5"},
+       {name:"Treasury 2Y",values:rows.map(r=>r.DGS2),color:"#f4ba3c"},
+       {name:"Treasury 30Y",values:rows.map(r=>r.DGS30),color:"#d7e3ef"}
+     ],xLabels:macroLabels(rows,"curve"),palette:["stroke-cyan","stroke-gold","stroke-silver"],width:390,height:222,dates:rows.map(r=>r.date)});
+   }
  }else{
-   $('#curve-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DGS10),color:'#38c9e5'},{values:rows.map(r=>r.DGS2),color:'#f4ba3c'},{values:rows.map(r=>r.DGS30),color:'#d7e3ef'}],xLabels:macroLabels(rows,"curve"),palette:['stroke-cyan','stroke-gold','stroke-silver'],width:390,height:222,dates:rows.map(r=>r.date)});
+   // This is a yield curve by *maturity*, not a historical time-series plot.
+   // A single date yields one curve: never fabricate an "earlier" comparison.
+   const series=[{name:"Último "+now.date,values:[now.DGS2,now.DGS10,now.DGS30],color:"#38c9e5"}];
+   if(then.date!==now.date)series.push({name:"Inicio "+then.date,values:[then.DGS2,then.DGS10,then.DGS30],color:"#f4ba3c"});
+   $("#curve-graph").innerHTML=svgPlot({series,xLabels:["2Y","10Y","30Y"],palette:["stroke-cyan","stroke-gold"],width:390,height:222,xValues:[2,10,30]});
  }
  const spread=now.DGS10-now.DGS2;
- $('#yield-stats').innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?'var(--green)':'var(--red)')+'">'+(spread>0?'+':'')+fmt(spread)+' pp</div>';
+ $("#yield-stats").innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?"var(--green)":"var(--red)")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</div>';
 }
 function renderReals(){
- const all=getRows().filter(r=>Number.isFinite(r.DGS10)&&Number.isFinite(r.DFII10));
+ const keys=["DGS10","DFII10"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
  const rows=macroWindowRows(all,"reals"),now=rows.at(-1);
- if(!now){$('#real-graph').innerHTML='<div class="native-error">No hay TIPS y Treasury de la misma fecha para este periodo.</div>';return;}
- $('#tips-value').textContent=fmt(now.DFII10)+' %';$('#breakeven-value').textContent=fmt(now.DGS10-now.DFII10)+' %';
- if(document.getElementById('real-dates'))$('#real-dates').textContent=macroWindows.reals+' · '+macroCoverageNotice(rows,'reals');
- $('#real-graph').innerHTML=svgPlot({series:[{values:rows.map(r=>r.DFII10),color:'#b88aff'},{values:rows.map(r=>r.DGS10-r.DFII10),color:'#f4ba3c'}],xLabels:macroLabels(rows,"reals"),palette:['stroke-purple','stroke-gold'],width:830,height:180,dates:rows.map(r=>r.date)});
+ const source=macroSourceLabel(keys),period=macroWindows.reals;
+ if(!now){
+   $("#real-graph").innerHTML=macroGraphMessage("Sin rendimientos nominales y reales coincidentes en "+period+".",source,all.at(-1)?.date);
+   $("#tips-value").textContent="—";$("#breakeven-value").textContent="—";
+   $("#real-dates").textContent=period+" · "+source+" · sin datos coincidentes";
+   return;
+ }
+ $("#tips-value").textContent=fmt(now.DFII10)+" %";
+ $("#breakeven-value").textContent=fmt(now.DGS10-now.DFII10)+" %";
+ $("#real-dates").textContent=period+" · "+source+" · "+macroCoverageNotice(rows,"reals");
+ if(rows.length<2){
+   $("#real-graph").innerHTML=macroGraphMessage("Un único cierre TIPS/Treasury ("+prettyDate(now.date)+"). No existe una evolución temporal en "+period+".",source);
+   return;
+ }
+ $("#real-graph").innerHTML=svgPlot({series:[
+   {name:"TIPS 10Y",values:rows.map(r=>r.DFII10),color:"#b88aff"},
+   {name:"Breakeven 10Y",values:rows.map(r=>r.DGS10-r.DFII10),color:"#f4ba3c"}
+ ],xLabels:macroLabels(rows,"reals"),palette:["stroke-purple","stroke-gold"],width:830,height:180,dates:rows.map(r=>r.date)});
 }
 function renderPolicy(){
- const fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
- const latestF=last(fed),latestB=last(ecb);
- $('#fed-value').textContent=latestF?fmt(latestF.value)+' %':'—';
- $('#ecb-value').textContent=latestB?fmt(latestB.value)+' %':'—';
- if(!latestF||!latestB){$('#policy-graph').innerHTML='<div class="native-error">Faltan tipos Fed/BCE contrastados.</div>';return;}
- const end=latestF.date>latestB.date?latestF.date:latestB.date;
- const start=windowStart(end,macroWindows.policy);
- const dates=[...new Set([...fed,...ecb].filter(r=>r.date>=start&&r.date<=end).map(r=>r.date))].sort();
- if(!dates.length)dates.push(end);
- const xDates=[...new Set([start,...dates.filter(d=>d>start),end])].sort();
- const align=arr=>{let lastVal=null;const map=new Map(arr.map(r=>[r.date,r.value]));for(const r of arr)if(r.date<=start&&Number.isFinite(r.value))lastVal=r.value;return xDates.map(d=>{if(map.has(d))lastVal=map.get(d);return lastVal;});};
- const aa=align(fed),bb=align(ecb);
- if(aa.some(z=>!Number.isFinite(z))||bb.some(z=>!Number.isFinite(z))){$('#policy-graph').innerHTML='<div class="native-error">Histórico oficial incompleto para el periodo.</div>';return;}
- $('#policy-graph').innerHTML=svgPlot({series:[{values:aa,color:'#f4ba3c'},{values:bb,color:'#38c9e5'}],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:['stroke-gold','stroke-cyan'],width:290,height:280,step:true,dates:xDates});
- if(document.getElementById('policy-dates'))$('#policy-dates').textContent=macroWindows.policy+' · '+macroCoverageNotice(xDates.map(date=>({date})),'policy');
+ const keys=["DFEDTARU","ECBDFR"],fed=v(macro,"DFEDTARU"),ecb=v(macro,"ECBDFR");
+ const latestF=last(fed),latestB=last(ecb),source=macroSourceLabel(keys),period=macroWindows.policy;
+ $("#fed-value").textContent=latestF?fmt(latestF.value)+" %":"—";
+ $("#ecb-value").textContent=latestB?fmt(latestB.value)+" %":"—";
+ if(!latestF||!latestB){
+   $("#policy-graph").innerHTML=macroGraphMessage("Tipos Fed/BCE no disponibles en el origen.",source);
+   $("#policy-dates").textContent="Faltan valores verificables de Fed o BCE";
+   return;
+ }
+ const end=latestF.date>latestB.date?latestF.date:latestB.date,start=windowStart(end,period);
+ // Group by actual publication/observation date, including both endpoints.
+ const dates=[...new Set([...fed,...ecb].map(r=>r.date).filter(d=>d>=start&&d<=end))].sort();
+ const xDates=[...new Set([start,...dates,end])].sort();
+ const align=arr=>{
+   const m=new Map(arr.filter(r=>Number.isFinite(r.value)).map(r=>[r.date,r.value]));
+   let known=null,knownDate=null;
+   for(const row of arr)if(row.date<=start&&Number.isFinite(row.value)){known=row.value;knownDate=row.date;}
+   return xDates.map(date=>{
+     if(m.has(date)){known=m.get(date);knownDate=date;}
+     return {value:known,asOf:knownDate};
+   });
+ };
+ const ff=align(fed),bb=align(ecb);
+ if(ff.some(r=>!Number.isFinite(r.value))||bb.some(r=>!Number.isFinite(r.value))){
+   $("#policy-graph").innerHTML=macroGraphMessage("No existe una base Fed/BCE validada para todo "+period+". No se extienden valores desconocidos.",source);
+   $("#policy-dates").textContent=period+" · "+source+" · datos incompletos";
+   return;
+ }
+ // Flat lines are genuine when the official target rate did not change.
+ const changes=(values)=>values.reduce((count,el,i)=>count+(i>0&&el.value!==values[i-1].value?1:0),0);
+ const changeCount=changes(ff)+changes(bb);
+ $("#policy-graph").innerHTML=svgPlot({series:[
+   {name:"Fed techo objetivo",values:ff.map(r=>r.value),color:"#f4ba3c"},
+   {name:"BCE facilidad depósito",values:bb.map(r=>r.value),color:"#38c9e5"}
+ ],xLabels:macroLabels(xDates.map(date=>({date})),"policy"),palette:["stroke-gold","stroke-cyan"],width:290,height:280,step:true,dates:xDates});
+ $("#policy-dates").textContent=period+" · "+source+" · "+prettyDate(start)+" – "+prettyDate(end)+" · "+changeCount+" cambios oficiales · Fed "+latestF.date+" / BCE "+latestB.date;
 }
 function renderMacro(){
  if(!macro?.series)return;
- const rows=getRows(),stamp=rows.at(-1)?.date||macro.updated||null;
- $('#stamp').textContent='Macro: '+prettyDate(stamp)+(macroLive?' · FRED':' · instantánea');
+ const dates=MACRO_SERIES.map(k=>v(macro,k).at(-1)?.date).filter(Boolean).sort();
+ const lastDate=dates.at(-1),loaded=macroOfficialKeys.size;
+ $("#stamp").textContent="Macro: "+(loaded===6?"FRED oficial":loaded?"FRED "+loaded+"/6 + respaldo":"instantánea")+" · "+prettyDate(lastDate||macro.updated);
  renderCurve();renderReals();renderPolicy();
 }
 function parseFredCsv(key,raw){
- const lines=raw.trim().split(/\r?\n/),head=lines.shift().replace(/\uFEFF/g,"").split(",");
- if(head[0]!=="observation_date"||head[1]!==key)throw Error('Esquema FRED incorrecto '+key);
+ const lines=raw.trim().split(/\r?\n/),head=lines.shift().replace(/\uFEFF/g,"").split(",").map(z=>z.trim());
+ if(head[0]!=="observation_date"||head[1]!==key)throw Error("CSV FRED con esquema distinto: "+key);
  const dates=new Map();
- for(const row of lines){
-   const [date,txt]=row.split(",");
-   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||""))continue;
-   if(!txt?.trim()||txt.trim()===".")continue;
-   const num=Number(txt);
-   if(!Number.isFinite(num)||num<-20||num>50)continue;
-   dates.set(date,{date,value:num});
+ for(const line of lines){
+   const [date,txt]=line.split(",");
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||"")||!txt?.trim()||txt.trim()===".")continue;
+   const value=Number(txt);
+   if(!Number.isFinite(value)||value< -20||value>50)continue;
+   dates.set(date,{date,value});
  }
- if(dates.size<40)throw Error('Histórico FRED insuficiente '+key);
- return [...dates.values()].sort((a,b)=>a.date.localeCompare(b.date));
+ if(dates.size<40)throw Error("FRED "+key+": menos de 40 observaciones oficiales");
+ const out=[...dates.values()].sort((a,b)=>a.date.localeCompare(b.date));
+ // Validated per-source, sorted and unique; no fallback rows may extend it.
+ if(out.at(-1).date>new Date(Date.now()+86400000).toISOString().slice(0,10))throw Error("FRED "+key+": fecha futura");
+ return out;
 }
 async function fetchMacroOfficial(){
- const keys=['DGS2','DGS10','DGS30','DFII10','DFEDTARU','ECBDFR'];
- const from=new Date();from.setUTCFullYear(from.getUTCFullYear()-5);from.setUTCDate(from.getUTCDate()-8);
+ const from=new Date();from.setUTCFullYear(from.getUTCFullYear()-5);from.setUTCDate(from.getUTCDate()-12);
  const start=from.toISOString().slice(0,10);
- const done=await Promise.allSettled(keys.map(async key=>{
-   const url='https://fred.stlouisfed.org/graph/fredgraph.csv?'+new URLSearchParams({id:key,cosd:start});
-   const response=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(18000)});
-   if(!response.ok)throw Error('FRED '+key+': HTTP '+response.status);
+ const done=await Promise.allSettled(MACRO_SERIES.map(async key=>{
+   const url="https://fred.stlouisfed.org/graph/fredgraph.csv?"+new URLSearchParams({id:key,cosd:start});
+   const response=await fetch(url,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(22000)});
+   if(!response.ok)throw Error("FRED "+key+" HTTP "+response.status);
    return {key,rows:parseFredCsv(key,await response.text())};
  }));
  let updated=0;
- for(const item of done){
-   if(item.status!=='fulfilled'){console.warn('FRED no disponible',item.reason);continue;}
-   const {key,rows}=item.value;
-   const existing=v(macro,key),index=new Map(existing.map(row=>[row.date,row]));
-   for(const row of rows)index.set(row.date,row);
-   macro.series[key]=[...index.values()].sort((a,b)=>a.date.localeCompare(b.date)).filter(row=>row.date>=start);
+ done.forEach((item,i)=>{
+   const key=MACRO_SERIES[i];
+   if(item.status!=="fulfilled"){
+     macroLastError.set(key,String(item.reason));
+     console.warn("FRED no disponible, respaldo etiquetado: "+key,item.reason);
+     return;
+   }
+   const {rows}=item.value;
+   // IMPORTANT: replace, not merge. The older embedded snapshot can have later
+   // values that have not yet been corroborated by the official CSV.
+   macro.series[key]=rows;
+   macroOfficialKeys.add(key);
+   macroLastError.delete(key);
    updated++;
- }
- if(updated){macroLive=true;macro.source='FRED (fuentes US Treasury, Fed y BCE) · consulta al abrir';renderMacro();}
- else console.warn('FRED inaccesible: usando instantánea fechada, sin datos ficticios.');
+ });
+ macroLive=macroOfficialKeys.size===MACRO_SERIES.length;
+ if(updated){
+   macro.source="FRED CSV oficiales consultados al abrir; series individuales";
+ }else console.warn("FRED inaccesible: la web usa instantáneas con fechas y origen explícitos.");
+ renderMacro();
 }
 async function bootMacro(){
  try{
-   const seed=document.getElementById('initial-macro');
-   if(seed){const obj=JSON.parse(seed.textContent);if(obj?.series){macro=obj;renderMacro();}}
- }catch(e){console.warn('Instantánea integrada inválida',e);}
+   const seed=document.getElementById("initial-macro");
+   if(seed){const candidate=JSON.parse(seed.textContent);if(candidate?.series){macro=candidate;renderMacro();}}
+ }catch(e){console.warn("Instantánea integrada no válida",e);}
  try{
-   const r=await fetch('data/series.json',{cache:'no-store'});
-   if(!r.ok)throw Error(r.status);
-   const obj=await r.json();
-   if(!obj?.series||!obj.source)throw Error('JSON no válido');
-   macro=obj;renderMacro();
- }catch(e){console.warn('Instantánea publicada no disponible',e);}
- if(!macro)macro={source:'FRED',series:{}};
+   const res=await fetch("data/series.json",{cache:"no-store"});
+   if(!res.ok)throw Error("HTTP "+res.status);
+   const data=await res.json();
+   if(!data?.series||!data.source)throw Error("Instantánea externa no válida");
+   if(macroOfficialKeys.size===0){macro=data;renderMacro();}
+ }catch(e){console.warn("Instantánea publicada no disponible",e);}
+ if(!macro)macro={source:"respaldo no disponible",series:{}};
  await fetchMacroOfficial();
 }
 
