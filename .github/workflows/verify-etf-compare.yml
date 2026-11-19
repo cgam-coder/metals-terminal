@@ -1,0 +1,92 @@
+name: Verificar comparativa trimestral GLD vs SLV
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/verify-etf-compare.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Validar render GLD SLV con fuente SEC
+        run: |
+          mkdir -p evidence-etf
+          cat > verify-etf.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const report={cases:{},errors:[],timestamp:new Date().toISOString()};
+          const prefix='https://cgam-coder.github.io/metals-terminal/preview/etf-compare/';
+          const evaluate=async(page)=>page.evaluate(()=>{
+            const m=marketChartCache.get('v4-flows-chart');
+            const card=document.getElementById('v4-flows');
+            const box=card?.getBoundingClientRect();
+            return {title:card?.querySelector('h3')?.innerText,chart:!!card?.querySelector('svg'),lines:m?.lines?.map(x=>({name:x.label,length:x.points.length,first:x.points[0],last:x.points.at(-1)})),dates:m?.dates?.length,
+             stat:document.getElementById('v4-flows-state')?.innerText,dateCaption:document.getElementById('v4-flows-dates')?.innerText,
+             w:document.documentElement.scrollWidth,viewport:innerWidth,cardHeight:box?.height,existingCot:!!document.getElementById('v4-cot-chart'),fedWatch:!!document.getElementById('v4-fedwatch')};
+          });
+          for(const [label,width,height] of [['desktop',1440,900],['tablet',1024,820],['mobile',390,820],['small',360,760]]){
+            const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
+            page.on('pageerror',e=>report.errors.push({label,type:'JS',message:e.message}));
+            try{
+              await page.goto(prefix+'?period=1mo',{waitUntil:'domcontentloaded',timeout:42000});
+              await page.waitForFunction(()=>!!marketChartCache.get('v4-flows-chart')?.dates?.length,{timeout:35000});
+              const v=await evaluate(page);report.cases[label]=v;
+              if(v.w>width||v.fedWatch||!v.existingCot)throw Error('regression/layout '+label);
+              if(v.lines?.length!==2||!v.lines[0].name.includes('GLD')||!v.lines[1].name.includes('SLV')||
+                !v.stat?.includes('GLD')||!v.stat?.includes('SLV')||!v.stat?.includes('estructural'))throw Error('missing dual lines or structural disclaimer '+label);
+              await page.locator('#v4-flows').screenshot({path:'evidence-etf/'+label+'-card.png'});
+              if(label==='desktop'){
+                await page.locator('[data-inspect="v4-flows"]').click();
+                await page.waitForTimeout(700);
+                report.cases.desktop.modal={
+                  title:await page.locator('#detail-title').innerText(),
+                  lines:await page.evaluate(()=>marketChartCache.get('v4-detail-graph')?.lines?.map(x=>x.label)),
+                  hasWGC:(await page.locator('#detail-chart').innerText()).includes('WGC')
+                };
+                await page.locator('#detail-overlay').screenshot({path:'evidence-etf/desktop-detail.png'});
+                if(report.cases.desktop.modal.lines?.length!==2||!report.cases.desktop.modal.hasWGC)throw Error('modal missing series or WGC context');
+                await page.locator('#detail-close').click();
+                await page.locator('[data-global-period="5y"]').click();
+                await page.waitForTimeout(2000);
+                report.cases.desktop.fiveYears=await evaluate(page);
+                if(report.cases.desktop.fiveYears.dates<17)throw Error('5Y historical coverage insufficient');
+              }
+            }catch(e){report.errors.push({label,type:'test',message:String(e)})}
+            await page.close();
+          }
+          const custom=await browser.newPage({viewport:{width:920,height:800}});
+          try{
+            await custom.goto(prefix+'?period=custom&from=2025-01-01&to=2026-07-31',{waitUntil:'domcontentloaded',timeout:42000});
+            await custom.waitForTimeout(19000);
+            report.cases.custom=await evaluate(custom);
+            if(report.cases.custom.dateCaption?.includes('2026-06-30'))throw Error('LOOKAHEAD: June 2026 report not yet filed by July 31');
+            if(!report.cases.custom.dateCaption?.includes('2026-03-31'))throw Error('as-of filtering did not select prior released report');
+          }catch(e){report.errors.push({label:'custom',type:'test',message:String(e)})}
+          await custom.close();
+          await browser.close();
+          fs.writeFileSync('evidence-etf/result.json',JSON.stringify(report,null,2));
+          console.log('ETF_TEST_START');
+          console.log(JSON.stringify(report,null,2));
+          console.log('ETF_TEST_END');
+          if(report.errors.length)process.exitCode=1;
+          EOF
+          node verify-etf.mjs
+      - name: Guardar pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: etf-gld-slv-validated-proof
+          path: evidence-etf/
+          retention-days: 7
+          if-no-files-found: warn
