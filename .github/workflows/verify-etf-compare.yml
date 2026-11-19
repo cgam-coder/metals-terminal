@@ -52,10 +52,13 @@ jobs:
                 report.cases.desktop.modal={
                   title:await page.locator('#detail-title').innerText(),
                   lines:await page.evaluate(()=>marketChartCache.get('v4-detail-graph')?.lines?.map(x=>x.label)),
-                  hasWGC:(await page.locator('#detail-chart').innerText()).includes('WGC')
+                  hasWGC:(await page.locator('#detail-chart').innerText()).includes('WGC'),
+                  scroll:await page.locator('#detail-chart').evaluate(el=>({overflow:getComputedStyle(el).overflowY,contextCards:el.querySelectorAll('.v4-etf-context>div').length,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}))
                 };
                 await page.locator('#detail-overlay').screenshot({path:'evidence-etf/desktop-detail.png'});
-                if(report.cases.desktop.modal.lines?.length!==2||!report.cases.desktop.modal.hasWGC)throw Error('modal missing series or WGC context');
+                await page.locator('.v4-etf-context').scrollIntoViewIfNeeded();
+                await page.locator('#detail-overlay').screenshot({path:'evidence-etf/desktop-context.png'});
+                if(report.cases.desktop.modal.lines?.length!==2||!report.cases.desktop.modal.hasWGC||report.cases.desktop.modal.scroll.overflow!=='auto'||report.cases.desktop.modal.scroll.contextCards<2)throw Error('modal missing series or WGC/SLV accessible context');
                 await page.locator('#detail-close').click();
                 await page.locator('[data-global-period="5y"]').click();
                 await page.waitForTimeout(2000);
