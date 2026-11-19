@@ -616,6 +616,22 @@
 .v4-selector{display:flex;align-items:center;gap:3px}
 .v4-selector button{border:1px solid #365a70;color:#c4d8e5;background:#102735;padding:5px 9px;min-height:31px;border-radius:6px;font-size:11px}
 .v4-selector button[aria-pressed="true"]{border-color:#bb9641;background:#66501a;color:#fff}
+.v4-etf-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.v4-etf-metal{min-width:0;background:#0d2532;border:1px solid #375267;border-radius:8px;padding:7px}
+.v4-etf-metal b{display:flex;align-items:center;gap:5px;font-size:10px;color:#bdd1de}
+.v4-etf-metal b::before{content:"";width:12px;height:3px;background:var(--gold);border-radius:2px}
+.v4-etf-metal.silver b::before{background:var(--silver)}
+.v4-etf-metal strong{display:block;font-size:17px;color:#f0f6fa;font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums}
+.v4-etf-metal small{display:block;font-size:9px;color:#9bb4c4}
+.v4-etf-note{font-size:10px;color:#e0c58d;line-height:1.45}
+.detail-chart.v4-etf-detail{overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-color:#476377 transparent}
+.detail-chart.v4-etf-detail>.v4-graph{height:auto;flex:1 0 270px;min-height:270px}
+.detail-chart.v4-etf-detail>.v4-etf-context{flex:0 0 auto;margin-top:0}
+.detail-chart.v4-etf-detail>.v4-placeholder{flex:0 0 auto}
+.v4-etf-context{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.v4-etf-context>div{border:1px solid #36566c;border-radius:8px;padding:10px;background:#0b2430;color:#b9d0de;font-size:11px}
+.v4-etf-context strong{color:#ebcf8c}
+@media(max-width:580px){.v4-etf-context{grid-template-columns:1fr}}
 .v4-fund-facts{display:grid;grid-template-columns:1fr;gap:8px}
 .v4-fund-facts>div{background:#0e2733;border:1px solid #365365;border-radius:7px;padding:9px}
 .v4-fund-facts b{display:block;color:#e6f2fa;font-size:11px}
@@ -722,14 +738,15 @@
    <div class="v4-foot"><span id="v4-volatility-dates">VXSLV pendiente de derecho de uso público</span><a href="https://fred.stlouisfed.org/series/GVZCLS" target="_blank" rel="noopener noreferrer">FRED / Cboe ↗</a></div>
   </article>
   <article class="panel v4-card" id="v4-flows">
-   <div class="v4-card-head"><h3>Flujos ETF/ETP</h3><button class="market-inspect" data-inspect="v4-flows" title="Ampliar flujos ETF ETP">Ampliar ↗</button></div>
-   <div class="v4-muted">Oro global WGC · plata SLV tenencias, no flujos agregados</div>
-   <div class="v4-status" id="v4-flows-state" role="status"><div class="v4-placeholder"><strong>Datos pendientes de integración.</strong> No se equiparan flujos globales del oro a tenencias de un solo ETF de plata.</div></div>
-   <div class="v4-foot"><a href="https://www.gold.org/goldhub/data/gold-etfs-holdings-and-flows" target="_blank" rel="noopener noreferrer">WGC · oro ↗</a><a href="https://www.ishares.com/us/products/239855/ISHARES-SILVER-TRUST-FUND" target="_blank" rel="noopener noreferrer">SLV · plata ↗</a></div>
+   <div class="v4-card-head"><h3>ETF físicos · Oro vs Plata</h3><button class="market-inspect" data-inspect="v4-flows" title="Ampliar tenencias GLD y SLV">Ampliar ↗</button></div>
+   <div class="v4-muted">GLD y SLV · tenencias físicas declaradas a la SEC · datos trimestrales</div>
+   <div id="v4-flows-state" class="v4-status" role="status">Cargando informes SEC de ambos fondos…</div>
+   <div id="v4-flows-chart" class="v4-graph"></div>
+   <div class="v4-foot"><span id="v4-flows-dates">Fecha de tenencias y presentación SEC</span><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener noreferrer">SEC EDGAR ↗</a></div>
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.2</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.3</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -2444,8 +2461,8 @@ function drawMarketDetail(){
 /* V4 · CFTC source of truth and independent GVZ. Zero cron, zero subscriptions. */
 const V4_SOURCE_COT="https://publicreporting.cftc.gov/resource/72hh-3qpy.json";
 const V4_FRED_GVZ="https://fred.stlouisfed.org/graph/fredgraph.csv?id=GVZCLS";
-const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"Flujos de inversión ETF/ETP"};
-const v4State={cot:null,cotSource:"",gvz:null,flows:null};
+const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"ETF físicos · comparación GLD / SLV"};
+const v4State={cot:null,cotSource:"",gvz:null,flows:null,secHoldings:null};
 const v4HtmlText=s=>String(s??"").replace(/[<>&"'\x60]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;","\x60":"&#96;"}[c]));
 function v4CotRows(raw){
  if(!Array.isArray(raw))throw Error("CFTC: formato de respuesta incorrecto");
@@ -2568,17 +2585,60 @@ function v4RenderGvz(){
  if(rows.length>=2)nativeChart("v4-volatility-chart",[{label:"GVZ · GLD",color:"#b88aff",points:rows.map(z=>z.value)}],rows.map(z=>z.t),"",'<span>FRED GVZCLS · Cboe, uso sujeto a permisos y atribución de serie.</span>');
  else host.innerHTML='<div class="v4-placeholder">No hay al menos dos cierres GVZ en el periodo. Valor anterior fechado, sin crear curva artificial.</div>';
 }
+function v4ValidateSECHoldings(json){
+ if(json?.schema!=="metals-v4-etf-holdings-sec-v1"||json.source_authority!=="U.S. Securities and Exchange Commission EDGAR (10-Q / 10-K)")throw Error("Fuentes SEC incompletas");
+ const result={};
+ for(const [symbol,min] of [["gld",19],["slv",20]]){
+  const src=json.series?.[symbol];if(!Array.isArray(src)||src.length<min)throw Error("Histórico SEC insuficiente "+symbol);
+  const rows=[];
+  for(const x of src){
+   const date=x.observation_date,filing=x.filed_at,value=Number(x.value),url=x.sec_filing_url;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||"")||!/^\d{4}-\d{2}-\d{2}$/.test(filing||"")||filing<date||filing>json.compiled_on||!Number.isFinite(value)||value<=0||
+      !/^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\/\d+\/\d+\/[\w.-]+\.htm$/.test(url||"")||
+      (rows.length&&rows.at(-1).date>=date))throw Error("Registro SEC inválido "+symbol);
+   rows.push({date,t:Date.parse(date+"T20:00:00Z")/1000,filed:filing,value,url});
+  }
+  result[symbol]=rows;
+ }
+ return result;
+}
+function v4ETFPairs(end){
+ const g=v4State.secHoldings?.gld||[],s=v4State.secHoldings?.slv||[];
+ const silver=new Map(s.filter(x=>x.filed<=end).map(x=>[x.date,x]));
+ return g.filter(x=>x.filed<=end&&silver.has(x.date)).map(x=>({date:x.date,t:x.t,gld:x,slv:silver.get(x.date)}));
+}
+function v4ETFSelection(){
+ const w=v4Window(),all=v4ETFPairs(w.end);
+ const context=nativePeriod!=="custom"&&["1d","3d","5d","2w","1mo","3mo","6mo"].includes(nativePeriod);
+ const first=context?new Date(Date.parse(w.end+"T00:00:00Z")-730*86400000).toISOString().slice(0,10):w.start;
+ return {rows:all.filter(x=>x.date>=first&&x.date<=w.end),context,start:first,end:w.end};
+}
+function v4ETFExtra(){
+ const f=v4State.flows;if(!f)return '<div class="v4-placeholder">Datos WGC/SLV complementarios no disponibles.</div>';
+ const end=v4Window().end,items=[];
+ if(f.gold.publication_date<=end)items.push('<div><strong>WGC · ETF físicos globales de oro</strong><p>Entradas netas +'+fmt(f.gold.net_fund_flow_usd_billion,1)+' mil millones USD, octubre de 2026. Es un flujo global, no un cambio GLD. <a href="'+v4HtmlText(f.gold.source_url)+'" target="_blank" rel="noopener">WGC ↗</a></p></div>');
+ if(f.silver.observation_date<=end)items.push('<div><strong>iShares SLV · dato reciente</strong><p>'+fmt(f.silver.trust_tonnes,2)+' toneladas el '+v4HtmlText(f.silver.observation_date)+'. No es un flujo global. <a href="'+v4HtmlText(f.silver.source_url)+'" target="_blank" rel="noopener">iShares ↗</a></p></div>');
+ return items.length?'<div class="v4-etf-context">'+items.join("")+'</div>':'<div class="v4-placeholder">No hay publicaciones complementarias disponibles en la fecha final elegida.</div>';
+}
 function v4RenderFlows(){
- const el=document.getElementById("v4-flows-state");
- if(!el)return;
- const obj=v4State.flows,selectedEnd=v4Window().end;
- if(!obj){el.innerHTML='<div class="v4-placeholder">No hay instantánea verificada de flujos y tenencias. Consulta las fuentes WGC y SLV.</div>';return;}
- const g=obj.gold,s=obj.silver,eligibleGold=g.publication_date<=selectedEnd,eligibleSilver=s.observation_date<=selectedEnd;
- if(!eligibleGold&&!eligibleSilver){el.innerHTML='<div class="v4-placeholder">No hay publicaciones verificadas en esta instantánea anteriores a '+v4HtmlText(selectedEnd)+'.</div>';return;}
- const blocks=[];
- if(eligibleGold)blocks.push('<div><b>Oro · ETF físicos globales</b><strong>+'+fmt(g.net_fund_flow_usd_billion,1)+' mil M USD</strong><small>Entrada neta · octubre 2026 · WGC, publicado '+v4HtmlText(g.publication_date)+' · tenencias '+v4Compact(g.holding_tonnes)+' t</small></div>');
- if(eligibleSilver)blocks.push('<div><b>Plata · iShares SLV</b><strong>'+fmt(s.trust_tonnes,2)+' t</strong><small>Tenencias en un solo trust · '+v4HtmlText(s.observation_date)+' · NO flujos globales de plata</small></div>');
- el.innerHTML='<div class="v4-fund-facts">'+blocks.join("")+'</div>';
+ const state=document.getElementById("v4-flows-state"),host=document.getElementById("v4-flows-chart"),dates=document.getElementById("v4-flows-dates");
+ if(!state||!host)return;
+ marketChartCache.delete("v4-flows-chart");
+ if(!v4State.secHoldings){state.innerHTML='<div class="v4-placeholder">La comparación GLD/SLV requiere informes trimestrales SEC validados. No se publican los archivos originales con restricciones de redistribución.</div>';host.innerHTML="";return;}
+ const p=v4ETFSelection(),all=v4ETFPairs(p.end),latest=p.rows.at(-1)||all.at(-1);
+ if(!latest){state.innerHTML='<div class="v4-placeholder">Sin informes de ambos fondos ya publicados para esta fecha.</div>';host.innerHTML="";dates.textContent="SEC · sin datos accesibles";return;}
+ state.innerHTML='<div class="v4-etf-comparison">'+
+  '<div class="v4-etf-metal gold"><b>GLD · oro</b><strong>'+fmt(latest.gld.value,2)+' t</strong><small>Informe '+latest.date+'</small></div>'+
+  '<div class="v4-etf-metal silver"><b>SLV · plata</b><strong>'+fmt(latest.slv.value,2)+' M oz</strong><small>Informe '+latest.date+'</small></div></div>'+
+  '<div class="v4-etf-note">'+(p.context?"Vista estructural de 2 años: los datos SEC son trimestrales, no diarios.":"Evolución de las tenencias físicas, no flujos monetarios.")+'</div>';
+ const slvLast=v4State.secHoldings.slv.filter(x=>x.filed<=p.end).at(-1);
+ dates.textContent="Último trimestre común "+latest.date+" · publicado desde "+(latest.gld.filed>latest.slv.filed?latest.gld.filed:latest.slv.filed)+(slvLast&&slvLast.date>latest.date?" · SLV también tiene "+slvLast.date:"");
+ if(p.rows.length<2){host.innerHTML='<div class="v4-placeholder">'+(nativePeriod==="custom"?"No existen dos trimestres comunes publicados dentro del rango elegido.":"Insuficientes trimestres comunes para trazar dos curvas.")+'</div>';return;}
+ const baseG=p.rows[0].gld.value,baseS=p.rows[0].slv.value;
+ nativeChart("v4-flows-chart",[
+  {label:"GLD · variación de tenencias",color:"#f4ba3c",points:p.rows.map(x=>(x.gld.value/baseG-1)*100)},
+  {label:"SLV · variación de tenencias",color:"#d7e3ef",points:p.rows.map(x=>(x.slv.value/baseS-1)*100)}
+ ],p.rows.map(x=>x.t),"%",'<span>Informes SEC trimestrales · fechas coincidentes · base 0 % en '+p.rows[0].date+'. No se interpolan datos.</span>');
 }
 function v4ValidateFlows(json){
  if(json?.schema!=="metals-v4-flows-facts-v1"||json.no_comparable_flow_aggregation!==true||
@@ -2592,6 +2652,11 @@ function renderV4(){
  v4RenderCotPanel("cot");v4RenderCotPanel("oi");v4RenderGvz();v4RenderFlows();
 }
 async function bootV4(){
+ try{
+  const response=await fetch("data/v4-etf-sec-quarterly.json?v=sec-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  if(!response.ok)throw Error("Datos SEC HTTP "+response.status);
+  v4State.secHoldings=v4ValidateSECHoldings(await response.json());renderV4();
+ }catch(error){console.warn("Informes GLD/SLV no disponibles",error)}
  try{
   const response=await fetch("data/v4-flows-facts.json?v=flows-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error("Flujos HTTP "+response.status);
@@ -2633,16 +2698,20 @@ async function bootV4(){
 function drawV4Detail(kind,host,foot){
  const title=V4_TITLES[kind];if(!title)return false;
  host.classList.remove("macro-focus-chart");
- const name=kind.slice(3),chartName=name==="cot"?"v4-cot-chart":name==="oi"?"v4-oi-chart":name==="volatility"?"v4-volatility-chart":null;
+ host.classList.toggle("v4-etf-detail",kind==="v4-flows");
+ const name=kind.slice(3),chartName=name==="cot"?"v4-cot-chart":name==="oi"?"v4-oi-chart":name==="volatility"?"v4-volatility-chart":name==="flows"?"v4-flows-chart":null;
  const chart=chartName?marketChartCache.get(chartName):null;
  if(chart?.lines?.length&&chart.dates?.length>=2){
   host.innerHTML='<div class="v4-graph" id="v4-detail-graph"></div>';
   nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub);
-  foot.textContent=title+" · "+activePeriodLabel()+" · fuente CFTC/FRED con fechas reales y periodicidad propia. No es dato intradía.";
+  if(name==="flows"){
+   host.insertAdjacentHTML("beforeend",v4ETFExtra());
+   foot.textContent=title+" · "+(v4ETFSelection().context?"vista contextual de 2A":activePeriodLabel())+" · comparación trimestral SEC en %. El dato WGC se muestra aparte.";
+  }else foot.textContent=title+" · "+activePeriodLabel()+" · fuente CFTC/FRED con fechas reales y periodicidad propia. No es dato intradía.";
  }else{
-  const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"Gold ETF flows: World Gold Council. Silver SLV: tenencias del fondo, NO flujos globales."};
+  const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"GLD y SLV: tenencias de metal declaradas trimestralmente a SEC. Datos WGC e iShares recientes se consultan aparte."};
   host.innerHTML='<div class="v4-placeholder" role="status">'+v4HtmlText(copy[name]||"Datos en validación")+'</div>';
-  if(name==="flows"&&v4State.flows)host.insertAdjacentHTML("beforeend",document.getElementById("v4-flows-state")?.innerHTML||"");
+  if(name==="flows")host.insertAdjacentHTML("beforeend",v4ETFExtra());
   foot.textContent=title+" · "+activePeriodLabel()+" · no hay una curva verificada para este periodo.";
  }
  return true;
