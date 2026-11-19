@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Modo diurno / nocturno — 19/11/2026
+
+La cabecera incorpora un botón **Noche / Día**. El aspecto nocturno original es la opción predeterminada; el modo diurno utiliza fondo crema claro, tarjetas blancas cálidas, contornos discretos y colores de series oscurecidos para conservar el contraste. Ambos estilos incluyen los siete mercados, gráficos macro, fila V4, calendarios, tooltips y ventanas de **Ampliar**, tanto en escritorio como en móvil.
+
+La elección se aplica sin recargar la página y se guarda únicamente en el almacenamiento local del navegador (`localStorage`, clave `metals-terminal-theme`), cuando el navegador lo permite. Se recupera antes de dibujar la interfaz para evitar un destello oscuro al abrir en modo Día. Si el almacenamiento no está disponible, el selector funciona durante la sesión pero no conserva la preferencia. No se infiere automáticamente el tema del sistema: Noche sigue siendo la opción inicial.
+
+Código: `theme.css` (paleta diurna encapsulada) y `index.html` (control accesible); GitHub Pages publica ambos. **No cambian cálculos, orígenes, ventanas temporales, permisos de datos, tareas programadas ni costes.** La prueba independiente `Verificar tema diurno/nocturno` comprueba contraste de cabeceras y ejes, persistencia, calendario, gráficos ampliados, restauración del modo nocturno y ausencia de desbordamiento en 1440/390/360 px. Además se corrigió una referencia obsoleta a `market-stamp` que podía producir un error JavaScript al redimensionar, sin alterar el contenido de las series.
+
 ## V4.3 — ETF físicos · GLD frente a SLV (19/11/2026)
 
 La cuarta tarjeta inferior pasa de dos cifras no equivalentes a una **comparativa de las tenencias físicas GLD (oro) y SLV (plata)**, con líneas dorada y plateada. Cada línea indica la variación porcentual desde la primera fecha de informe SEC disponible conjuntamente y publicada a la fecha del filtro; las cifras absolutas muestran toneladas de oro GLD y millones de onzas troy de plata SLV a la última fecha común.
