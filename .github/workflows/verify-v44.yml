@@ -1,4 +1,4 @@
-name: Verificar Metals Terminal V4.4: calidad, periodos y móvil
+name: 'Verificar Metals Terminal V4.4 - calidad, periodos y móvil'
 on:
   workflow_dispatch:
   push:
