@@ -634,7 +634,7 @@
 .detail-chart .v4-graph .native-canvas{min-height:100%}
 .detail-chart .v4-graph .native-canvas .native-series{min-height:190px}
 .detail-chart .v4-graph .native-canvas .native-note,.detail-chart .v4-graph .native-canvas .native-legend{display:flex}
-@media(min-width:1200px){.dashboard>.rates-stack{grid-template-rows:minmax(0,1fr) minmax(0,1fr)}}
+@media(min-width:1200px){.dashboard>.rates-stack{grid-template-rows:minmax(0,1.17fr) minmax(0,.83fr)}}
 @media(min-width:881px) and (max-width:1199px){.dashboard{grid-template-rows:300px 235px 420px!important}.dashboard>.rates-stack{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr)}.rates-stack>.policy-panel .chart-container{min-height:80px}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:880px){.dashboard>.rates-stack{order:4;display:flex;flex-direction:column;gap:var(--gap);width:100%;height:auto;flex-shrink:0}.dashboard>.rates-stack>.policy-panel{height:320px;min-height:320px;order:0}.dashboard>.rates-stack>.v4-fed-card{min-height:210px;height:210px;order:1}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}.v4-fed-card{min-height:220px!important}}
@@ -2511,7 +2511,7 @@ function v4RenderCotPanel(kind){
  const hist=full.filter(z=>z.date<=latest.date),rank=hist.length>=100?Math.round(hist.filter(z=>z.pct<=latest.pct).length/hist.length*100):null;
  state.innerHTML='<span class="v4-stat">'+v4Compact(value)+'</span><span class="v4-smallstat">'+unit+" · "+(isCot?pct:"CFTC, futures only")+'</span><span class="v4-note">'+(isCot?"Percentil histórico (neto/OI): "+(rank===null?"no disponible":rank+"º"):"Volumen diario: sin fuente CME integrada")+'</span>';
  dates.textContent="Posiciones "+latest.date+" · "+(inWindow?rows.length+" informes en rango":"último informe anterior; no hay observación en rango")+" · publicación exacta no incluida en API";
- if(rows.length>=2)nativeChart(id+"-chart",[{label:isCot?"Neto / interés abierto":"Interés abierto CFTC",color:isCot?"#f4ba3c":"#d7e3ef",points:rows.map(z=>isCot?z.pct:z.oi)}],rows.map(z=>z.t),isCot?"%":"",'<span>CFTC Disaggregated Futures Only · fecha martes · publicación exacta no incluida en fuente.</span>');
+ if(rows.length>=2)nativeChart(id+"-chart",[{label:isCot?"Neto / interés abierto":"Interés abierto CFTC (miles de contratos)",color:isCot?"#f4ba3c":"#d7e3ef",points:rows.map(z=>isCot?z.pct:z.oi/1000)}],rows.map(z=>z.t),isCot?"%":" mil",'<span>CFTC Disaggregated Futures Only · fecha martes · publicación exacta no incluida en fuente.</span>');
  else host.innerHTML='<div class="v4-placeholder">'+(rows.length===1?"Solo una observación en el intervalo; no se inventa línea temporal.":"No hubo publicación CFTC dentro del periodo. Se muestra el último informe disponible, indicado por su fecha.")+'</div>';
  document.querySelectorAll('[data-v4-select^="'+kind+':"]').forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v4Select===kind+":"+metal)));
 }
@@ -2529,10 +2529,16 @@ function v4ParseGvz(csv){
  if(records.length<500||new Set(records.map(z=>z.date)).size!==records.length)throw Error("FRED GVZ: histórico insuficiente");
  return records;
 }
+function v4GvzSnapshot(json){
+ if(json?.schema!=="metals-v4-gvz-fred-v1"||json.series!=="GVZCLS"||json.source_url!=="https://fred.stlouisfed.org/series/GVZCLS"||!Array.isArray(json.rows)||json.rows.length<1200)throw Error("GVZ FRED: respaldo no válido");
+ const rows=json.rows.map(([date,value])=>({date,t:Date.parse(date+"T20:00:00Z")/1000,value:Number(value)}));
+ if(rows.some((r,i)=>!/^\\d{4}-\\d{2}-\\d{2}$/.test(r.date)||!Number.isFinite(r.t)||!Number.isFinite(r.value)||r.value<=0||r.value>300||(i&&r.date<=rows[i-1].date)))throw Error("GVZ FRED: orden o valor incorrecto");
+ return rows;
+}
 function v4RenderGvz(){
  const host=document.getElementById("v4-volatility-chart"),state=document.getElementById("v4-volatility-state"),dates=document.getElementById("v4-volatility-dates");
  marketChartCache.delete("v4-volatility-chart");
- if(!v4State.gvz){host.innerHTML="";state.innerHTML='<div class="v4-placeholder">GVZ: consulta FRED pendiente o bloqueada; VXSLV: fuente vigente no autorizada para redistribución.</div>';return;}
+ if(!v4State.gvz){host.innerHTML="";state.innerHTML='<div class="v4-placeholder">GVZ: fuente FRED no disponible; VXSLV: fuente pendiente de autorización para redistribución.</div>';return;}
  const {start,end}=v4Window(),rows=v4State.gvz.filter(z=>z.date>=start&&z.date<=end),recent=v4State.gvz.filter(z=>z.date<=end).at(-1);
  if(!recent){state.innerHTML='<div class="v4-placeholder">No hay lectura GVZ disponible hasta '+v4HtmlText(end)+'.</div>';host.innerHTML="";return;}
  state.innerHTML='<span class="v4-stat">'+fmt(recent.value,2)+'</span><span class="v4-smallstat">GVZ · GLD · índice de volatilidad implícita</span><span class="v4-note">VXSLV: enlace Cboe disponible; sin redistribución validada</span>';
@@ -2567,6 +2573,12 @@ async function bootV4(){
   v4State.cot=fresh;v4State.cotSource="CFTC consulta directa";
   renderV4();
  }catch(error){console.warn("CFTC directo no disponible; respaldo etiquetado",error)}
+ try{
+  const response=await fetch("data/v4-gvz-snapshot.json?v=gvz-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  if(!response.ok)throw Error("GVZ respaldo HTTP "+response.status);
+  v4State.gvz=v4GvzSnapshot(await response.json());
+  renderV4();
+ }catch(error){console.warn("Respaldo GVZ FRED no disponible",error)}
  try{
   const response=await fetch(V4_FRED_GVZ+"&cosd=2021-11-01",{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(18000)});
   if(!response.ok)throw Error("FRED GVZ HTTP "+response.status);
