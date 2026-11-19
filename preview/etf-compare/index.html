@@ -624,6 +624,10 @@
 .v4-etf-metal strong{display:block;font-size:17px;color:#f0f6fa;font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums}
 .v4-etf-metal small{display:block;font-size:9px;color:#9bb4c4}
 .v4-etf-note{font-size:10px;color:#e0c58d;line-height:1.45}
+.detail-chart.v4-etf-detail{overflow-y:auto;display:flex;flex-direction:column;gap:8px;scrollbar-color:#476377 transparent}
+.detail-chart.v4-etf-detail>.v4-graph{height:auto;flex:1 0 270px;min-height:270px}
+.detail-chart.v4-etf-detail>.v4-etf-context{flex:0 0 auto;margin-top:0}
+.detail-chart.v4-etf-detail>.v4-placeholder{flex:0 0 auto}
 .v4-etf-context{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
 .v4-etf-context>div{border:1px solid #36566c;border-radius:8px;padding:10px;background:#0b2430;color:#b9d0de;font-size:11px}
 .v4-etf-context strong{color:#ebcf8c}
@@ -2694,6 +2698,7 @@ async function bootV4(){
 function drawV4Detail(kind,host,foot){
  const title=V4_TITLES[kind];if(!title)return false;
  host.classList.remove("macro-focus-chart");
+ host.classList.toggle("v4-etf-detail",kind==="v4-flows");
  const name=kind.slice(3),chartName=name==="cot"?"v4-cot-chart":name==="oi"?"v4-oi-chart":name==="volatility"?"v4-volatility-chart":name==="flows"?"v4-flows-chart":null;
  const chart=chartName?marketChartCache.get(chartName):null;
  if(chart?.lines?.length&&chart.dates?.length>=2){
