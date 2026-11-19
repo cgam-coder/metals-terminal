@@ -739,7 +739,7 @@
    <div class="v4-foot"><span id="v4-volatility-dates">VXSLV pendiente de derecho de uso público</span><a href="https://fred.stlouisfed.org/series/GVZCLS" target="_blank" rel="noopener noreferrer">FRED / Cboe ↗</a></div>
   </article>
   <article class="panel v4-card" id="v4-flows">
-   <div class="v4-card-head"><h3>ETF físicos · Oro vs Plata</h3><button class="market-inspect" data-inspect="v4-flows" title="Ampliar tenencias GLD y SLV">Ampliar ↗</button></div>
+   <div class="v4-card-head"><h3>ETF físicos · Oro vs Plata</h3><div class="v4-etf-actions"><button type="button" class="v4-context-button" id="v4-etf-context-toggle" aria-pressed="false">Contexto 2A</button><button class="market-inspect" data-inspect="v4-flows" title="Ampliar tenencias GLD y SLV">Ampliar ↗</button></div></div>
    <div class="v4-muted">GLD y SLV · tenencias físicas declaradas a la SEC · datos trimestrales</div>
    <div id="v4-flows-state" class="v4-status" role="status">Cargando informes SEC de ambos fondos…</div>
    <div id="v4-flows-chart" class="v4-graph"></div>
@@ -750,7 +750,7 @@
 <footer class="footnote"><span></span><span id="version">METALS · V4.3</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
-  <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
+  <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
   <div id="detail-timeframes" class="global-timeframes detail-timeframes" role="group" aria-label="Intervalo del gráfico ampliado"><button type="button" data-detail-period="1d" class="" aria-pressed="false">1D</button><button type="button" data-detail-period="3d" class="" aria-pressed="false">3D</button><button type="button" data-detail-period="5d" class="" aria-pressed="false">1S</button><button type="button" data-detail-period="2w" class="" aria-pressed="false">2S</button><button type="button" data-detail-period="1mo" class="active" aria-pressed="true">1M</button><button type="button" data-detail-period="3mo" class="" aria-pressed="false">3M</button><button type="button" data-detail-period="6mo" class="" aria-pressed="false">6M</button><button type="button" data-detail-period="1y" class="" aria-pressed="false">1A</button><button type="button" data-detail-period="2y" class="" aria-pressed="false">2A</button><button type="button" data-detail-period="5y" class="" aria-pressed="false">5A</button></div>
   <details id="detail-period-picker" class="period-picker"><summary aria-label="Seleccionar periodo de fechas personalizado"><svg class="period-picker-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span class="period-picker-label">Seleccionar periodo</span><span class="period-picker-selected"></span><span class="period-picker-chevron" aria-hidden="true">⌄</span></summary><form id="detail-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><div class="period-popover-heading">Personalizar intervalo</div><div class="period-popover-caption">Elige un día o un rango de fechas entre los últimos cinco años.</div><div class="period-date-fields"><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label></div><div class="period-popover-actions"><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button></div><span class="date-feedback" role="status" aria-live="polite"></span></form></details>
   <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
@@ -2351,6 +2351,7 @@ async function bootMacro(){
 
 function openMarketDetail(kind){
  detailKind=kind;detailWindow=activePeriodLabel();
+ syncETFContextControls();
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
  const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
@@ -2367,7 +2368,7 @@ function closeMarketDetail(){
  const el=document.getElementById('detail-overlay');el.hidden=true;
  const chart=document.getElementById('detail-chart');
  chart.innerHTML='';chart.classList.remove("macro-focus-chart");
- document.body.style.overflow='';detailKind=null;
+ document.body.style.overflow='';detailKind=null;syncETFContextControls();
 }
 function drawMarketDetail(){
  const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
@@ -2609,11 +2610,27 @@ function v4ETFPairs(end){
  const silver=new Map(s.filter(x=>x.filed<=end).map(x=>[x.date,x]));
  return g.filter(x=>x.filed<=end&&silver.has(x.date)).map(x=>({date:x.date,t:x.t,gld:x,slv:silver.get(x.date)}));
 }
+let etfContext2Y=false;
 function v4ETFSelection(){
  const w=v4Window(),all=v4ETFPairs(w.end);
- const context=nativePeriod!=="custom"&&["1d","3d","5d","2w","1mo","3mo","6mo"].includes(nativePeriod);
- const first=context?new Date(Date.parse(w.end+"T00:00:00Z")-730*86400000).toISOString().slice(0,10):w.start;
- return {rows:all.filter(x=>x.date>=first&&x.date<=w.end),context,start:first,end:w.end};
+ const first=etfContext2Y?new Date(Date.parse(w.end+"T00:00:00Z")-730*86400000).toISOString().slice(0,10):w.start;
+ return {rows:all.filter(x=>x.date>=first&&x.date<=w.end),context:etfContext2Y,start:first,end:w.end};
+}
+function syncETFContextControls(){
+ for(const id of ["v4-etf-context-toggle","detail-context-toggle"]){
+  const el=document.getElementById(id);
+  if(!el)continue;
+  el.setAttribute("aria-pressed",String(etfContext2Y));
+  el.textContent=etfContext2Y?"Volver al periodo":"Contexto 2A";
+ }
+ const detail=document.getElementById("detail-context-toggle");
+ if(detail)detail.hidden=detailKind!=="v4-flows";
+}
+function toggleETFContext(){
+ etfContext2Y=!etfContext2Y;
+ syncETFContextControls();
+ v4RenderFlows();
+ if(detailKind==="v4-flows"&&!document.getElementById("detail-overlay").hidden)drawMarketDetail();
 }
 function v4ETFExtra(){
  const f=v4State.flows;if(!f)return '<div class="v4-placeholder">Datos WGC/SLV complementarios no disponibles.</div>';
@@ -2626,21 +2643,29 @@ function v4RenderFlows(){
  const state=document.getElementById("v4-flows-state"),host=document.getElementById("v4-flows-chart"),dates=document.getElementById("v4-flows-dates");
  if(!state||!host)return;
  marketChartCache.delete("v4-flows-chart");
- if(!v4State.secHoldings){state.innerHTML='<div class="v4-placeholder">La comparación GLD/SLV requiere informes trimestrales SEC validados. No se publican los archivos originales con restricciones de redistribución.</div>';host.innerHTML="";return;}
- const p=v4ETFSelection(),all=v4ETFPairs(p.end),latest=p.rows.at(-1)||all.at(-1);
- if(!latest){state.innerHTML='<div class="v4-placeholder">Sin informes de ambos fondos ya publicados para esta fecha.</div>';host.innerHTML="";dates.textContent="SEC · sin datos accesibles";return;}
+ syncETFContextControls();
+ if(!v4State.secHoldings){state.innerHTML='<div class="v4-placeholder">La comparación GLD/SLV requiere informes SEC trimestrales validados.</div>';host.innerHTML="";return;}
+ const p=v4ETFSelection(),all=v4ETFPairs(p.end),within=p.rows.at(-1),prior=all.filter(x=>x.date<p.start).at(-1),latest=within||prior;
+ if(!latest){
+  state.innerHTML='<div class="v4-placeholder">No hay informes GLD/SLV comunes publicados antes del final seleccionado.</div>';
+  host.innerHTML="";dates.textContent="SEC · sin observaciones comunes disponibles hasta esta fecha";return;
+ }
+ const outside=!within,ref=outside?"Anterior al periodo":"En el periodo";
  state.innerHTML='<div class="v4-etf-comparison">'+
-  '<div class="v4-etf-metal gold"><b>GLD · oro</b><strong>'+fmt(latest.gld.value,2)+' t</strong><small>Informe '+latest.date+'</small></div>'+
-  '<div class="v4-etf-metal silver"><b>SLV · plata</b><strong>'+fmt(latest.slv.value,2)+' M oz</strong><small>Informe '+latest.date+'</small></div></div>'+
-  '<div class="v4-etf-note">'+(p.context?"Vista estructural de 2 años: los datos SEC son trimestrales, no diarios.":"Evolución de las tenencias físicas, no flujos monetarios.")+'</div>';
+  '<div class="v4-etf-metal gold"><b>GLD · oro</b><strong>'+fmt(latest.gld.value,2)+' t</strong><small>'+ref+' · '+latest.date+'</small></div>'+
+  '<div class="v4-etf-metal silver"><b>SLV · plata</b><strong>'+fmt(latest.slv.value,2)+' M oz</strong><small>'+ref+' · '+latest.date+'</small></div></div>'+
+  '<div class="v4-etf-note">'+(p.context?"Contexto opcional 2A: no corresponde al periodo global "+activePeriodLabel()+".":outside?"Último informe común publicado ANTES del periodo "+activePeriodLabel()+". No equivale a una variación de ese intervalo.":"Datos trimestrales SEC; tenencias físicas, no flujos de dinero.")+'</div>';
  const slvLast=v4State.secHoldings.slv.filter(x=>x.filed<=p.end).at(-1);
- dates.textContent="Último trimestre común "+latest.date+" · publicado desde "+(latest.gld.filed>latest.slv.filed?latest.gld.filed:latest.slv.filed)+(slvLast&&slvLast.date>latest.date?" · SLV también tiene "+slvLast.date:"");
- if(p.rows.length<2){host.innerHTML='<div class="v4-placeholder">'+(nativePeriod==="custom"?"No existen dos trimestres comunes publicados dentro del rango elegido.":"Insuficientes trimestres comunes para trazar dos curvas.")+'</div>';return;}
+ dates.textContent=(outside?"Referencia anterior ":"Trimestre en rango ")+latest.date+" · público desde "+(latest.gld.filed>latest.slv.filed?latest.gld.filed:latest.slv.filed)+(slvLast&&slvLast.date>latest.date?" · SLV tiene también "+slvLast.date:"");
+ if(p.rows.length<2){
+  host.innerHTML='<div class="v4-placeholder">'+(p.rows.length===1?"Una sola observación común dentro del intervalo: no hay evolución temporal.":"No hay observaciones comunes dentro del periodo solicitado.")+' Pulsa «Contexto 2A» si quieres examinar el histórico trimestral, sin modificar el selector global.</div>';
+  return;
+ }
  const baseG=p.rows[0].gld.value,baseS=p.rows[0].slv.value;
  nativeChart("v4-flows-chart",[
   {label:"GLD · variación de tenencias",color:"#f4ba3c",points:p.rows.map(x=>(x.gld.value/baseG-1)*100)},
   {label:"SLV · variación de tenencias",color:"#d7e3ef",points:p.rows.map(x=>(x.slv.value/baseS-1)*100)}
- ],p.rows.map(x=>x.t),"%",'<span>Informes SEC trimestrales · fechas coincidentes · base 0 % en '+p.rows[0].date+'. No se interpolan datos.</span>');
+ ],p.rows.map(x=>x.t),"%",'<span>Informes SEC trimestrales, fechas publicadas coincidentes; base 0 % en '+p.rows[0].date+'. Sin interpolación.</span>');
 }
 function v4ValidateFlows(json){
  if(json?.schema!=="metals-v4-flows-facts-v1"||json.no_comparable_flow_aggregation!==true||
@@ -2708,7 +2733,7 @@ function drawV4Detail(kind,host,foot){
   nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub);
   if(name==="flows"){
    host.insertAdjacentHTML("beforeend",v4ETFExtra());
-   foot.textContent=title+" · "+(v4ETFSelection().context?"vista contextual de 2A":activePeriodLabel())+" · comparación trimestral SEC en %. El dato WGC se muestra aparte.";
+   foot.textContent=title+" · "+(v4ETFSelection().context?"contexto opcional de 2A fuera del periodo global":"periodo global "+activePeriodLabel())+" · comparación trimestral SEC en %. El dato WGC se muestra aparte.";
   }else foot.textContent=title+" · "+activePeriodLabel()+" · fuente CFTC/FRED con fechas reales y periodicidad propia. No es dato intradía.";
  }else{
   const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"GLD y SLV: tenencias de metal declaradas trimestralmente a SEC. Datos WGC e iShares recientes se consultan aparte."};
@@ -2719,7 +2744,7 @@ function drawV4Detail(kind,host,foot){
  return true;
 }
 
-function init(){bootMarket();bootMacro();bootV4();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
+function init(){document.getElementById('v4-etf-context-toggle').addEventListener('click',toggleETFContext);document.getElementById('detail-context-toggle').addEventListener('click',toggleETFContext);bootMarket();bootMacro();bootV4();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
 window.addEventListener('resize',()=>{
  const nextWidth=window.innerWidth;
  if(Math.abs(nextWidth-lastMacroWidth)<9)return;
