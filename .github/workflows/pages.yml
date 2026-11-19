@@ -6,6 +6,7 @@ on:
     paths:
       - 'index.html'
       - 'theme.css'
+      - 'quality.js'
       - 'data/**'
       - 'preview/intradia/**'
       - 'preview/v4/**'
@@ -38,6 +39,7 @@ jobs:
           mkdir -p _site/data
           cp index.html _site/index.html
           cp theme.css _site/theme.css
+          cp quality.js _site/quality.js
           cp data/series.json _site/data/series.json
           cp data/vix-history.json _site/data/vix-history.json
           cp data/v4-cot-snapshot.json _site/data/v4-cot-snapshot.json
