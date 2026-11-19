@@ -1,0 +1,147 @@
+name: Verificar Metals Terminal V4.4: calidad, periodos y móvil
+on:
+  workflow_dispatch:
+  push:
+    paths: [ 'quality.js', '.github/workflows/verify-v44.yml' ]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar sitio publicado
+        run: |
+          mkdir -p evidence-v44
+          cat > verify.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const results={cases:{},errors:[],time:new Date().toISOString()};
+          const base='https://cgam-coder.github.io/metals-terminal/';
+          const must=(bool,msg)=>{if(!bool)throw Error(msg);};
+          const snap=async page=>page.evaluate(()=>{
+            const report=document.querySelector('.source-refresh-report');
+            const etf=v4ETFSelection();
+            const rect=el=>el?({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height}):null;
+            const details=document.getElementById('detail-overlay');
+            return {
+             period:nativePeriod,context:etf.context,etfPoints:etf.rows.length,
+             etfChart:!!document.querySelector('#v4-flows-chart svg'),
+             etfCaption:document.getElementById('v4-flows-state')?.innerText,
+             etfDates:document.getElementById('v4-flows-dates')?.innerText,
+             button:document.getElementById('v4-etf-context-toggle')?.innerText,
+             badgeCount:document.querySelectorAll('.source-quality').length,
+             reportPresent:!!report,reportSummary:report?.querySelector('.source-report-summary')?.textContent,
+             reportOpen:report?.open, qualityLoaded:typeof window.renderMetalsQuality==='function',
+             qualitySignals:window.metalsQualityDone?.size,
+             hasDataSourcing:!!document.getElementById('source-audit-content'),
+             version:document.getElementById('version')?.textContent,
+             viewport:window.innerWidth,scrollWidth:document.documentElement.scrollWidth,
+             modalHidden:details.hidden,
+             mobileMethodOpen:document.getElementById('detail-method')?.open,
+             modalChartSize:rect(document.getElementById('detail-chart'))
+            };
+          });
+          try {
+            for(const [name,w,h] of [['desktop',1440,900],['tablet',1024,800],['mobile',390,780],['small',360,760]]){
+              const context=await browser.newContext({viewport:{width:w,height:h},deviceScaleFactor:1});
+              const page=await context.newPage();
+              page.on('pageerror',e=>results.errors.push({name,error:e.stack||e.message}));
+              try{
+                await page.goto(base+'?period=1mo&check44='+name,{waitUntil:'domcontentloaded',timeout:46000});
+                await page.waitForFunction(()=>v4State.secHoldings?.gld?.length>10&&typeof window.renderMetalsQuality==='function',{timeout:30000});
+                await page.waitForTimeout(450);
+                let state=await snap(page);
+                must(state.version.includes('V4.4'),'new build not released');
+                must(state.period==='1mo'&&!state.context,'default context is not global 1M');
+                must(state.etfPoints<2&&!state.etfChart,'ETF must not draw a 2y curve for 1M');
+                must(state.etfCaption?.includes('ANTES')&&state.etfCaption.includes('periodo'),'prior SEC report not labelled');
+                must(state.badgeCount>=12,'source badges absent: '+state.badgeCount);
+                must(state.qualityLoaded&&state.hasDataSourcing,'source quality module missing');
+                must(state.scrollWidth<=w+1,'horizontal overflow normal '+name);
+                await page.locator('#v4-etf-context-toggle').click();
+                state=await snap(page);
+                must(state.context&&state.etfPoints>=4&&state.etfChart,'opt-in 2Y chart missing');
+                must(state.period==='1mo','opt-in context modified global period');
+                await page.locator('[data-inspect="v4-flows"]').click();
+                await page.waitForTimeout(350);
+                state=await snap(page);
+                must(!state.modalHidden,'expanded ETF not opened');
+                must(await page.locator('#detail-context-toggle').isVisible(),'context toggle inaccessible in modal');
+                must(await page.locator('.v4-extra-method').count()>0,'WGC context folding missing');
+                if(w<=780){
+                  must(!state.mobileMethodOpen,'mobile methodology should start collapsed');
+                  must(state.modalChartSize.height>=175,'mobile plot too short '+state.modalChartSize.height);
+                  await page.locator('#detail-method summary').click();
+                  must(await page.locator('#detail-method').evaluate(el=>el.open),'mobile method cannot be opened');
+                }
+                await page.screenshot({path:'evidence-v44/'+name+'-etf-detail.png',fullPage:false});
+                await page.locator('#detail-close').click();
+                await page.locator('[data-global-period="5y"]').click();
+                await page.waitForTimeout(400);
+                state=await snap(page);
+                must(state.period==='5y'&&!state.context&&state.etfPoints>=16&&state.etfChart,'global interval did not restore 5Y');
+                must(state.scrollWidth<=w+1,'overflow after changes');
+                await page.locator('#theme-toggle').click();
+                state=await snap(page);
+                must(state.scrollWidth<=w+1,'day mode overflow');
+                await page.screenshot({path:'evidence-v44/'+name+'-day.png',fullPage:false});
+                results.cases[name]=state;
+              }catch(e){results.errors.push({name,type:'test',error:String(e)});}
+              await context.close();
+            }
+            const historical=await browser.newPage({viewport:{width:1100,height:780}});
+            historical.on('pageerror',e=>results.errors.push({name:'custom',error:e.stack||e.message}));
+            try{
+              await historical.goto(base+'?period=custom&from=2026-05-01&to=2026-07-31',{waitUntil:'domcontentloaded',timeout:46000});
+              await historical.waitForFunction(()=>!!v4State.secHoldings,{timeout:26000});
+              const state=await snap(historical);
+              results.cases.custom=state;
+              must(state.etfPoints===0&&!state.etfChart,'custom range plotted report before its publication');
+              must(state.etfDates?.includes('2026-03-31'),'as-of 31 July must use March 2026 report');
+              must(!state.etfDates?.includes('2026-06-30'),'SEC lookahead observed');
+              must(state.etfCaption.includes('ANTES'),'custom prior reference not explicit');
+              await historical.locator('#v4-etf-context-toggle').click();
+              must((await snap(historical)).period==='custom','context changed custom dates');
+            }catch(e){results.errors.push({name:'custom',type:'test',error:String(e)});}
+            await historical.close();
+            const refresh=await browser.newPage({viewport:{width:390,height:800}});
+            refresh.on('pageerror',e=>results.errors.push({name:'refresh',error:e.stack||e.message}));
+            try{
+              await refresh.goto(base+'?period=1mo&_refresh=1',{waitUntil:'domcontentloaded',timeout:46000});
+              await refresh.waitForFunction(()=>typeof window.renderMetalsQuality==='function',{timeout:25000});
+              const state=await snap(refresh);
+              results.cases.refresh=state;
+              must(state.reportPresent&&state.reportSummary?.includes('grupos'),'refresh result not displayed');
+              must(!state.reportOpen,'refresh report pushes dashboard');
+              must(state.scrollWidth<=391,'refresh report creates overflow');
+              await refresh.locator('.source-refresh-report summary').click();
+              must(await refresh.locator('.source-audit-row').count()>=8,'source provenance table incomplete');
+              await refresh.screenshot({path:'evidence-v44/refresh-report.png',fullPage:false});
+            }catch(e){results.errors.push({name:'refresh',type:'test',error:String(e)});}
+            await refresh.close();
+          }finally{
+            await browser.close();
+            fs.writeFileSync('evidence-v44/result.json',JSON.stringify(results,null,2));
+            console.log('V44_TEST_RESULT '+JSON.stringify(results));
+            if(results.errors.length)process.exitCode=1;
+          }
+          EOF
+          node verify.mjs
+      - name: Guardar evidencias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metals-v44-tests
+          path: evidence-v44/
+          retention-days: 7
+          if-no-files-found: warn
