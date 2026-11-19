@@ -38,6 +38,8 @@ jobs:
                 return {boxes,documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth,bodyWidth:document.body.scrollWidth,cotText:document.getElementById('v4-cot-state')?.innerText,oiText:document.getElementById('v4-oi-state')?.innerText,gvzText:document.getElementById('v4-volatility-state')?.innerText,gvzChart:!!document.querySelector('#v4-volatility-chart svg'),cotChart:!!document.querySelector('#v4-cot-chart svg'),oiChart:!!document.querySelector('#v4-oi-chart svg'),fed:document.querySelector('#v4-fedwatch-state')?.innerText};
               });
               report.cases[label]=data;
+              if(data.documentWidth>data.viewportWidth)throw Error('Desbordamiento horizontal '+label);
+              if(label==='desktop'&&(!data.cotChart||!data.oiChart||!data.gvzChart))throw Error('Datos oficiales sin graficar: COT/OI/GVZ');
               await page.screenshot({path:'v4-evidence/'+label+'.png',fullPage:true});
               if(label==='desktop'){
                 await page.locator('[data-v4-select="cot:silver"]').click();
