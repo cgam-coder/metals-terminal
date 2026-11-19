@@ -1,0 +1,75 @@
+name: Verificar Metals Terminal V4 (solo prueba aislada)
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/verify-v4.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar navegador
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Inspeccionar render real y responsividad
+        run: |
+          cat > /tmp/verify-v4.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          fs.mkdirSync('v4-evidence',{recursive:true});
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const report={timestamp:new Date().toISOString(),cases:{},errors:[]};
+          for(const [label,width,height] of [['desktop',1440,920],['tablet',1080,860],['mobile',390,844],['small',360,760]]){
+            const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
+            page.on('pageerror',e=>report.errors.push({device:label,type:'runtime',message:e.message}));
+            try{
+              await page.goto('https://cgam-coder.github.io/metals-terminal/preview/v4/?period=1mo',{waitUntil:'domcontentloaded',timeout:40000});
+              await page.waitForTimeout(label==='desktop'?25000:7000);
+              const data=await page.evaluate(()=>{
+                const boxes={},ids=['.dashboard','.rates-stack','.rates-stack>.policy-panel','#v4-fedwatch','#posicionamiento-expectativas','#v4-cot','#v4-oi','#v4-volatility','#v4-flows'];
+                for(const id of ids){const el=document.querySelector(id),r=el?.getBoundingClientRect();boxes[id]=r?{x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}:null}
+                return {boxes,documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth,bodyWidth:document.body.scrollWidth,cotText:document.getElementById('v4-cot-state')?.innerText,oiText:document.getElementById('v4-oi-state')?.innerText,gvzText:document.getElementById('v4-volatility-state')?.innerText,gvzChart:!!document.querySelector('#v4-volatility-chart svg'),cotChart:!!document.querySelector('#v4-cot-chart svg'),oiChart:!!document.querySelector('#v4-oi-chart svg'),fed:document.querySelector('#v4-fedwatch-state')?.innerText};
+              });
+              report.cases[label]=data;
+              await page.screenshot({path:'v4-evidence/'+label+'.png',fullPage:true});
+              if(label==='desktop'){
+                await page.locator('[data-v4-select="cot:silver"]').click();
+                report.cases.desktop.selectSilver=await page.locator('#v4-cot-state').innerText();
+                await page.locator('[data-inspect="v4-cot"]').click();
+                report.cases.desktop.modalCot=await page.locator('#detail-title').innerText();
+                report.cases.desktop.modalChart=await page.locator('#detail-chart svg').count();
+                await page.locator('#detail-close').click();
+                await page.locator('#global-timeframes [data-global-period="5y"]').click();
+                await page.waitForTimeout(1500);
+                report.cases.desktop.fiveYearTitle=await page.locator('#v4-cot-dates').innerText();
+                await page.locator('#global-timeframes [data-global-period="1mo"]').click();
+              }
+              if(label==='mobile'){
+                await page.locator('[data-inspect="v4-fedwatch"]').click();
+                report.cases.mobile.modalFed=await page.locator('#detail-title').innerText();
+                await page.locator('#detail-close').click();
+              }
+            }catch(e){report.errors.push({device:label,type:'exception',message:String(e)})}
+            await page.close();
+          }
+          await browser.close();
+          console.log('V4_EVIDENCE_START');
+          console.log(JSON.stringify(report,null,2));
+          console.log('V4_EVIDENCE_END');
+          fs.writeFileSync('v4-evidence/result.json',JSON.stringify(report,null,2));
+          EOF
+          node /tmp/verify-v4.mjs
+      - name: Guardar pruebas visuales
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metals-v4-visual-and-data-proof
+          path: v4-evidence/
+          if-no-files-found: warn
