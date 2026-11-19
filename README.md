@@ -4,6 +4,12 @@ Web: https://cgam-coder.github.io/metals-terminal/
 
 Terminal personal estático (HTML/CSS/JS/SVG), con selector global de diez periodos **1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A** junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
+## Validación real de widgets intradía — 19/11/2026
+
+Prueba aislada en Chromium conectado a Internet, tanto en escritorio como en móvil, sobre `preview/intradia/`: **NO APTO para integrar**. Los cinco símbolos exactos `COMEX:GC1!`, `COMEX:SI1!`, `COMEX:HG1!`, `NYMEX:BZ1!` y `CBOE:VIX` se intentan cargar en widgets oficiales Web Components de TradingView, pero los gráficos avanzados responden «Invalid symbol» y «This symbol is only available on TradingView». Las miniaturas no proporcionan una alternativa válida; además, se registraron errores `Invalid timeframe format: 1W`. Los atributos 60/120/360 minutos se transmiten al widget, pero no constituyen evidencia de barras cargadas, y el parámetro de 3D no se aplica como periodo exacto. Véanse [run 44521814002 y su artefacto de capturas](https://github.com/cgam-coder/metals-terminal/actions/runs/44521814002). La [FAQ oficial TradingView](https://www.tradingview.com/widget-docs/faq/data/) atribuye ese mensaje a restricciones de permiso para mostrar el símbolo en widgets.
+
+Decisión: **no introducir estos widgets en producción**. Mantener históricos verificables GC/SI/HG/BZ y VIX, sin sustituir futuros por spot. La estrategia de intradía automático, datos reales, gráficos SVG propios, cero pagos y licencia de redistribución sigue sin un proveedor válido acreditado. No existen nuevos crons ni suscripciones; solo se publican evidencias y una ruta de preview aislada.
+
 ## Corrección de carga de la ratio XAU/XAG ampliada — 18/11/2026
 
 Cuando se cambia el intervalo dentro de «Ampliar» para la ratio spot XAU/XAG, el panel deja de depender de las respuestas ajenas de DXY y EUR/USD: se actualiza en cuanto terminan las solicitudes de **oro XAU y plata XAG** (ambas de XAUS) y hay fechas comunes suficientes. Cada consulta XAUS dispone de un plazo máximo de 16 segundos, incluido el procesamiento del cuerpo. Si falla una de las dos fuentes, o no hay al menos tres fechas comunes verificadas, el cuadro presenta una explicación explícita, no un indicador de «Consultando» indefinido.
