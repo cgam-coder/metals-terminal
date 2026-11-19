@@ -85,10 +85,13 @@ jobs:
               cards:['v4-cot','v4-oi','v4-volatility','v4-flows','v4-fedwatch'].map(id=>!!document.getElementById(id)),
               cotChart:!!document.querySelector('#v4-cot-chart svg'),
               oiChart:!!document.querySelector('#v4-oi-chart svg'),
+              cotLines:marketChartCache.get('v4-cot-chart')?.lines?.map(x=>x.label),
+              oiLines:marketChartCache.get('v4-oi-chart')?.lines?.map(x=>x.label),
               gvzChart:!!document.querySelector('#v4-volatility-chart svg'),
               flows:document.getElementById('v4-flows-state')?.innerText
             }));
-            if(!report.production.cards.every(Boolean)||!report.production.cotChart||!report.production.oiChart||!report.production.gvzChart)throw Error('V4 production missing cards or verified curves');
+            if(!report.production.cards.every(Boolean)||!report.production.cotChart||!report.production.oiChart||!report.production.gvzChart||
+               report.production.cotLines?.length!==2||report.production.oiLines?.length!==2)throw Error('V4 production lacks both metals on COT/OI');
             await prod.screenshot({path:'v4-evidence/production.png',fullPage:true});
           }catch(e){report.errors.push({device:'production',type:'exception',message:String(e)})}
           await prod.close();
