@@ -616,6 +616,14 @@
 .v4-stat{font-size:23px;font-weight:750;color:#ebf5fa;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
 .v4-smallstat{font-size:11px;color:#d5e7f0}
 .v4-note{font-size:10px;color:#dbc28b}
+.v4-dual-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.v4-dual-metal{min-width:0;padding:6px 7px;background:#0b2330;border:1px solid #314b5b;border-radius:7px}
+.v4-dual-metal b{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#bdd4e2}
+.v4-dual-metal b::before{content:"";display:block;width:12px;height:3px;background:var(--gold);border-radius:2px}
+.v4-dual-metal.silver b::before{background:var(--silver)}
+.v4-dual-metal strong{display:block;font-size:17px;font-weight:760;color:#eef4f7;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v4-dual-metal small{display:block;font-size:10px;color:#a6bccb;line-height:1.4}
+.v4-compare-note{font-size:10px;color:#a9c5d3;line-height:1.4}
 .v4-selector{display:flex;align-items:center;gap:3px}
 .v4-selector button{border:1px solid #365a70;color:#c4d8e5;background:#102735;padding:5px 9px;min-height:31px;border-radius:6px;font-size:11px}
 .v4-selector button[aria-pressed="true"]{border-color:#bb9641;background:#66501a;color:#fff}
@@ -712,7 +720,7 @@
   <article class="panel v4-card" id="v4-cot">
    <div class="v4-card-head"><h3>COT · Managed Money</h3><button class="market-inspect" data-inspect="v4-cot" title="Ampliar posicionamiento COT">Ampliar ↗</button></div>
    <div class="v4-muted">GC / SI · CFTC · desagregado · solo futuros · semanal</div>
-   <div class="v4-selector" data-v4-selector="cot"><button data-v4-select="cot:gold" aria-pressed="true">Oro</button><button data-v4-select="cot:silver" aria-pressed="false">Plata</button></div>
+   <div class="v4-compare-note">Dos series simultáneas · neto especulativo / interés abierto (%)</div>
    <div id="v4-cot-state" class="v4-status" role="status">Cargando informe oficial CFTC…</div>
    <div id="v4-cot-chart" class="v4-graph"></div>
    <div class="v4-foot"><span id="v4-cot-dates">Fecha del informe y cobertura</span><a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" target="_blank" rel="noopener noreferrer">CFTC ↗</a></div>
@@ -720,7 +728,7 @@
   <article class="panel v4-card" id="v4-oi">
    <div class="v4-card-head"><h3>Interés abierto y volumen</h3><button class="market-inspect" data-inspect="v4-oi" title="Ampliar interés abierto y volumen">Ampliar ↗</button></div>
    <div class="v4-muted">Interés abierto semanal CFTC · volumen diario CME pendiente</div>
-   <div class="v4-selector" data-v4-selector="oi"><button data-v4-select="oi:gold" aria-pressed="true">Oro</button><button data-v4-select="oi:silver" aria-pressed="false">Plata</button></div>
+   <div class="v4-compare-note">Dos series simultáneas · variación de OI desde la primera fecha común (base 0 %)</div>
    <div id="v4-oi-state" class="v4-status" role="status">Leyendo interés abierto publicado…</div>
    <div id="v4-oi-chart" class="v4-graph"></div>
    <div class="v4-foot"><span id="v4-oi-dates">OI semanal; volumen sin fuente integrada</span><a href="https://www.cmegroup.com/market-data/volume-open-interest.html" target="_blank" rel="noopener noreferrer">CME ↗</a></div>
@@ -2455,7 +2463,7 @@ function drawMarketDetail(){
 const V4_SOURCE_COT="https://publicreporting.cftc.gov/resource/72hh-3qpy.json";
 const V4_FRED_GVZ="https://fred.stlouisfed.org/graph/fredgraph.csv?id=GVZCLS";
 const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"Flujos de inversión ETF/ETP","v4-fedwatch":"FedWatch · expectativas Fed"};
-const v4State={cot:null,cotSource:"",gvz:null,flows:null,select:{cot:"gold",oi:"gold"}};
+const v4State={cot:null,cotSource:"",gvz:null,flows:null};
 const v4HtmlText=s=>String(s??"").replace(/[<>&"'\x60]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;","\x60":"&#96;"}[c]));
 function v4CotRows(raw){
  if(!Array.isArray(raw))throw Error("CFTC: formato de respuesta incorrecto");
@@ -2503,22 +2511,49 @@ function v4Current(rows){
  return (rows||[]).filter(z=>v4CotEligible(z,end)).at(-1)||null;
 }
 function v4Compact(n){return Number.isFinite(n)?new Intl.NumberFormat("es-ES",{maximumFractionDigits:0}).format(n):"—";}
+// Align strictly by actual report date: never substitute the other metal's week.
+function v4AlignedCotRows(goldRows,silverRows){
+ const silver=new Map(silverRows.map(r=>[r.date,r]));
+ return goldRows.filter(r=>silver.has(r.date)).map(g=>({date:g.date,t:g.t,gold:g,silver:silver.get(g.date)}));
+}
 function v4RenderCotPanel(kind){
- const metal=v4State.select[kind],full=v4State.cot?.[metal],id=kind==="cot"?"v4-cot":"v4-oi",host=document.getElementById(id+"-chart"),state=document.getElementById(id+"-state"),dates=document.getElementById(id+"-dates");
+ const id=kind==="cot"?"v4-cot":"v4-oi",host=document.getElementById(id+"-chart"),state=document.getElementById(id+"-state"),dates=document.getElementById(id+"-dates");
  if(!host||!state)return;
  marketChartCache.delete(id+"-chart");
- if(!full){host.innerHTML="";state.innerHTML='<div class="v4-placeholder">CFTC: fuente todavía no disponible. No se muestran posiciones estimadas.</div>';return;}
- const rows=v4Slice(full),latest=rows.at(-1)||v4Current(full),inWindow=rows.length>0;
- if(!latest){host.innerHTML="";state.innerHTML='<div class="v4-placeholder">Sin un informe publicado verificable en este intervalo.</div>';dates.textContent="Fuente CFTC · sin observaciones";return;}
- const isCot=kind==="cot",value=isCot?latest.net:latest.oi;
- const unit=isCot?"contratos netos":"contratos abiertos";
- const pct=isCot?(latest.pct.toFixed(2)+" % de OI"):"OI semanal de todos los vencimientos";
- const hist=full.filter(z=>z.date<=latest.date),rank=hist.length>=100?Math.round(hist.filter(z=>z.pct<=latest.pct).length/hist.length*100):null;
- state.innerHTML='<span class="v4-stat">'+v4Compact(value)+'</span><span class="v4-smallstat">'+unit+" · "+(isCot?pct:"CFTC, futures only")+'</span><span class="v4-note">'+(isCot?"Percentil histórico (neto/OI): "+(rank===null?"no disponible":rank+"º"):"Volumen diario: sin fuente CME integrada")+'</span>';
- dates.textContent="Posiciones "+latest.date+" · "+(inWindow?rows.length+" informes en rango":"último informe anterior; no hay observación en rango")+" · publicación exacta no incluida en API";
- if(rows.length>=2)nativeChart(id+"-chart",[{label:isCot?"Neto / interés abierto":"Interés abierto CFTC (miles de contratos)",color:isCot?"#f4ba3c":"#d7e3ef",points:rows.map(z=>isCot?z.pct:z.oi/1000)}],rows.map(z=>z.t),isCot?"%":" mil",'<span>CFTC Disaggregated Futures Only · fecha martes · publicación exacta no incluida en fuente.</span>');
- else host.innerHTML='<div class="v4-placeholder">'+(rows.length===1?"Solo una observación en el intervalo; no se inventa línea temporal.":"No hubo publicación CFTC dentro del periodo. Se muestra el último informe disponible, indicado por su fecha.")+'</div>';
- document.querySelectorAll('[data-v4-select^="'+kind+':"]').forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v4Select===kind+":"+metal)));
+ const allGold=v4State.cot?.gold,allSilver=v4State.cot?.silver;
+ if(!allGold?.length||!allSilver?.length){
+  host.innerHTML="";state.innerHTML='<div class="v4-placeholder">CFTC: aún no hay dos series oro/plata verificadas para compararlas.</div>';
+  dates.textContent="CFTC · fuentes pendientes";return;
+ }
+ const aligned=v4AlignedCotRows(v4Slice(allGold),v4Slice(allSilver));
+ const end=v4Window().end;
+ const goldLast=aligned.at(-1)?.gold||v4Current(allGold),silverLast=aligned.at(-1)?.silver||v4Current(allSilver);
+ if(!goldLast||!silverLast){
+  host.innerHTML="";state.innerHTML='<div class="v4-placeholder">Sin posiciones de ambos metales verificadas antes de la fecha final.</div>';dates.textContent="CFTC · fechas no disponibles";return;
+ }
+ const cot=kind==="cot";
+ const reportMetal=(name,r,all)=>{
+  const val=cot?r.net:r.oi;
+  const hist=all.filter(z=>z.date<=r.date);
+  const percentile=hist.length>=100?Math.round(hist.filter(z=>z.pct<=r.pct).length/hist.length*100):null;
+  const meta=cot?fmt(r.pct,2)+" % del OI · P"+(percentile===null?"—":percentile):"contratos · CFTC semanal";
+  return '<div class="v4-dual-metal '+name+'"><b>'+(name==="gold"?"Oro GC":"Plata SI")+'</b><strong>'+v4Compact(val)+'</strong><small>'+meta+'</small></div>';
+ };
+ state.innerHTML='<div class="v4-dual-stats">'+reportMetal("gold",goldLast,allGold)+reportMetal("silver",silverLast,allSilver)+'</div>'+
+  '<div class="v4-note">'+(cot?"COT: neto Managed Money normalizado por el OI de cada contrato.":"OI: cambios relativos desde una misma fecha, no comparación directa de contratos absolutos.")+
+  (cot?"":" Volumen diario CME no disponible.")+'</div>';
+ const matching=goldLast.date===silverLast.date;
+ dates.textContent=(matching?"Informe común "+goldLast.date:"Oro "+goldLast.date+" / plata "+silverLast.date)+" · "+aligned.length+" fechas compartidas en rango · CFTC posiciones martes, publicación exacta no informada";
+ if(aligned.length>=2){
+  const lines=cot?[
+   {label:"Oro GC · neto/OI",color:"#f4ba3c",points:aligned.map(p=>p.gold.pct)},
+   {label:"Plata SI · neto/OI",color:"#d7e3ef",points:aligned.map(p=>p.silver.pct)}
+  ]:[
+   {label:"Oro GC · ΔOI base 0",color:"#f4ba3c",points:aligned.map(p=>(p.gold.oi/aligned[0].gold.oi-1)*100)},
+   {label:"Plata SI · ΔOI base 0",color:"#d7e3ef",points:aligned.map(p=>(p.silver.oi/aligned[0].silver.oi-1)*100)}
+  ];
+  nativeChart(id+"-chart",lines,aligned.map(p=>p.t),"%",'<span>CFTC Futures Only · fechas comunes de los informes · '+(cot?"neto Managed Money / OI":"OI normalizado a "+aligned[0].date)+'. Los valores absolutos figuran arriba.</span>');
+ }else host.innerHTML='<div class="v4-placeholder">'+(aligned.length===1?"Solo existe una fecha común dentro del intervalo: se muestran las cifras, no una curva.":"No hay informes de ambos metales en las mismas fechas dentro del rango seleccionado.")+'</div>';
 }
 function v4ParseGvz(csv){
  const ls=String(csv).trim().split(/\r?\n/),head=ls.shift().replace(/\uFEFF/g,"").split(",");
@@ -2688,12 +2723,6 @@ document.addEventListener("keydown",event=>{
  event.stopPropagation();
  opened.forEach(picker=>picker.open=false);
 });
-document.querySelectorAll('[data-v4-select]').forEach(button=>button.addEventListener('click',()=>{
- const [kind,metal]=button.dataset.v4Select.split(':');
- if(!['cot','oi'].includes(kind)||!['gold','silver'].includes(metal))return;
- v4State.select[kind]=metal;renderV4();
- if(detailKind==='v4-'+kind)drawMarketDetail();
-}));
 $('#curve-mode').addEventListener('click',()=>{curveHistorical=!curveHistorical;$('#curve-mode').textContent=curveHistorical?'Ver curva ↔':'Ver histórico ↔';renderCurve()});$('#refresh').addEventListener('click',()=>{try{const url=new URL(location.href);url.searchParams.set('period',nativePeriod);if(nativePeriod==="custom"&&customRange){url.searchParams.set("from",customRange.from);url.searchParams.set("to",customRange.to);}url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href);}catch(e){location.reload();}});const modal=$('#modal');$('#method-button').addEventListener('click',()=>modal.classList.add('open'));$('#close-modal').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});window.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});}
 init();
 </script>
