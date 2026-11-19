@@ -1,6 +1,10 @@
-# Metals Terminal V4.0 — Posicionamiento y expectativas
+# Metals Terminal V4.2 — Posicionamiento y expectativas
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.2 — Retirada de FedWatch sin datos gratuitos integrables (19/11/2026)
+
+Se elimina el panel FedWatch y su modal de Metals Terminal. «Tipos oficiales de interés» recupera toda su columna en escritorio y su tarjeta normal en móvil. Continúan intactos los **cuatro** paneles inferiores: COT oro/plata, interés abierto semanal CFTC, GVZ y flujos ETF/ETP. No se instala API CME de pago, no se calculan probabilidades sin base y no se modifica el resto del terminal.
 
 ## V4.1 — Comparación simultánea oro/plata en COT e interés abierto (19/11/2026)
 
@@ -12,7 +16,7 @@ Web: https://cgam-coder.github.io/metals-terminal/
 
 ## V4.0 — Posicionamiento y expectativas (19/11/2026)
 
-**Producción:** las cinco tarjetas nuevas están integradas en `index.html`. FedWatch aparece debajo de Tipos oficiales (columna derecha en escritorio, apilados en móvil); cuatro tarjetas — COT, interés abierto/volumen, volatilidad implícita y ETF/ETP — están en una fila inferior nueva (4 columnas escritorio, 2 tableta, 1 móvil). Se mantiene el selector temporal global, calendarios y modal de «Ampliar»; no se modifica la definición de GC/SI/HG/BZ ni la fuente de sus cierres.
+**Histórico de V4.0 (revisado en V4.2):** originalmente se incorporaron cinco paneles, incluido FedWatch. Posteriormente se retiró FedWatch por falta de una fuente gratuita integrable. En producción permanecen cuatro tarjetas — COT, interés abierto/volumen, volatilidad implícita y ETF/ETP — en la fila inferior (4 columnas escritorio, 2 tableta, 1 móvil). Se mantiene el selector temporal global, calendarios y modal de «Ampliar»; no se modifica la definición de GC/SI/HG/BZ ni la fuente de sus cierres.
 
 **Datos realmente operativos:**
 - **COT oro/plata:** CFTC Disaggregated Futures Only (Gold COMEX 088691, Silver COMEX 084691); cinco años, 263 informes por metal. Últimas posiciones disponibles en el corte (martes 10/11/2026), Managed Money neto GC +112.341 contratos y SI +3.615; percentiles históricos calculados sobre neto/interés abierto. `data/v4-cot-snapshot.json` es respaldo con fuente y fecha; se intenta consulta directa cuando CORS lo permite. El campo de publicación exacta no está en cada registro y no debe inferirse.
