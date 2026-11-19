@@ -1,6 +1,22 @@
-# Metals Terminal V4.2 — Posicionamiento y expectativas
+# Metals Terminal V4.3 — Posicionamiento y expectativas
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.3 — ETF físicos · GLD frente a SLV (19/11/2026)
+
+La cuarta tarjeta inferior pasa de dos cifras no equivalentes a una **comparativa de las tenencias físicas GLD (oro) y SLV (plata)**, con líneas dorada y plateada. Cada línea indica la variación porcentual desde la primera fecha de informe SEC disponible conjuntamente y publicada a la fecha del filtro; las cifras absolutas muestran toneladas de oro GLD y millones de onzas troy de plata SLV a la última fecha común.
+
+**Datos y limitaciones:** `data/v4-etf-sec-quarterly.json` contiene 20 observaciones GLD y 21 SLV entre 30/09/2021 y 30/09/2026, con 20 fechas comunes, obtenidas de informes 10-Q/10-K públicos de SEC y cotejadas con el recopilador independiente Silver Dominion. Cada punto guarda fecha de tenencias, primera fecha de presentación SEC del informe y URL de su archivo; son cifras con redondeo de dos decimales, no un archivo oficial diario del ETF. GLD tiene su último informe común a **30/06/2026** (presentado 04/08/2026) y SLV dispone además de un informe a **30/09/2026** (presentado 06/11/2026). El gráfico empareja solamente observaciones cuya publicación ya consta antes de la fecha final elegida, evitando datos futuros en consultas históricas.
+
+**Horizonte:** los informes son trimestrales. Para los selectores cortos (1D, 3D, 1S, 2S, 1M, 3M, 6M) se usa **vista estructural propia de los últimos 2 años, expresamente etiquetada**, ya que esos intervalos no proporcionan suficientes trimestres para una curva. En 1A, 2A, 5A y fechas personalizadas, se respeta la ventana pedida; con cero o un dato coincidente se muestra explicación, no gráfico fabricado. «Ampliar» conserva las dos líneas y añade aparte flujos globales WGC para oro y el último dato SLV, sin mezclarlos como series comparables.
+
+**Licencia:** se rechazó reproducir o redistribuir el Excel diario oficial de GLD porque su primera pestaña prohíbe expresamente la redistribución sin permiso. La fuente integrada usa cantidades declaradas públicamente en **SEC EDGAR** (datos factuales de informes regulatorios); las fechas de presentación se contrastaron contra el JSON oficial de `data.sec.gov/submissions/`. La descarga Excel de iShares SLV no contiene un histórico diario equiparable de toneladas. Sin API premium, servicios de pago ni programación periódica; el histórico SEC es una instantánea fechada cuya revisión/actualización sigue siendo manual.
+
+**Verificación:** prueba aislada [GitHub Actions #44550747821](https://github.com/cgam-coder/metals-terminal/actions/runs/44550747821) superada: dos series verificadas en 1440, 1024, 390 y 360 px, ampliación con contexto WGC legible y sin desbordamientos, 19 observaciones comunes en 5A, filtro as-of excluyendo el informe de 30/06/2026 cuando se consulta el terminal con fecha final 31/07/2026. No se alteran los históricos de futuros GC/SI/HG/BZ.
+
+**Fuentes:** https://www.sec.gov/edgar/search/ ; https://data.sec.gov/submissions/CIK0001222333.json ; https://data.sec.gov/submissions/CIK0001330568.json ; https://silverdominion.com/market-tools/gold-silver-etf-holdings-tracker/ ; https://www.gold.org/goldhub/data/gold-etfs-holdings-and-flows .
+
+
 
 ## V4.2 — Retirada de FedWatch sin datos gratuitos integrables (19/11/2026)
 
