@@ -2,7 +2,7 @@ name: Verificar tema diurno/nocturno
 on:
   workflow_dispatch:
   push:
-    paths: ['.github/workflows/verify-theme.yml']
+    paths: ['.github/workflows/verify-theme.yml', 'index.html', 'theme.css']
 permissions:
   contents: read
 jobs:
