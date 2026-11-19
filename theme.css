@@ -278,6 +278,21 @@ html[data-theme="day"] .swatch{background:var(--gold)}
 html[data-theme="day"] .swatch.silver{background:var(--silver)}
 html[data-theme="day"] .swatch.cyan{background:var(--cyan)}
 html[data-theme="day"] .swatch.purple{background:var(--purple)}
+/* Remaining inline-series tones: EUR/USD, copper, VIX and compact quotes. */
+html[data-theme="day"] svg [stroke="#91b7ff"]{stroke:#4666a0}
+html[data-theme="day"] svg [stroke="#db9569"]{stroke:#94513a}
+html[data-theme="day"] svg [stroke="#fb6571"]{stroke:#ae354a}
+html[data-theme="day"] svg [fill="#91b7ff"]{fill:#4666a0}
+html[data-theme="day"] svg [fill="#db9569"]{fill:#94513a}
+html[data-theme="day"] svg [fill="#fb6571"]{fill:#ae354a}
+html[data-theme="day"] svg stop[stop-color="#91b7ff"]{stop-color:#4666a0}
+html[data-theme="day"] svg stop[stop-color="#db9569"]{stop-color:#94513a}
+html[data-theme="day"] svg stop[stop-color="#fb6571"]{stop-color:#ae354a}
+html[data-theme="day"] .native-dot[style*="#91b7ff"]{background:#4666a0!important}
+html[data-theme="day"] .native-dot[style*="#db9569"]{background:#94513a!important}
+html[data-theme="day"] .native-dot[style*="#fb6571"]{background:#ae354a!important}
+html[data-theme="day"] .metal-line1 span[style*="color:#9eafbd"]{color:#536d7b!important}
+html[data-theme="day"] .card-heading .glyph[style*="#8db8ff"]{color:#4666a0!important}
 /* Toggle appears beside Sources, not inside the common time selector. */
 .theme-toggle{min-height:37px;white-space:nowrap;gap:8px;display:inline-flex;align-items:center;justify-content:center}
 .theme-toggle .theme-icon{font-size:17px;line-height:1}
