@@ -747,7 +747,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.3</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.4</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1862,9 +1862,9 @@ function persistGlobalPeriod(period){
  }catch(e){console.warn("No se pudo guardar el periodo en la URL",e);}
 }
 function bootMarket(){
- loadFuturesCards();
- loadCboeVix();
- fetchNative(getRequestedGlobalPeriod());
+ loadFuturesCards().finally(()=>window.metalsQualitySignal?.("futures"));
+ loadCboeVix().finally(()=>window.metalsQualitySignal?.("vix"));
+ fetchNative(getRequestedGlobalPeriod()).finally(()=>window.metalsQualitySignal?.("xaus"));
 }
 
 
@@ -2465,7 +2465,7 @@ function drawMarketDetail(){
 const V4_SOURCE_COT="https://publicreporting.cftc.gov/resource/72hh-3qpy.json";
 const V4_FRED_GVZ="https://fred.stlouisfed.org/graph/fredgraph.csv?id=GVZCLS";
 const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"ETF físicos · comparación GLD / SLV"};
-const v4State={cot:null,cotSource:"",gvz:null,flows:null,secHoldings:null};
+const v4State={cot:null,cotSource:"",gvz:null,gvzSource:"",flows:null,secHoldings:null};
 const v4HtmlText=s=>String(s??"").replace(/[<>&"'\x60]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;","\x60":"&#96;"}[c]));
 function v4CotRows(raw){
  if(!Array.isArray(raw))throw Error("CFTC: formato de respuesta incorrecto");
@@ -2712,13 +2712,13 @@ async function bootV4(){
  try{
   const response=await fetch("data/v4-gvz-snapshot.json?v=gvz-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
   if(!response.ok)throw Error("GVZ respaldo HTTP "+response.status);
-  v4State.gvz=v4GvzSnapshot(await response.json());
+  v4State.gvz=v4GvzSnapshot(await response.json());v4State.gvzSource="Archivo local FRED/Cboe";
   renderV4();
  }catch(error){console.warn("Respaldo GVZ FRED no disponible",error)}
  try{
   const response=await fetch(V4_FRED_GVZ+"&cosd=2021-11-01",{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(18000)});
   if(!response.ok)throw Error("FRED GVZ HTTP "+response.status);
-  v4State.gvz=v4ParseGvz(await response.text());
+  v4State.gvz=v4ParseGvz(await response.text());v4State.gvzSource="Consulta directa FRED/Cboe";
   renderV4();
  }catch(error){console.warn("FRED GVZ no disponible desde navegador",error)}
 }
@@ -2744,7 +2744,7 @@ function drawV4Detail(kind,host,foot){
  return true;
 }
 
-function init(){document.getElementById('v4-etf-context-toggle').addEventListener('click',toggleETFContext);document.getElementById('detail-context-toggle').addEventListener('click',toggleETFContext);bootMarket();bootMacro();bootV4();$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
+function init(){document.getElementById('v4-etf-context-toggle').addEventListener('click',toggleETFContext);document.getElementById('detail-context-toggle').addEventListener('click',toggleETFContext);bootMarket();bootMacro().finally(()=>window.metalsQualitySignal?.('macro'));bootV4().finally(()=>window.metalsQualitySignal?.('v4'));$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
 window.addEventListener('resize',()=>{
  const nextWidth=window.innerWidth;
  if(Math.abs(nextWidth-lastMacroWidth)<9)return;
@@ -2824,4 +2824,5 @@ init();
   syncTheme();
 })();
 </script>
+<script defer src="./quality.js"></script>
 </body></html>
