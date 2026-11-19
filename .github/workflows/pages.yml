@@ -8,6 +8,7 @@ on:
       - 'data/**'
       - 'preview/intradia/**'
       - 'preview/v4/**'
+      - 'preview/etf-compare/**'
       - '.github/workflows/pages.yml'
   workflow_run:
     workflows: ['Actualizar datos macro oficiales']
@@ -40,10 +41,13 @@ jobs:
           cp data/v4-cot-snapshot.json _site/data/v4-cot-snapshot.json
           cp data/v4-gvz-snapshot.json _site/data/v4-gvz-snapshot.json
           cp data/v4-flows-facts.json _site/data/v4-flows-facts.json
+          cp data/v4-etf-sec-quarterly.json _site/data/v4-etf-sec-quarterly.json
           mkdir -p _site/preview/intradia
           cp preview/intradia/index.html _site/preview/intradia/index.html
           mkdir -p _site/preview/v4
           cp preview/v4/index.html _site/preview/v4/index.html
+          mkdir -p _site/preview/etf-compare
+          cp preview/etf-compare/index.html _site/preview/etf-compare/index.html
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
