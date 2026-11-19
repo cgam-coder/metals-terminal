@@ -6,6 +6,7 @@ on:
     paths:
       - 'index.html'
       - 'data/**'
+      - 'preview/intradia/**'
       - '.github/workflows/pages.yml'
   workflow_run:
     workflows: ['Actualizar datos macro oficiales']
@@ -35,6 +36,8 @@ jobs:
           cp index.html _site/index.html
           cp data/series.json _site/data/series.json
           cp data/vix-history.json _site/data/vix-history.json
+          mkdir -p _site/preview/intradia
+          cp preview/intradia/index.html _site/preview/intradia/index.html
           touch _site/.nojekyll
       - name: Configurar Pages
         uses: actions/configure-pages@v5
