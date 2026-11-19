@@ -2,7 +2,6 @@
    Snapshot dates never imply that the latest official publication has been fetched. */
 (function(){
  "use strict";
- const rowsHost=document.createElement("section");
  const noFuture=(date)=>/^\d{4}-\d{2}-\d{2}$/.test(date||"")&&date<=new Date(Date.now()+86400000).toISOString().slice(0,10);
  const dateText=date=>noFuture(date)?date:"sin fecha acreditada";
  const statusSet=window.metalsQualityDone||new Set();
@@ -91,17 +90,23 @@
     }
     putBadge(caption,byId[key]);
   };
-  cardBadge("#q-gold", "futures"); // id is the quote slot; use nearest card instead below
-  for(const key of ["gold","silver","copper","brent"]){
+  const putCard=(key,source)=>{
     const card=document.getElementById("q-"+key)?.closest(".ticker-card");
-    if(card)putBadge(card.querySelector(".card-caption"),byId.futures);
+    const caption=card?.querySelector(".card-caption");
+    if(!caption)return;
+    if(!caption.querySelector(".caption-copy")){
+      const wrap=document.createElement("span");wrap.className="caption-copy";
+      wrap.textContent=caption.textContent.trim();caption.textContent="";caption.appendChild(wrap);
+    }
+    putBadge(caption,source);
+  };
+  for(const key of ["gold","silver","copper","brent"]){
+    putCard(key,byId.futures);
   }
   for(const key of ["dxy","eur"]){
-    const card=document.getElementById("q-"+key)?.closest(".ticker-card");
-    if(card)putBadge(card.querySelector(".card-caption"),byId.xaus);
+    putCard(key,byId.xaus);
   }
-  const vixCard=document.getElementById("q-vix")?.closest(".ticker-card");
-  if(vixCard)putBadge(vixCard.querySelector(".card-caption"),byId.vix);
+  putCard("vix",byId.vix);
   putBadge(document.querySelector("#comparativa .main-title-extra"),byId.futures);
   putBadge(document.querySelector(".ratio-panel .main-title-extra"),byId.xaus);
   putBadge(document.getElementById("curve-caption"),byId.macro);
@@ -144,7 +149,7 @@
  }
  if(typeof FORCE_MARKET_RECHECK!=="undefined"&&FORCE_MARKET_RECHECK){
    report=document.createElement("details");
-   report.className="source-refresh-report";report.open=true;
+   report.className="source-refresh-report";report.open=false;
    report.innerHTML='<summary>Resultado de «Actualizar todo» <span class="source-report-summary"></span></summary><div class="source-report-table"></div><p>Se han reconsultado las fuentes accesibles. Los archivos históricos publicados en GitHub se actualizan por separado y NO se modifican al pulsar este botón. Las respuestas directas pueden estar bloqueadas por el navegador o todavía no publicadas en origen.</p>';
    document.querySelector(".header")?.insertAdjacentElement("afterend",report);
  }
