@@ -1664,7 +1664,8 @@ function renderNative(){
  renderFuturesComparison();
  renderRatioPanel();
  const dates=Object.values(nativeData).map(x=>x.asOf).filter(Boolean).sort(),stamp=dates.at(-1);
- document.getElementById("market-stamp").textContent=nativePeriod==="custom"?"Mercados · histórico del "+customRange.from+" al "+customRange.to:"Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
+ const marketStamp=document.getElementById("market-stamp");
+ if(marketStamp)marketStamp.textContent=nativePeriod==="custom"?"Mercados · histórico del "+customRange.from+" al "+customRange.to:"Mercado · Consulta a demanda · "+(stamp?new Date(stamp).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"Sin fuente");
 }
 // A network stall in any ancillary asset must not block the ratio inspection.
 async function fetchValidatedXaus(key,range,interval){
