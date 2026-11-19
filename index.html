@@ -753,7 +753,7 @@
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
   <div id="detail-timeframes" class="global-timeframes detail-timeframes" role="group" aria-label="Intervalo del gráfico ampliado"><button type="button" data-detail-period="1d" class="" aria-pressed="false">1D</button><button type="button" data-detail-period="3d" class="" aria-pressed="false">3D</button><button type="button" data-detail-period="5d" class="" aria-pressed="false">1S</button><button type="button" data-detail-period="2w" class="" aria-pressed="false">2S</button><button type="button" data-detail-period="1mo" class="active" aria-pressed="true">1M</button><button type="button" data-detail-period="3mo" class="" aria-pressed="false">3M</button><button type="button" data-detail-period="6mo" class="" aria-pressed="false">6M</button><button type="button" data-detail-period="1y" class="" aria-pressed="false">1A</button><button type="button" data-detail-period="2y" class="" aria-pressed="false">2A</button><button type="button" data-detail-period="5y" class="" aria-pressed="false">5A</button></div>
   <details id="detail-period-picker" class="period-picker"><summary aria-label="Seleccionar periodo de fechas personalizado"><svg class="period-picker-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span class="period-picker-label">Seleccionar periodo</span><span class="period-picker-selected"></span><span class="period-picker-chevron" aria-hidden="true">⌄</span></summary><form id="detail-dates" class="custom-date-form" aria-label="Seleccionar fechas históricas"><div class="period-popover-heading">Personalizar intervalo</div><div class="period-popover-caption">Elige un día o un rango de fechas entre los últimos cinco años.</div><div class="period-date-fields"><label>Desde <input name="from" type="date" required aria-label="Fecha inicial"/></label><label>Hasta <input name="to" type="date" required aria-label="Fecha final"/></label></div><div class="period-popover-actions"><button type="submit" class="date-apply">Mostrar</button><button type="button" data-reset-dates class="date-reset" title="Volver a 1M">Restablecer</button></div><span class="date-feedback" role="status" aria-live="polite"></span></form></details>
-  <div id="detail-chart" class="detail-chart"></div><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></div>
+  <div id="detail-chart" class="detail-chart"></div><details id="detail-method" class="detail-method" open><summary>Fuente, fechas y metodología</summary><div id="detail-foot" class="detail-foot">Fuente y tipo de instrumento</div></details></div>
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los futuros GC, SI y HG se comparan mediante gráficos SVG propios de sus cierres publicados, no por widgets COMEX en directo. XAU/XAG spot se utiliza únicamente en la ratio inferior; DXY y EUR/USD usan XAUS y el VIX utiliza cierres diarios de Cboe. Todos los gráficos se dibujan de forma nativa; no dependen de widgets de TradingView. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
@@ -822,6 +822,7 @@ if(new URLSearchParams(location.search).has("datasetqa")){
  })();
 }
 </script>
+<script>window.metalsQualityDone=new Set();window.metalsQualitySignal=key=>{window.metalsQualityDone.add(key);window.renderMetalsQuality?.();};</script>
 <script>
 'use strict';
 const MARKET={gold:'COMEX:GC1!',silver:'COMEX:SI1!',ratio:'TVC:GOLDSILVER',dxy:'TVC:DXY',eur:'FX:EURUSD',vix:'TVC:VIX',brent:'TVC:UKOIL',copper:'COMEX:HG1!'};
@@ -2354,6 +2355,7 @@ function openMarketDetail(kind){
  syncETFContextControls();
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
+ document.getElementById("detail-method").open=!window.matchMedia("(max-width: 780px)").matches;
  const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
  document.querySelectorAll("#detail-timeframes button").forEach(button=>{
@@ -2732,13 +2734,13 @@ function drawV4Detail(kind,host,foot){
   host.innerHTML='<div class="v4-graph" id="v4-detail-graph"></div>';
   nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub);
   if(name==="flows"){
-   host.insertAdjacentHTML("beforeend",v4ETFExtra());
+   host.insertAdjacentHTML("beforeend",'<details class="v4-extra-method" '+(window.matchMedia("(max-width:780px)").matches?"":"open")+'><summary>Contexto WGC e iShares SLV</summary>'+v4ETFExtra()+'</details>');
    foot.textContent=title+" · "+(v4ETFSelection().context?"contexto opcional de 2A fuera del periodo global":"periodo global "+activePeriodLabel())+" · comparación trimestral SEC en %. El dato WGC se muestra aparte.";
   }else foot.textContent=title+" · "+activePeriodLabel()+" · fuente CFTC/FRED con fechas reales y periodicidad propia. No es dato intradía.";
  }else{
   const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"GLD y SLV: tenencias de metal declaradas trimestralmente a SEC. Datos WGC e iShares recientes se consultan aparte."};
   host.innerHTML='<div class="v4-placeholder" role="status">'+v4HtmlText(copy[name]||"Datos en validación")+'</div>';
-  if(name==="flows")host.insertAdjacentHTML("beforeend",v4ETFExtra());
+  if(name==="flows")host.insertAdjacentHTML("beforeend",'<details class="v4-extra-method" '+(window.matchMedia("(max-width:780px)").matches?"":"open")+'><summary>Contexto WGC e iShares SLV</summary>'+v4ETFExtra()+'</details>');
   foot.textContent=title+" · "+activePeriodLabel()+" · no hay una curva verificada para este periodo.";
  }
  return true;
