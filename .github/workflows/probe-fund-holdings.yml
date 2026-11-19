@@ -1,0 +1,50 @@
+name: Cualificar historicos GLD y SLV (solo lectura)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/probe-fund-holdings.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Descargar archivos oficiales sin autenticacion ni persistir en repositorio
+        run: |
+          mkdir -p fund-probe
+          python3 - <<'PY'
+          import requests,hashlib,json,os
+          endpoints={
+            "GLD":"https://api.spdrgoldshares.com/api/v1/historical-archive?exchange=NYSE&lang=en&product=gld",
+            "SLV":"https://www.blackrock.com/varnish-api/blk-one01-product-data/product-data/api/v1/get-fund-document?appSubType=ISHARES&appType=PRODUCT_PAGE&component=fundDownload&locale=en_US&portfolioId=239855&targetSite=us-ishares&userType=individual"
+          }
+          results={}
+          headers={"User-Agent":"Mozilla/5.0 (compatible; MetalsTerminalReadOnlyDataValidation/1.0)","Accept":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,*/*"}
+          for symbol,url in endpoints.items():
+            try:
+              r=requests.get(url,headers=headers,timeout=35,allow_redirects=True)
+              content=r.content
+              binary=content[:8]
+              result={"http":r.status_code,"mime":r.headers.get("Content-Type"),"bytes":len(content),"sha256":hashlib.sha256(content).hexdigest(),"magic":binary.hex(),"redirect_origin":r.url.split("?")[0],"source":url.split("?")[0]}
+              if r.ok and len(content)>3000 and (binary.startswith(b'PK') or binary.startswith(bytes.fromhex('d0cf11e0'))):
+                ext='xlsx' if binary.startswith(b'PK') else 'xls'
+                path='fund-probe/'+symbol.lower()+'.'+ext
+                with open(path,'wb') as f:f.write(content)
+                result['file']=path
+              results[symbol]=result
+            except Exception as e:results[symbol]={"error":repr(e)}
+          print("HOLDINGS_PROBE_RESULT_START")
+          print(json.dumps(results,indent=2))
+          print("HOLDINGS_PROBE_RESULT_END")
+          with open('fund-probe/probe.json','w') as f:json.dump(results,f,indent=2)
+          PY
+      - name: Conservar evidencia temporal de las descargas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gld-slv-official-file-validation
+          path: fund-probe/
+          retention-days: 1
+          if-no-files-found: warn
