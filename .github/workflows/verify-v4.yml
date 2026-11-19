@@ -61,6 +61,23 @@ jobs:
             }catch(e){report.errors.push({device:label,type:'exception',message:String(e)})}
             await page.close();
           }
+          // Production smoke only: the release must not depend on the preview URL.
+          const prod=await browser.newPage({viewport:{width:1440,height:900}});
+          try{
+            await prod.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo',{waitUntil:'domcontentloaded',timeout:40000});
+            await prod.waitForTimeout(10000);
+            result.production=await prod.evaluate(()=>({
+              version:document.getElementById('version')?.textContent,
+              cards:['v4-cot','v4-oi','v4-volatility','v4-flows','v4-fedwatch'].map(id=>!!document.getElementById(id)),
+              cotChart:!!document.querySelector('#v4-cot-chart svg'),
+              oiChart:!!document.querySelector('#v4-oi-chart svg'),
+              gvzChart:!!document.querySelector('#v4-volatility-chart svg'),
+              flows:document.getElementById('v4-flows-state')?.innerText
+            }));
+            if(!result.production.cards.every(Boolean)||!result.production.cotChart||!result.production.oiChart||!result.production.gvzChart)throw Error('V4 production missing cards or verified curves');
+            await prod.screenshot({path:'v4-evidence/production.png',fullPage:true});
+          }catch(e){result.errors.push({device:'production',type:'exception',message:String(e)})}
+          await prod.close();
           await browser.close();
           console.log('V4_EVIDENCE_START');
           console.log(JSON.stringify(report,null,2));
