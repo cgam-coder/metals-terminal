@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## V4.1 — Comparación simultánea oro/plata en COT e interés abierto (19/11/2026)
+
+- Los gráficos **COT** e **interés abierto CFTC** representan simultáneamente oro GC (línea dorada) y plata SI (línea plateada), tanto en las tarjetas pequeñas como al pulsar «Ampliar».
+- COT: eje común **Managed Money neto / interés abierto de cada metal (%)**. Las cifras netas absolutas de contratos y los percentiles históricos se conservan visibles por separado sobre las curvas.
+- Interés abierto: eje común **variación porcentual desde la primera fecha de informe que comparten ambas series (base 0 %)**. El número absoluto de contratos abiertos de oro y plata se muestra en la cabecera de la tarjeta; así no se mezclan sus escalas absolutas.
+- Únicamente se comparan fechas de informe CFTC Futures Only coincidentes. No se interpolan semanas ausentes, ni se sustituye el volumen diario CME aún pendiente. Al elegir un periodo sin dos fechas comunes, se muestran los valores verificados disponibles sin inventar una línea.
+- Ambos gráficos utilizan fuentes y costes exactamente iguales a V4.0. La selección temporal y el calendario siguen siendo globales y las vistas ampliadas utilizan los mismos datos.
+
 ## V4.0 — Posicionamiento y expectativas (19/11/2026)
 
 **Producción:** las cinco tarjetas nuevas están integradas en `index.html`. FedWatch aparece debajo de Tipos oficiales (columna derecha en escritorio, apilados en móvil); cuatro tarjetas — COT, interés abierto/volumen, volatilidad implícita y ETF/ETP — están en una fila inferior nueva (4 columnas escritorio, 2 tableta, 1 móvil). Se mantiene el selector temporal global, calendarios y modal de «Ampliar»; no se modifica la definición de GC/SI/HG/BZ ni la fuente de sus cierres.
