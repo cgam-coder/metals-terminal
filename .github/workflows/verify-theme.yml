@@ -49,6 +49,21 @@ jobs:
               url:location.href
             };
           });
+          const headerLayout=async page=>page.evaluate(()=>{
+            const rect=selector=>{const el=document.querySelector(selector);if(!el)return null;const b=el.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom}};
+            return {
+              header:rect('.header'),brand:rect('.brand'),title:rect('.brand-title'),
+              stamp:rect('#stamp'),theme:rect('#theme-toggle'),
+              timeframes:rect('#global-timeframes'),actions:rect('.header-secondary-actions'),
+              sources:rect('#method-button'),refresh:rect('#refresh'),picker:rect('#header-period-picker'),
+              subtitle:document.querySelector('.header .subtitle')?.textContent?.trim(),
+              brandText:document.querySelector('.brand-title')?.textContent?.replace(/\\s+/g,' ').trim(),
+              sourceParent:document.querySelector('#method-button')?.parentElement?.className,
+              titleColors:[getComputedStyle(document.querySelector('.brand-title span')).color,getComputedStyle(document.querySelector('.brand-title em')).color],
+              marketStatusRemoved:!document.querySelector('.header')?.textContent?.includes('Mercado · datos bajo demanda'),
+              viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth
+            };
+          });
           try {
             for(const [name,width,height] of [['desktop',1440,900],['mobile',390,844],['small',360,780]]){
               const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
@@ -63,6 +78,22 @@ jobs:
                 const first=await colors(page);
                 check(first.theme==='night'&&first.button.includes('Noche'),'night must be default');
                 check(first.v4Cards===4,'V4 cards missing');
+                const header=await headerLayout(page);
+                result.screens[name]={header};
+                check(header.subtitle==='Oro · Plata · Cobre','obsolete subtitle '+header.subtitle);
+                check(header.brandText==='METALS TERMINAL','brand text mismatch '+header.brandText);
+                check(header.titleColors[0]!==header.titleColors[1],'brand lost two-color identity');
+                check(header.sourceParent==='header-secondary-actions','Sources is not beside Refresh');
+                check(header.marketStatusRemoved,'obsolete status still visible');
+                check(Math.abs(header.sources.y-header.refresh.y)<8,'Sources/Refresh not same row');
+                check(header.sources.x<header.refresh.x&&header.refresh.x-header.sources.right<16,'Sources and Refresh not adjacent');
+                check(header.sources.x>=header.header.x-1&&header.picker.right<=header.header.right+1,'header controls beyond header bounds');
+                check(header.title.right<=header.header.right+1,'brand title overflows');
+                check(header.header.height<=(width<=620?220:135),'header not compact: '+header.header.height+' px');
+                if(width<=1100){
+                  check(Math.abs(header.stamp.y-header.theme.y)<22,'Macro and theme separated');
+                  check(header.actions.y>header.timeframes.y,'mobile actions not under period');
+                }
                 await page.locator('#theme-toggle').click();
                 await page.waitForTimeout(500);
                 const day=await colors(page);
@@ -71,6 +102,10 @@ jobs:
                 check(day.heading==='rgb(32, 51, 65)','day heading contrast: '+day.heading);
                 check(day.width<=width+1,'horizontal overflow daylight '+name+' '+day.width+'/'+width);
                 check(day.period==='1M','timeframe changed by theme');
+                const dayHeader=await headerLayout(page);
+                check(dayHeader.titleColors[0]!==dayHeader.titleColors[1],'day theme brand not bicolor');
+                check(dayHeader.scrollWidth<=width+1,'day header causes horizontal overflow');
+                result.screens[name].dayHeader=dayHeader;
                 await page.screenshot({path:'evidence-theme/'+name+'-day.png',fullPage:true});
                 await page.locator('#header-period-picker summary').click();
                 const calendar=await page.locator('#header-dates input[type=date]').first().evaluate(el=>({
@@ -104,7 +139,7 @@ jobs:
                 check(night.bodyBg==='rgb(7, 12, 18)','original night palette altered');
                 check(night.width<=width+1,'horizontal overflow night '+name);
                 await page.screenshot({path:'evidence-theme/'+name+'-night.png',fullPage:false});
-                result.screens[name]={nightFirst:first,day,persisted,night,calendar};
+                result.screens[name]={...result.screens[name],nightFirst:first,day,persisted,night,calendar};
               }catch(err){result.errors.push({name,type:'assertion',message:String(err)})}
               await context.close();
             }
