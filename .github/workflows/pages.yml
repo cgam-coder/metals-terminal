@@ -38,6 +38,7 @@ jobs:
           cp data/series.json _site/data/series.json
           cp data/vix-history.json _site/data/vix-history.json
           cp data/v4-cot-snapshot.json _site/data/v4-cot-snapshot.json
+          cp data/v4-gvz-snapshot.json _site/data/v4-gvz-snapshot.json
           mkdir -p _site/preview/intradia
           cp preview/intradia/index.html _site/preview/intradia/index.html
           mkdir -p _site/preview/v4
