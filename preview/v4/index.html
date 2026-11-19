@@ -619,6 +619,11 @@
 .v4-selector{display:flex;align-items:center;gap:3px}
 .v4-selector button{border:1px solid #365a70;color:#c4d8e5;background:#102735;padding:5px 9px;min-height:31px;border-radius:6px;font-size:11px}
 .v4-selector button[aria-pressed="true"]{border-color:#bb9641;background:#66501a;color:#fff}
+.v4-fund-facts{display:grid;grid-template-columns:1fr;gap:8px}
+.v4-fund-facts>div{background:#0e2733;border:1px solid #365365;border-radius:7px;padding:9px}
+.v4-fund-facts b{display:block;color:#e6f2fa;font-size:11px}
+.v4-fund-facts strong{display:block;font-size:19px;color:#efc16a;margin:4px 0;font-variant-numeric:tabular-nums}
+.v4-fund-facts small{display:block;font-size:10px;color:#9cb3c2;line-height:1.4}
 .v4-graph{flex:1 1 auto;min-height:113px;position:relative;border-radius:8px;background:#081a26;border:1px solid #2e4a5b;overflow:hidden}
 .v4-graph .native-canvas{height:100%;min-height:113px;padding:5px}
 .v4-graph .native-canvas .native-series{min-height:90px}
@@ -2450,7 +2455,7 @@ function drawMarketDetail(){
 const V4_SOURCE_COT="https://publicreporting.cftc.gov/resource/72hh-3qpy.json";
 const V4_FRED_GVZ="https://fred.stlouisfed.org/graph/fredgraph.csv?id=GVZCLS";
 const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"Flujos de inversión ETF/ETP","v4-fedwatch":"FedWatch · expectativas Fed"};
-const v4State={cot:null,cotSource:"",gvz:null,select:{cot:"gold",oi:"gold"}};
+const v4State={cot:null,cotSource:"",gvz:null,flows:null,select:{cot:"gold",oi:"gold"}};
 const v4HtmlText=s=>String(s??"").replace(/[<>&"'\x60]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;","\x60":"&#96;"}[c]));
 function v4CotRows(raw){
  if(!Array.isArray(raw))throw Error("CFTC: formato de respuesta incorrecto");
@@ -2546,14 +2551,39 @@ function v4RenderGvz(){
  if(rows.length>=2)nativeChart("v4-volatility-chart",[{label:"GVZ · GLD",color:"#b88aff",points:rows.map(z=>z.value)}],rows.map(z=>z.t),"",'<span>FRED GVZCLS · Cboe, uso sujeto a permisos y atribución de serie.</span>');
  else host.innerHTML='<div class="v4-placeholder">No hay al menos dos cierres GVZ en el periodo. Valor anterior fechado, sin crear curva artificial.</div>';
 }
+function v4RenderFlows(){
+ const el=document.getElementById("v4-flows-state");
+ if(!el)return;
+ const obj=v4State.flows,selectedEnd=v4Window().end;
+ if(!obj){el.innerHTML='<div class="v4-placeholder">No hay instantánea verificada de flujos y tenencias. Consulta las fuentes WGC y SLV.</div>';return;}
+ const g=obj.gold,s=obj.silver,eligibleGold=g.publication_date<=selectedEnd,eligibleSilver=s.observation_date<=selectedEnd;
+ if(!eligibleGold&&!eligibleSilver){el.innerHTML='<div class="v4-placeholder">No hay publicaciones verificadas en esta instantánea anteriores a '+v4HtmlText(selectedEnd)+'.</div>';return;}
+ const blocks=[];
+ if(eligibleGold)blocks.push('<div><b>Oro · ETF físicos globales</b><strong>+'+fmt(g.net_fund_flow_usd_billion,1)+' mil M USD</strong><small>Entrada neta · octubre 2026 · WGC, publicado '+v4HtmlText(g.publication_date)+' · tenencias '+v4Compact(g.holding_tonnes)+' t</small></div>');
+ if(eligibleSilver)blocks.push('<div><b>Plata · iShares SLV</b><strong>'+fmt(s.trust_tonnes,2)+' t</strong><small>Tenencias en un solo trust · '+v4HtmlText(s.observation_date)+' · NO flujos globales de plata</small></div>');
+ el.innerHTML='<div class="v4-fund-facts">'+blocks.join("")+'</div>';
+}
+function v4ValidateFlows(json){
+ if(json?.schema!=="metals-v4-flows-facts-v1"||json.no_comparable_flow_aggregation!==true||
+    json.gold?.source!=="World Gold Council"||json.gold.observation_date!=="2026-10-31"||
+    json.silver?.source!=="iShares SLV (BlackRock)"||json.silver.observation_date!=="2026-11-11"||
+    !Number.isFinite(json.gold.net_fund_flow_usd_billion)||!Number.isFinite(json.silver.trust_tonnes)||json.silver.trust_tonnes<=0)throw Error("Flujos/SLV: evidencia no validada");
+ return json;
+}
 function renderV4(){
  if(!document.getElementById("v4-cot"))return;
- v4RenderCotPanel("cot");v4RenderCotPanel("oi");v4RenderGvz();
+ v4RenderCotPanel("cot");v4RenderCotPanel("oi");v4RenderGvz();v4RenderFlows();
  const customPast=nativePeriod==="custom"&&customRange&&customRange.to<new Date().toISOString().slice(0,10);
  const fed=document.getElementById("v4-fedwatch-state");
  if(fed)fed.innerHTML='<div class="v4-placeholder"><strong>'+(customPast?"Histórico no disponible para fecha elegida.":"Probabilidades no disponibles.")+'</strong> La herramienta oficial CME se consulta mediante enlace; no se inventan porcentajes.</div>';
 }
 async function bootV4(){
+ try{
+  const response=await fetch("data/v4-flows-facts.json?v=flows-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error("Flujos HTTP "+response.status);
+  v4State.flows=v4ValidateFlows(await response.json());
+  renderV4();
+ }catch(error){console.warn("Flujos WGC y SLV no disponibles",error)}
  try{
   const response=await fetch("data/v4-cot-snapshot.json?v=cftc-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
   if(!response.ok)throw Error("HTTP "+response.status);
@@ -2598,6 +2628,7 @@ function drawV4Detail(kind,host,foot){
  }else{
   const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"Gold ETF flows: World Gold Council. Silver SLV: tenencias del fondo, NO flujos globales.",fedwatch:"Probabilidades oficiales CME FedWatch. Acceso automatizado y archivo histórico no acreditados."};
   host.innerHTML='<div class="v4-placeholder" role="status">'+v4HtmlText(copy[name]||"Datos en validación")+'</div>';
+  if(name==="flows"&&v4State.flows)host.insertAdjacentHTML("beforeend",document.getElementById("v4-flows-state")?.innerHTML||"");
   foot.textContent=title+" · "+activePeriodLabel()+" · no hay una curva verificada para este periodo.";
  }
  return true;
