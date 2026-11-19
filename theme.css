@@ -1,0 +1,284 @@
+/* Metals Terminal — optional daylight skin. Night is the unchanged default.
+   All rules are scoped to html[data-theme="day"]. No data or chart computation is changed. */
+html[data-theme="day"]{
+  color-scheme:light;
+  --bg:#f3f1eb;--panel:#fffdf9;--panel2:#f8f5ee;
+  --stroke:#c9d4da;--stroke2:#dbe2e6;
+  --text:#21313d;--muted:#516675;--muted2:#637c88;
+  --gold:#a16b12;--silver:#54718e;--cyan:#117589;
+  --green:#14734e;--red:#ac3447;--purple:#6c4ca7;
+  --shadow:0 7px 23px rgba(24,46,60,.09);
+}
+html[data-theme="day"] body{background:var(--bg);color:var(--text)}
+html[data-theme="day"] a{color:#116a88}
+html[data-theme="day"] .header{
+  background:linear-gradient(110deg,#fffefb,#f9f5ed 68%,#f2ece0);
+  border-bottom-color:#cbd6da;
+}
+html[data-theme="day"] .brand-title{color:#243644}
+html[data-theme="day"] .subtitle,
+html[data-theme="day"] .status{color:#4e6677}
+html[data-theme="day"] .dot{box-shadow:0 0 0 3px #11758925}
+html[data-theme="day"] .panel,
+html[data-theme="day"] .ticker-card{
+  background:linear-gradient(155deg,#fffefb,#f9f8f3 96%);
+  border-color:var(--stroke);box-shadow:inset 0 1px #fff, var(--shadow);
+}
+html[data-theme="day"] .panel{
+  background:radial-gradient(ellipse at 90% 105%,#eaf3f381,transparent 65%),linear-gradient(160deg,#fffefb,#faf9f5 95%);
+}
+html[data-theme="day"] .top-grid .ticker-card.metal-feature{
+  background:radial-gradient(ellipse at 84% 86%,#f6dfa842,transparent 69%),linear-gradient(145deg,#fffefa,#f9f6ef)!important;
+}
+html[data-theme="day"] .top-grid .ticker-card.metal-feature.silver{
+  background:radial-gradient(ellipse at 84% 86%,#c3d4e333,transparent 69%),linear-gradient(145deg,#fffefa,#f7f9fb)!important;
+}
+html[data-theme="day"] .top-grid .ticker-card.market-feature{
+  background:radial-gradient(ellipse at 84% 86%,#bce3e53b,transparent 69%),linear-gradient(145deg,#fffefa,#f5fafb)!important;
+}
+html[data-theme="day"] .top-grid .ticker-card{border-top-color:#c1ccd1}
+html[data-theme="day"] .panel-title,
+html[data-theme="day"] .card-heading h2,
+html[data-theme="day"] .v4-card-head h3,
+html[data-theme="day"] .v4-section-header h2{color:#203341}
+html[data-theme="day"] .card-caption,
+html[data-theme="day"] .metal-feature .card-caption,
+html[data-theme="day"] .panel-caption,
+html[data-theme="day"] .macro-caption,
+html[data-theme="day"] .macro-window-explain,
+html[data-theme="day"] .main-title-extra,
+html[data-theme="day"] .yield-note,
+html[data-theme="day"] .metal-timestamp,
+html[data-theme="day"] .metal-timestamp .delayed,
+html[data-theme="day"] .metal-scale,
+html[data-theme="day"] .metal-wait,
+html[data-theme="day"] .metal-marker,
+html[data-theme="day"] .micro,
+html[data-theme="day"] .footnote,
+html[data-theme="day"] .detail-foot{color:#536d7b}
+html[data-theme="day"] .metal-main-price,
+html[data-theme="day"] .native-num{color:#1a303e}
+html[data-theme="day"] .metal-day-change.pos,
+html[data-theme="day"] .native-positive{color:#13754c}
+html[data-theme="day"] .metal-day-change.neg,
+html[data-theme="day"] .native-negative{color:#af3549}
+html[data-theme="day"] .metal-error,
+html[data-theme="day"] .native-error{color:#875c19}
+html[data-theme="day"] .native-error a,
+html[data-theme="day"] .metal-error a{color:#126884}
+html[data-theme="day"] .metal-source-link,
+html[data-theme="day"] .link-small,
+html[data-theme="day"] .v4-foot a,
+html[data-theme="day"] .native-note a,
+html[data-theme="day"] .footnote a{color:#096c88}
+html[data-theme="day"] .metal-source-link{border-color:#c5d5df}
+html[data-theme="day"] .metal-spark-outer,
+html[data-theme="day"] .native-canvas .native-series,
+html[data-theme="day"] .tv-chart,
+html[data-theme="day"] .chart-container,
+html[data-theme="day"] .detail-chart.macro-focus-chart{
+  background:linear-gradient(180deg,#fcfefd,#f0f5f4)!important;
+  border-color:#cfdee2;
+}
+html[data-theme="day"] .v4-graph{
+  background:#f6f9f8;border-color:#cfdae0;
+}
+html[data-theme="day"] .metal-spark-unavailable{color:#526b78}
+html[data-theme="day"] .native-canvas .native-caption,
+html[data-theme="day"] .native-canvas .native-legend,
+html[data-theme="day"] .native-canvas .native-note,
+html[data-theme="day"] .native-canvas .native-note strong,
+html[data-theme="day"] .native-meta,
+html[data-theme="day"] .legend span{color:#435b69}
+html[data-theme="day"] .native-canvas .native-note strong{color:#8c601c}
+html[data-theme="day"] .chart-container .axis-text,
+html[data-theme="day"] .detail-chart.macro-focus-chart .axis-text,
+html[data-theme="day"] .native-canvas .native-axis,
+html[data-theme="day"] .market-axis,
+html[data-theme="day"] .top-grid .ticker-card .metal-spark-outer .market-axis,
+html[data-theme="day"] .top-grid .ticker-card .metal-marker{fill:#4d6876}
+html[data-theme="day"] .chart-container .grid,
+html[data-theme="day"] .detail-chart.macro-focus-chart .grid,
+html[data-theme="day"] .native-canvas .native-grid,
+html[data-theme="day"] .top-grid .ticker-card .metal-spark-outer .market-grid{stroke:#9fb4c1;stroke-opacity:.55}
+html[data-theme="day"] .macro-crosshair,
+html[data-theme="day"] .market-crosshair{stroke:#476b7e}
+html[data-theme="day"] .native-canvas .native-tip,
+html[data-theme="day"] .metal-spark-outer .metal-hover,
+html[data-theme="day"] .macro-hover-tip{
+  background:#fffdf9f2;border:1px solid #9db4be;color:#223945;
+  box-shadow:0 6px 20px #243a4922;
+}
+html[data-theme="day"] .outline-button,
+html[data-theme="day"] .market-inspect,
+html[data-theme="day"] .macro-expand,
+html[data-theme="day"] .ratio-view-toggle,
+html[data-theme="day"] .mini-action,
+html[data-theme="day"] .provider-mini a,
+html[data-theme="day"] .provider-link{
+  background:#edf4f5;color:#1a5b75;border-color:#b6ccd5;
+}
+html[data-theme="day"] .outline-button:hover,
+html[data-theme="day"] .market-inspect:hover,
+html[data-theme="day"] .macro-expand:hover,
+html[data-theme="day"] .ratio-view-toggle:hover,
+html[data-theme="day"] .provider-mini a:hover,
+html[data-theme="day"] .provider-link:hover{background:#e3eef0;border-color:#6297a9;color:#103d50}
+html[data-theme="day"] .global-timeframes,
+html[data-theme="day"] .control-group,
+html[data-theme="day"] .macro-range{background:#eef1ec;border-color:#c9d4d7}
+html[data-theme="day"] .global-timeframes button,
+html[data-theme="day"] .control-group button,
+html[data-theme="day"] .macro-range button{color:#39576a}
+html[data-theme="day"] .global-timeframes button.active,
+html[data-theme="day"] .global-timeframes button:hover,
+html[data-theme="day"] .control-group button.active,
+html[data-theme="day"] .control-group button:hover,
+html[data-theme="day"] .macro-range button.active,
+html[data-theme="day"] .macro-range button:hover{
+  color:#fff;background:linear-gradient(145deg,#ab7a25,#85601e)
+}
+html[data-theme="day"] .native-range button,
+html[data-theme="day"] .v4-selector button{background:#edf4f5;border-color:#b7cbd4;color:#315669}
+html[data-theme="day"] .native-range button.active,
+html[data-theme="day"] .native-range button:hover,
+html[data-theme="day"] .v4-selector button[aria-pressed="true"]{background:#936b22;color:#fff;border-color:#89621f}
+html[data-theme="day"] .period-picker>summary{
+  background:#edf3f2;color:#264d60;border-color:#b3cad2;
+}
+html[data-theme="day"] .period-picker>summary:hover,
+html[data-theme="day"] .period-picker>summary:focus-visible{background:#e4eff0;border-color:#7ba4b4}
+html[data-theme="day"] .period-picker.active>summary{background:#fbf0d5;border-color:#b89247;color:#76521d}
+html[data-theme="day"] .period-picker-selected{color:#76521d}
+html[data-theme="day"] .period-picker .custom-date-form{
+  background:linear-gradient(150deg,#fffdf9,#f2f5f3);
+  border-color:#abbfc7;color:#284452;box-shadow:0 18px 45px #243b4c29;
+}
+html[data-theme="day"] .period-popover-heading{color:#233c4c}
+html[data-theme="day"] .period-popover-caption,
+html[data-theme="day"] .date-feedback,
+html[data-theme="day"] .period-date-fields label{color:#526b7a}
+html[data-theme="day"] .period-date-fields input[type=date]{
+  color-scheme:light;background:#fffefa;color:#243b47;border-color:#b1c5ce;
+}
+html[data-theme="day"] .date-reset{background:#edf2f2;color:#295267;border-color:#bbccd5}
+html[data-theme="day"] .date-reset:hover{background:#e0ebec}
+html[data-theme="day"] .custom-date-form[data-error] .date-feedback{color:#a14527}
+html[data-theme="day"] .macro-period-bar{background:#f0f5f3;color:#324d5e;border-color:#d0e0e1}
+html[data-theme="day"] .macro-period-bar strong{color:#243d4d}
+html[data-theme="day"] .macro-period-bar .macro-period-tag{background:#f4e7c8;color:#725015;border-color:#d5b979}
+html[data-theme="day"] .macro-period-bar .macro-up{color:#13744a}
+html[data-theme="day"] .macro-period-bar .macro-down{color:#af3549}
+html[data-theme="day"] .macro-period-bar .macro-flat{color:#5b6f7b}
+html[data-theme="day"] .data-line,
+html[data-theme="day"] .curve-bottom,
+html[data-theme="day"] .policy-legend,
+html[data-theme="day"] .external-foot{border-top-color:#d3dde0}
+html[data-theme="day"] .data-metric em{color:#617889}
+html[data-theme="day"] .small-tag{background:#f4ead0;border-color:#cfb57d;color:#815917}
+html[data-theme="day"] .source-meta{
+  background:linear-gradient(90deg,#fbf0d8,#f7f4e8);
+  color:#66532b;border-color:#dac89a;
+}
+html[data-theme="day"] .source-meta strong{color:#5c451b}
+html[data-theme="day"] .v4-section-header small,
+html[data-theme="day"] .v4-muted,
+html[data-theme="day"] .v4-compare-note,
+html[data-theme="day"] .v4-foot,
+html[data-theme="day"] .v4-detail-caption{color:#526d7c}
+html[data-theme="day"] .v4-status,
+html[data-theme="day"] .v4-smallstat{color:#314d5d}
+html[data-theme="day"] .v4-stat,
+html[data-theme="day"] .v4-etf-metal strong,
+html[data-theme="day"] .v4-dual-metal strong{color:#223b48}
+html[data-theme="day"] .v4-note,
+html[data-theme="day"] .v4-etf-note{color:#825a19}
+html[data-theme="day"] .v4-etf-metal,
+html[data-theme="day"] .v4-dual-metal,
+html[data-theme="day"] .v4-fund-facts>div{
+  background:#f3f7f6;border-color:#d2dfe2;
+}
+html[data-theme="day"] .v4-etf-metal b,
+html[data-theme="day"] .v4-dual-metal b,
+html[data-theme="day"] .v4-fund-facts b{color:#385669}
+html[data-theme="day"] .v4-etf-metal small,
+html[data-theme="day"] .v4-dual-metal small,
+html[data-theme="day"] .v4-fund-facts small{color:#5b7380}
+html[data-theme="day"] .v4-fund-facts strong{color:#8d6015}
+html[data-theme="day"] .v4-etf-context>div{
+  background:#f5f7f4;border-color:#cbd9da;color:#3a5865;
+}
+html[data-theme="day"] .v4-etf-context strong{color:#8a5d18}
+html[data-theme="day"] .v4-placeholder{
+  background:#f1f5f3;color:#3c5a6c;border-color:#c9dbdf;
+}
+html[data-theme="day"] .v4-placeholder strong{color:#815b1f}
+html[data-theme="day"] .detail-overlay,
+html[data-theme="day"] .modal{background:#19303d8a}
+html[data-theme="day"] .detail-box,
+html[data-theme="day"] .modal-card{
+  background:linear-gradient(145deg,#fffefa,#f3f6f3);
+  border-color:#b5c8cd;box-shadow:0 20px 65px #192d3e44;color:#213744;
+}
+html[data-theme="day"] .modal-top button{background:#e9f1f0;border-color:#b9cbd4}
+html[data-theme="day"] .detail-foot{color:#536e7b}
+html[data-theme="day"] .method,
+html[data-theme="day"] .method h2,
+html[data-theme="day"] .external-futures,
+html[data-theme="day"] .external-item strong{color:#2b4555}
+html[data-theme="day"] .method code{color:#97631c}
+html[data-theme="day"] .external-item{
+  background:#f5f8f7;border-color:#cbdadf;
+}
+html[data-theme="day"] .external-options .external-item p,
+html[data-theme="day"] .external-foot,
+html[data-theme="day"] .external-futures .note,
+html[data-theme="day"] .provider-mini{color:#526c7a}
+html[data-theme="day"] .historical-import{border-top-color:#cbdadf}
+html[data-theme="day"] .historical-import h3{color:#2b4555}
+html[data-theme="day"] .historical-import label{color:#7e5d23}
+html[data-theme="day"] .historical-import input[type=file]{
+  color:#284554;background:#fffefa;border-color:#b4cbd4
+}
+html[data-theme="day"] .historical-import-status,
+html[data-theme="day"] .historical-import .import-note{color:#5c7380}
+html[data-theme="day"] .mobile-jump-nav{
+  background:#fdfcf4f5;border-color:#c6d9dd;box-shadow:0 4px 12px #20374414;
+}
+html[data-theme="day"] .mobile-jump-nav a{
+  background:#f4f7f4;color:#335a6d;border-color:#c9dbe0;
+}
+html[data-theme="day"] .mobile-jump-nav a:hover,
+html[data-theme="day"] .mobile-jump-nav a:focus-visible{
+  background:#e8f1f0;color:#174457;border-color:#88adb9;
+}
+html[data-theme="day"] .footnote{border-top-color:#c7d5db}
+html[data-theme="day"] .theme-toggle{background:#f7efdd;color:#75501b;border-color:#d4be8e}
+/* Re-colour presentation-only SVG strokes without touching stored values,
+   observations, axes, calculations, or historical windows. */
+html[data-theme="day"] svg [stroke="#f4ba3c"]{stroke:#a16b12}
+html[data-theme="day"] svg [stroke="#d7e3ef"]{stroke:#54718e}
+html[data-theme="day"] svg [stroke="#38c9e5"]{stroke:#117589}
+html[data-theme="day"] svg [stroke="#b88aff"]{stroke:#6c4ca7}
+html[data-theme="day"] svg [stroke="#8db8ff"]{stroke:#4666a0}
+html[data-theme="day"] svg [fill="#f4ba3c"]{fill:#a16b12}
+html[data-theme="day"] svg [fill="#d7e3ef"]{fill:#54718e}
+html[data-theme="day"] svg [fill="#38c9e5"]{fill:#117589}
+html[data-theme="day"] svg [fill="#b88aff"]{fill:#6c4ca7}
+html[data-theme="day"] svg stop[stop-color="#f4ba3c"]{stop-color:#a16b12}
+html[data-theme="day"] svg stop[stop-color="#d7e3ef"]{stop-color:#54718e}
+html[data-theme="day"] svg stop[stop-color="#38c9e5"]{stop-color:#117589}
+html[data-theme="day"] .native-dot[style*="#f4ba3c"]{background:#a16b12!important}
+html[data-theme="day"] .native-dot[style*="#d7e3ef"]{background:#54718e!important}
+html[data-theme="day"] .native-dot[style*="#38c9e5"]{background:#117589!important}
+html[data-theme="day"] .native-dot[style*="#b88aff"]{background:#6c4ca7!important}
+html[data-theme="day"] .v4-etf-metal.silver b::before,
+html[data-theme="day"] .v4-dual-metal.silver b::before{background:var(--silver)}
+html[data-theme="day"] .swatch{background:var(--gold)}
+html[data-theme="day"] .swatch.silver{background:var(--silver)}
+html[data-theme="day"] .swatch.cyan{background:var(--cyan)}
+html[data-theme="day"] .swatch.purple{background:var(--purple)}
+/* Toggle appears beside Sources, not inside the common time selector. */
+.theme-toggle{min-height:37px;white-space:nowrap;gap:8px;display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle .theme-icon{font-size:17px;line-height:1}
+@media(max-width:510px){.theme-toggle{padding:8px 10px}.theme-toggle .theme-icon{font-size:15px}}
