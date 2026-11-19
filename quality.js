@@ -150,7 +150,7 @@
  if(typeof FORCE_MARKET_RECHECK!=="undefined"&&FORCE_MARKET_RECHECK){
    report=document.createElement("details");
    report.className="source-refresh-report";report.open=false;
-   report.innerHTML='<summary>Resultado de «Actualizar todo» <span class="source-report-summary"></span></summary><div class="source-report-table"></div><p>Se han reconsultado las fuentes accesibles. Los archivos históricos publicados en GitHub se actualizan por separado y NO se modifican al pulsar este botón. Las respuestas directas pueden estar bloqueadas por el navegador o todavía no publicadas en origen.</p>';
+   report.innerHTML='<summary>Resultado de «Actualizar todo» <span class="source-report-summary"></span></summary><div class="source-report-table"></div><p>Se intenta renovar la lectura desde las fuentes accesibles; consulta los estados finales antes de concluir que han respondido. Los archivos históricos publicados en GitHub se actualizan por separado y NO se modifican al pulsar este botón. El navegador puede bloquear algunas respuestas o el proveedor puede no haber publicado datos nuevos.</p>';
    document.querySelector(".header")?.insertAdjacentElement("afterend",report);
  }
  // Renders are the only source of data updates; no independent interval/polling.
