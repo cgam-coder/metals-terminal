@@ -1,6 +1,23 @@
-# Metals Terminal V3.8 — Histórico de cinco años
+# Metals Terminal V4.0 — Posicionamiento y expectativas
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.0 — Posicionamiento y expectativas (19/11/2026)
+
+**Producción:** las cinco tarjetas nuevas están integradas en `index.html`. FedWatch aparece debajo de Tipos oficiales (columna derecha en escritorio, apilados en móvil); cuatro tarjetas — COT, interés abierto/volumen, volatilidad implícita y ETF/ETP — están en una fila inferior nueva (4 columnas escritorio, 2 tableta, 1 móvil). Se mantiene el selector temporal global, calendarios y modal de «Ampliar»; no se modifica la definición de GC/SI/HG/BZ ni la fuente de sus cierres.
+
+**Datos realmente operativos:**
+- **COT oro/plata:** CFTC Disaggregated Futures Only (Gold COMEX 088691, Silver COMEX 084691); cinco años, 263 informes por metal. Últimas posiciones disponibles en el corte (martes 10/11/2026), Managed Money neto GC +112.341 contratos y SI +3.615; percentiles históricos calculados sobre neto/interés abierto. `data/v4-cot-snapshot.json` es respaldo con fuente y fecha; se intenta consulta directa cuando CORS lo permite. El campo de publicación exacta no está en cada registro y no debe inferirse.
+- **Interés abierto:** 404.725 contratos de GC del último informe CFTC del 10/11/2026; es **semanal**, no sustituto de OI/volumen diarios CME. Volumen diario: pendiente de fuente verificable y autorización de integración.
+- **GVZ:** histórico de FRED/Cboe (1.268 cierres), instantánea de `data/v4-gvz-snapshot.json`; último cierre verificado para este corte, GVZ 26,46 a 17/11/2026. Se intenta FRED directo; ante bloqueo CORS se conserva el corte fechado con atribución. **VXSLV**: fuente Cboe pública identificada, pero sus derechos de redistribución en esta web no están acreditados; no se representa una serie vigente a partir del FRED discontinuado.
+- **ETF/ETP:** dos hechos públicos, no una serie comparable: WGC (octubre 2026, publicado 05/11/2026): +2,7 mil millones USD en flujos netos de ETF físicos globales de oro y tenencias 4.275 t; iShares SLV (11/11/2026) 15.684,52 t mantenidas en el trust. `data/v4-flows-facts.json` conserva ambas fechas y enlaces oficiales. No se equiparan a flujos globales de plata ni se dibuja un histórico que no consta.
+- **FedWatch:** tarjeta funcional de navegación y ampliación con enlace CME, sin porcentajes cuando no pueden obtenerse de fuente autorizada gratuita. La API CME FedWatch EOD se ofrece desde **25 USD/mes**, incompatibles con el presupuesto; no se contrata.
+
+**Pruebas:** V4 aislada en `preview/v4/`, [recertificación Chromium (escritorio 1440, tableta 1080, móvil 390 y 360 px)](https://github.com/cgam-coder/metals-terminal/actions/runs/44531290207) PASS técnico: sin errores JavaScript, sin desbordamiento horizontal, COT/OI/GVZ con curvas reales, selectores Oro/Plata y ampliación COT, datos WGC/SLV visibles. Se mantienen HOLD de fuente/permiso para diario CME, VXSLV, histórico ETF/ETP y probabilidades FedWatch.
+
+**Operación:** coste incremental obligatorio 0 €, sin cron, sin dependencia de nuevos proveedores de pago. Los archivos propios están fechados y solo cambian mediante revisión manual; no se presentan como datos en tiempo real. Documento de requisitos y aceptación: [ESPECIFICACION_V4_POSICIONAMIENTO_EXPECTATIVAS_20261119.md](docs/ESPECIFICACION_V4_POSICIONAMIENTO_EXPECTATIVAS_20261119.md).
+
+
 
 Terminal personal estático (HTML/CSS/JS/SVG), con selector global de diez periodos **1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A y 5A** junto a «Actualizar todo». No hay trabajos periódicos ni servicios nuevos de pago.
 
