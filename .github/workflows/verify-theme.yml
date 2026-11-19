@@ -53,7 +53,7 @@ jobs:
             for(const [name,width,height] of [['desktop',1440,900],['mobile',390,844],['small',360,780]]){
               const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
               const page=await context.newPage();
-              page.on('pageerror',err=>result.errors.push({name,type:'pageerror',message:err.message}));
+              page.on('pageerror',err=>result.errors.push({name,type:'pageerror',message:err.stack||err.message}));
               try{
                 await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
                 await page.waitForSelector('#theme-toggle',{timeout:10000});
