@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'theme.css'
       - 'data/**'
       - 'preview/intradia/**'
       - 'preview/v4/**'
@@ -36,6 +37,7 @@ jobs:
         run: |
           mkdir -p _site/data
           cp index.html _site/index.html
+          cp theme.css _site/theme.css
           cp data/series.json _site/data/series.json
           cp data/vix-history.json _site/data/vix-history.json
           cp data/v4-cot-snapshot.json _site/data/v4-cot-snapshot.json
