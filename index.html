@@ -1710,6 +1710,8 @@ async function fetchNative(period){
  if(period==="custom"&&!customRange)return;
  if(period!=="custom"&&!Object.hasOwn(DISPLAY_PERIOD_LABEL,period))period="1mo";
  if(period!=="custom")customRange=null;
+ // An explicit global timeframe selection always returns the ETF card to the exact requested window.
+ if(etfContext2Y){etfContext2Y=false;syncETFContextControls();}
  persistGlobalPeriod(period);
  const token=++nativeRequest;nativePeriod=period;nativeData={};
  for(const key of ["dxy","eur"])document.getElementById("q-"+key).innerHTML='<div class="metal-wait">Consultando '+FUTURES_PUBLIC[key].code+' para '+activePeriodLabel()+'…</div>';
