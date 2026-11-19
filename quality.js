@@ -154,7 +154,7 @@
    document.querySelector(".header")?.insertAdjacentElement("afterend",report);
  }
  // Renders are the only source of data updates; no independent interval/polling.
- for(const key of ["renderV4","renderMacro","renderFuturesCards","renderBrowserQuotes","renderVixCard","refreshVixViews"]){
+ for(const key of ["renderV4","v4RenderFlows","renderMacro","renderCurve","renderReals","renderPolicy","renderFuturesCards","renderBrowserQuotes","renderVixCard","refreshVixViews"]){
    const original=window[key];
    if(typeof original!=="function")continue;
    window[key]=function(...args){const value=original.apply(this,args);queuePaint();return value;};
