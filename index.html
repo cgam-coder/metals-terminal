@@ -590,17 +590,6 @@
 
 
 /* V4 · additional research layer; keep every original market panel intact */
-.dashboard>.rates-stack{grid-area:policy;min-width:0;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:var(--gap)}
-.rates-stack>.policy-panel{grid-area:auto;min-width:0;min-height:0;height:auto}
-.rates-stack>.policy-panel .chart-container{min-height:54px;max-height:none;flex:1 1 auto}
-.rates-stack>.policy-panel .source-meta{font-size:9px;padding:5px 6px;margin-top:4px}
-.rates-stack>.policy-panel .policy-legend{font-size:10px;padding-top:6px;margin-top:4px}
-.rates-stack>.policy-panel .panel-title{font-size:15px}
-.v4-fed-card{border-left:3px solid var(--gold);display:flex;flex-direction:column;gap:5px;min-width:0}
-.v4-fed-card .panel-title{font-size:16px;line-height:1.15}
-.v4-fed-card .v4-muted{font-size:10px}
-.v4-fed-card .v4-status{flex:1;justify-content:center;padding:6px}
-.v4-fed-card .v4-foot{margin-top:auto}
 .v4-section{margin:12px 0 18px}
 .v4-section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
 .v4-section-header h2{font-size:18px;line-height:1.3;letter-spacing:-.2px;margin:0}
@@ -647,10 +636,10 @@
 .detail-chart .v4-graph .native-canvas{min-height:100%}
 .detail-chart .v4-graph .native-canvas .native-series{min-height:190px}
 .detail-chart .v4-graph .native-canvas .native-note,.detail-chart .v4-graph .native-canvas .native-legend{display:flex}
-@media(min-width:1200px){.dashboard>.rates-stack{grid-template-rows:minmax(0,1.17fr) minmax(0,.83fr)}}
-@media(min-width:881px) and (max-width:1199px){.dashboard{grid-template-rows:300px 235px 420px!important}.dashboard>.rates-stack{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr)}.rates-stack>.policy-panel .chart-container{min-height:80px}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:880px){.dashboard>.rates-stack{order:4;display:flex;flex-direction:column;gap:var(--gap);width:100%;height:auto;flex-shrink:0}.dashboard>.rates-stack>.policy-panel{height:320px;min-height:320px;order:0}.dashboard>.rates-stack>.v4-fed-card{min-height:210px;height:210px;order:1}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}.v4-fed-card{min-height:220px!important}}
+@media(min-width:1200px){.dashboard>.policy-panel{grid-area:policy;min-width:0;min-height:0;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{flex:1 1 auto;min-height:175px;max-height:none}}
+@media(min-width:881px) and (max-width:1199px){.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:880px){.dashboard>.policy-panel{order:4;min-height:355px;height:355px;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{min-height:140px;flex:1 1 auto}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -692,7 +681,6 @@
     <div class="panel-head"><div><h2 class="panel-title">Ratio Oro/Plata — Evolución</h2><div class="main-title-extra">Spot XAU/XAG · ratio calculada</div></div><button class="ratio-view-toggle" id="ratio-view-toggle" title="Alternar valor absoluto y variación porcentual">Vista: ratio</button><button class="market-inspect" data-inspect="ratio" title="Ampliar ratio oro-plata">Ampliar ↗</button><a class="link-small" href="https://www.tradingview.com/symbols/TVC-GOLDSILVER/" target="_blank" rel="noopener">Gráfico ↗</a></div>
     <div class="tv-chart" id="chart-ratio"><div class="tv-loader">Cargando ratio de mercado…</div></div>
   </section>
-  <div class="rates-stack">
   <section class="panel policy-panel">
     <div class="panel-head"><h2 class="panel-title">Tipos oficiales de interés</h2><div class="macro-controls"><span title="Series no equivalentes" class="small-tag">Fed / BCE</span><button type="button" class="macro-expand" data-expand-macro="policy" title="Ampliar los tipos oficiales">⤢ Ampliar</button></div></div>
     <div class="panel-caption">Fed: límite superior · BCE: depósito · % anual</div>
@@ -700,13 +688,6 @@
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
-  <section class="panel v4-fed-card" id="v4-fedwatch" aria-label="Expectativas FedWatch">
-    <div class="v4-card-head"><h3 class="panel-title">FedWatch · próxima reunión</h3><button class="market-inspect" data-inspect="v4-fedwatch" title="Ampliar FedWatch">Ampliar ↗</button></div>
-    <div class="v4-muted">Expectativas implícitas de futuros Fed Funds · CME</div>
-    <div id="v4-fedwatch-state" class="v4-status"><div class="v4-placeholder"><strong>Probabilidades no integradas.</strong> No se muestran porcentajes sin datos oficiales verificables.</div></div>
-    <div class="v4-foot"><span>Mercado, no pronóstico de la Fed</span><a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener noreferrer">CME FedWatch ↗</a></div>
-  </section>
-  </div>
   <section class="panel real-panel">
     <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div><button type="button" class="macro-expand" data-expand-macro="reals" title="Ampliar el tipo real y la inflación implícita">⤢ Ampliar</button></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
@@ -765,7 +746,7 @@
 <p>Los tipos nominales y reales proceden del <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">Tesoro de EE. UU.</a>; el breakeven se calcula como Treasury 10Y − TIPS 10Y, con compensaciones de inflación y primas de riesgo, no como predicción precisa de IPC.</p>
 <p>Los tipos oficiales proceden de <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener">FRED (DFEDTARU)</a> y <a href="https://fred.stlouisfed.org/series/ECBDFR" target="_blank" rel="noopener">FRED/BCE (ECBDFR)</a>. Fed = extremo superior del rango objetivo; BCE = facilidad de depósito. No son el mismo instrumento.</p>
 <p>El VIX muestra únicamente el <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data/" target="_blank" rel="noopener noreferrer">cierre diario Cboe</a>; no contiene datos en vivo del índice. Se consulta cuando abres el terminal, sin cron.</p>
-<p><strong>V4 — Posicionamiento y expectativas:</strong> COT y OI semanal proceden de CFTC, informes de posiciones los martes, con instantánea oficial local fechada y consulta directa cuando el navegador lo permite; OI semanal no es volumen diario CME. GVZ procede de FRED/Cboe, con fecha de cierre y atribución explícita; la serie VXSLV y su redistribución pública todavía no están acreditadas. Flujos globales de oro WGC (mensual) y tenencias de SLV (un solo fondo) son métricas diferentes, con fecha visible; no se construye una falsa serie conjunta. CME FedWatch es consultable mediante enlace oficial: su API tiene coste, por lo que no se muestran probabilidades no verificadas. Todas las instantáneas se renuevan manualmente, sin cron ni servicios nuevos de pago. Seleccionar periodos pasados nunca autoriza a utilizar valores posteriores a la fecha final.</p>
+<p><strong>V4 — Posicionamiento y expectativas:</strong> COT y OI semanal proceden de CFTC, informes de posiciones los martes, con instantánea oficial local fechada y consulta directa cuando el navegador lo permite; OI semanal no es volumen diario CME. GVZ procede de FRED/Cboe, con fecha de cierre y atribución explícita; la serie VXSLV y su redistribución pública todavía no están acreditadas. Flujos globales de oro WGC (mensual) y tenencias de SLV (un solo fondo) son métricas diferentes, con fecha visible; no se construye una falsa serie conjunta. Todas las instantáneas se renuevan manualmente, sin cron ni servicios nuevos de pago. Seleccionar periodos pasados nunca autoriza a utilizar valores posteriores a la fecha final.</p>
 <p>El archivo <code>data/series.json</code> es una instantánea que se descarga al abrir la página; solo cambia cuando se ejecuta manualmente su actualización y se publica. No hay tareas programadas de GitHub. Sin conexión o sin publicación, el panel conserva la instantánea oficial integrada con fecha visible. El HTML no usa claves API, no ejecuta operaciones y no recopila datos personales.</p>
 <section class="historical-import" aria-labelledby="import-title">
  <h3 id="import-title">Histórico de futuros de hasta cinco años</h3>
@@ -2463,7 +2444,7 @@ function drawMarketDetail(){
 /* V4 · CFTC source of truth and independent GVZ. Zero cron, zero subscriptions. */
 const V4_SOURCE_COT="https://publicreporting.cftc.gov/resource/72hh-3qpy.json";
 const V4_FRED_GVZ="https://fred.stlouisfed.org/graph/fredgraph.csv?id=GVZCLS";
-const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"Flujos de inversión ETF/ETP","v4-fedwatch":"FedWatch · expectativas Fed"};
+const V4_TITLES={"v4-cot":"COT · Managed Money · futuros GC/SI","v4-oi":"Interés abierto semanal · GC/SI","v4-volatility":"Volatilidad implícita · GVZ/VXSLV","v4-flows":"Flujos de inversión ETF/ETP"};
 const v4State={cot:null,cotSource:"",gvz:null,flows:null};
 const v4HtmlText=s=>String(s??"").replace(/[<>&"'\x60]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;","\x60":"&#96;"}[c]));
 function v4CotRows(raw){
@@ -2609,9 +2590,6 @@ function v4ValidateFlows(json){
 function renderV4(){
  if(!document.getElementById("v4-cot"))return;
  v4RenderCotPanel("cot");v4RenderCotPanel("oi");v4RenderGvz();v4RenderFlows();
- const customPast=nativePeriod==="custom"&&customRange&&customRange.to<new Date().toISOString().slice(0,10);
- const fed=document.getElementById("v4-fedwatch-state");
- if(fed)fed.innerHTML='<div class="v4-placeholder"><strong>'+(customPast?"Histórico no disponible para fecha elegida.":"Probabilidades no disponibles.")+'</strong> La herramienta oficial CME se consulta mediante enlace; no se inventan porcentajes.</div>';
 }
 async function bootV4(){
  try{
@@ -2662,7 +2640,7 @@ function drawV4Detail(kind,host,foot){
   nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub);
   foot.textContent=title+" · "+activePeriodLabel()+" · fuente CFTC/FRED con fechas reales y periodicidad propia. No es dato intradía.";
  }else{
-  const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"Gold ETF flows: World Gold Council. Silver SLV: tenencias del fondo, NO flujos globales.",fedwatch:"Probabilidades oficiales CME FedWatch. Acceso automatizado y archivo histórico no acreditados."};
+  const copy={cot:"CFTC Futures Only · informes semanales con fecha de posición martes.",oi:"Interés abierto de CFTC semanal. Volumen diario CME todavía no validado.",volatility:"GVZ: FRED/Cboe · VXSLV: fuente actual no autorizada para reutilización.",flows:"Gold ETF flows: World Gold Council. Silver SLV: tenencias del fondo, NO flujos globales."};
   host.innerHTML='<div class="v4-placeholder" role="status">'+v4HtmlText(copy[name]||"Datos en validación")+'</div>';
   if(name==="flows"&&v4State.flows)host.insertAdjacentHTML("beforeend",document.getElementById("v4-flows-state")?.innerHTML||"");
   foot.textContent=title+" · "+activePeriodLabel()+" · no hay una curva verificada para este periodo.";
