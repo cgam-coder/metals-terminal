@@ -1,6 +1,6 @@
 # Metals Terminal V4 — Especificación cerrada de interfaz y datos
 
-**Fecha:** 19 de noviembre de 2026. **Ámbito:** cinco indicadores adicionales para Oro-Plata V2. **Estado:** especificación para implementación, NO cambio funcional publicado. **Base contrastada:** `cgam-coder/metals-terminal`, HTML/SVG estático e histórico existente.
+**Fecha:** 19 de noviembre de 2026. **Ámbito:** cinco indicadores adicionales para Oro-Plata V2. **Estado:** implementación V4.0 publicada el 19/11/2026, con PASS de interfaz y datos COT/OI semanal/GVZ, hechos WGC/SLV fechados; HOLD para volumen CME diario, probabilidad FedWatch, histórico ETF comparable y VXSLV redistribuible. **Base contrastada:** `cgam-coder/metals-terminal`, HTML/SVG estático e histórico existente.
 
 ## 1. Decisiones y restricciones inamovibles
 
@@ -140,3 +140,13 @@ Guardar las series nuevas separadas por proveedor y por instrumento. Esquema rec
 - CME Market Data API: https://www.cmegroup.com/market-data/market-data-api.html
 
 **Decisión final de la especificación:** aprobar posición, jerarquía, UI y reglas de honestidad de las cinco tarjetas; no dar por autorizada todavía la automatización de todas sus fuentes.
+
+## 9. Estado real tras implantación (19/11/2026)
+
+- Commit de versión pública V4: `6f9581bf4c3a0bb7ea61f4b64d681d2ce8d0e74c`; `index.html` conserva mercados originales y añade los cinco paneles.
+- PASS visual y funcional de la candidata: [Actions run 44531290207](https://github.com/cgam-coder/metals-terminal/actions/runs/44531290207), desktop/tableta/móvil sin desbordamiento, controles COT, modal, gráficos COT + OI + GVZ, cifras WGC/SLV.
+- COT: instantánea oficial CFTC de 263 registros por metal, intento de lectura directa con respaldo. Interés abierto: valor semanal CFTC; volumen diario pendiente CME.
+- GVZ FRED: 1.268 datos en instantánea atribuida Cboe (hasta 17/11/2026), URL original citada; VXSLV sin redistribución validada.
+- Flujos WGC octubre 2026 y tenencias iShares SLV 11/11/2026: dos hechos distintos, sin curva histórica artificial.
+- FedWatch: solo enlace a CME; la [API FedWatch EOD cuesta desde 25 USD/mes](https://www.cmegroup.com/market-data/market-data-api/fedwatch-api.html), no integrarla a presupuesto 0 €.
+- No se ejecutaron crons ni se añadieron servicios de pago. Snapshots cambian mediante acciones manuales; no prometer actualización oficial automática de todas las series.
