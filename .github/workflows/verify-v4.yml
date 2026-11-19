@@ -20,7 +20,7 @@ jobs:
           npx playwright install chromium
       - name: Inspeccionar render real y responsividad
         run: |
-          cat > /tmp/verify-v4.mjs <<'EOF'
+          cat > verify-v4.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
           fs.mkdirSync('v4-evidence',{recursive:true});
@@ -65,7 +65,7 @@ jobs:
           console.log('V4_EVIDENCE_END');
           fs.writeFileSync('v4-evidence/result.json',JSON.stringify(report,null,2));
           EOF
-          node /tmp/verify-v4.mjs
+          node verify-v4.mjs
       - name: Guardar pruebas visuales
         if: always()
         uses: actions/upload-artifact@v4
