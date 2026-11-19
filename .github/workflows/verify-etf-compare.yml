@@ -77,6 +77,18 @@ jobs:
             if(!report.cases.custom.dateCaption?.includes('2026-03-31'))throw Error('as-of filtering did not select prior released report');
           }catch(e){report.errors.push({label:'custom',type:'test',message:String(e)})}
           await custom.close();
+          // Final production smoke checks the published release, not the staged preview.
+          const published=await browser.newPage({viewport:{width:1440,height:900}});
+          try{
+            await published.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&v=b6be3f70',{waitUntil:'domcontentloaded',timeout:42000});
+            await published.waitForFunction(()=>!!marketChartCache.get('v4-flows-chart')?.dates?.length,null,{timeout:35000});
+            report.production=await evaluate(published);
+            report.production.version=await published.locator('#version').innerText();
+            if(!report.production.version.includes('V4.3')||report.production.lines?.length!==2||
+              !report.production.lines[0].name.includes('GLD')||!report.production.lines[1].name.includes('SLV'))throw Error('Production not V4.3 or missing dual ETFs');
+            await published.locator('#v4-flows').screenshot({path:'evidence-etf/production-card.png'});
+          }catch(e){report.errors.push({label:'production',type:'test',message:String(e)})}
+          await published.close();
           await browser.close();
           fs.writeFileSync('evidence-etf/result.json',JSON.stringify(report,null,2));
           console.log('ETF_TEST_START');
