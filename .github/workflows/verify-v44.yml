@@ -61,7 +61,7 @@ jobs:
                 await page.waitForFunction(()=>v4State.secHoldings?.gld?.length>10&&typeof window.renderMetalsQuality==='function',{timeout:30000});
                 await page.waitForTimeout(450);
                 let state=await snap(page);
-                must(state.version.includes('V4.4'),'new build not released');
+                must(state.version.includes('V4.4')||state.version.includes('V4.5'),'known deployed version not detected');
                 must(state.period==='1mo'&&!state.context,'default context is not global 1M');
                 must(state.etfPoints<2&&!state.etfChart,'ETF must not draw a 2y curve for 1M');
                 must(state.etfCaption?.includes('ANTES')&&state.etfCaption.includes('periodo'),'prior SEC report not labelled');
