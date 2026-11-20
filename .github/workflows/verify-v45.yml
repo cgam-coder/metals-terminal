@@ -77,8 +77,8 @@ jobs:
               page.on('pageerror',e=>out.errors.push({label,error:e.stack||e.message}));
               try{
                 await page.goto(start+'?period=10y&qa45='+label,{waitUntil:'domcontentloaded',timeout:45000});
-                await page.waitForFunction(()=>macro?.series?.DGS2?.length>=2000&&v4State.cot?.gold?.length>=480&&v4State.gvz?.length>=2200&&cboeHistory?.length>=2200,{timeout:55000});
-                await page.waitForFunction(()=>window.metalsQualityDone?.has('futures'),{timeout:75000});
+                await page.waitForFunction(()=>macro?.series?.DGS2?.length>=2000&&v4State.cot?.gold?.length>=480&&v4State.gvz?.length>=2200&&cboeHistory?.length>=2200,null,{timeout:110000});
+                await page.waitForFunction(()=>window.metalsQualityDone?.has('futures'),null,{timeout:90000});
                 await page.waitForTimeout(600);
                 let st=await read(page);
                 out.cases[label]=st;
@@ -123,7 +123,7 @@ jobs:
             page.on('pageerror',e=>out.errors.push({label:'custom',error:e.stack||e.message}));
             try{
               await page.goto(start+'?period=custom&from=2016-11-21&to=2017-11-21',{waitUntil:'domcontentloaded',timeout:45000});
-              await page.waitForFunction(()=>v4State.cot?.gold?.length>=480&&macro?.series?.DGS2?.length>=2000,{timeout:40000});
+              await page.waitForFunction(()=>v4State.cot?.gold?.length>=480&&macro?.series?.DGS2?.length>=2000,null,{timeout:60000});
               const st=await read(page);out.cases.custom=st;
               check(st.period==='custom','historic custom range rejected');
               check(st.macroLine>2,'macro custom historic has no 2016 data');
