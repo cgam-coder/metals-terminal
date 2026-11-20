@@ -1,4 +1,4 @@
-/* Metals Terminal V4.4 — on-demand source quality, no new providers or jobs.
+/* Metals Terminal V4.5 — on-demand source quality, no new providers or jobs.
    Snapshot dates never imply that the latest official publication has been fetched. */
 (function(){
  "use strict";
@@ -42,7 +42,7 @@
      const pending=!statusSet.has(id==="cot"||id==="gvz"||id==="sec"||id==="wgc"?"v4":id);
      return {id,label,date,mode,frequency,note,ready,pending,stale:stale(date,frequency)};
    };
-   return [
+   const groups=[
      group("futures","Futuros GC/SI/HG/BZ",lastFuture,lastFuture?futureMethod:"Pendiente / respaldo incompleto","diario","Cierres de contratos próximos, no cotización intradía; no se empalman proveedores.",!!lastFuture),
      group("xaus","DXY · EUR/USD · XAU/XAG",allXaus?earliest(marketDates):null,allXaus?"Consulta XAUS del periodo":"Consulta XAUS parcial o no disponible","diario","Referencias indicativas; la ratio se calcula con XAU y XAG en fechas comunes.",allXaus),
      group("vix","VIX",latestVix,cboeHistorySource||"Respaldo reciente","diario","Cierres Cboe; el archivo puede tener lagunas reconocidas.",!!latestVix),
@@ -52,9 +52,33 @@
      group("sec","ETF GLD/SLV",secLast?.date||null,"Archivo trimestral SEC, actualización manual","trimestral",secPublished?"Último informe conjunto publicado desde "+secPublished+"; tenencias, no flujos.":"Informes SEC aún no validados.",!!secLast),
      group("wgc","Contexto WGC/SLV",wgc?.observation_date||null,"Datos WGC/iShares fechados","mensual","Dos hechos públicos distintos, no flujos globales comparables.",!!v4State.flows)
    ];
+   const first=rows=>rows?.[0]?.date||null;
+   const max=items=>items.filter(Boolean).sort().at(-1)||null;
+   const xausFirst=k=>{const t=nativeData[k]?.points?.[0]?.t;return Number.isFinite(t)?new Date(t*1000).toISOString().slice(0,10):null;};
+   const starts={
+    futures:max(FUTURE_KEYS.map(k=>first(futuresCache[k]))),
+    xaus:max(["gold","silver","dxy","eur"].map(xausFirst)),
+    vix:first(cboeHistory),
+    macro:max(MACRO_SERIES.map(k=>first(macro?.series?.[k]))),
+    cot:max([first(v4State.cot?.gold),first(v4State.cot?.silver)]),
+    gvz:first(v4State.gvz),
+    sec:sec[0]?.date||null
+   };
+   const interval=v4Window();
+   const extended=nativePeriod==="10y"||(nativePeriod==="custom"&&(Date.parse(interval.end)-Date.parse(interval.start))>2*365*86400000);
+   const deadline=Date.parse(interval.start+"T00:00:00Z")+90*86400000;
+   for(const g of groups){
+    g.from=starts[g.id]||null;
+    g.singleFact=g.id==="wgc";
+    g.partial=extended&&g.ready&&!g.singleFact&&(!g.from||Date.parse(g.from+"T00:00:00Z")>deadline);
+   }
+   return groups;
+
  }
  function badgeText(r){
   if(!r.ready)return r.pending?"Consultando": "Sin dato";
+   if(r.partial)return "Cobertura parcial";
+   if(r.singleFact&&nativePeriod==="10y")return "Dato puntual";
   if(r.stale)return "Revisar fecha";
   if(asOf())return "Corte histórico";
   if(r.mode.startsWith("Caché"))return "Caché";
@@ -64,9 +88,9 @@
  }
  function badge(r){
   const el=document.createElement("span");
-  el.className="source-quality "+(!r.ready?"missing":r.stale?"delayed":r.pending?"pending":"available");
+  el.className="source-quality "+(!r.ready?"missing":r.partial||r.stale?"delayed":r.pending?"pending":"available");
   el.textContent=badgeText(r);
-  el.title=r.label+" · "+r.mode+" · último dato "+dateText(r.date)+" · "+r.note+(r.pending?" · consulta todavía en curso":"");
+  el.title=r.label+" · "+r.mode+" · cobertura "+(r.from?dateText(r.from)+" a ":"")+dateText(r.date)+" · "+r.note+(r.partial?" · no alcanza el inicio del intervalo":"")+(r.pending?" · consulta todavía en curso":"");
   el.setAttribute("aria-label",el.title);
   el.dataset.qualityFor=r.id;
   return el;
@@ -120,8 +144,8 @@
  function htmlEscape(s){return String(s??"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));}
  function rowTable(groups){
    return '<div class="source-audit-table" role="table" aria-label="Fuentes, modo de consulta y antigüedad">'+groups.map(r=>{
-     const text=r.ready?(r.stale?"Revisar publicación":r.pending?"Consulta en curso":"Dato disponible"):(r.pending?"Consultando":"Sin datos validados");
-     return '<div class="source-audit-row" role="row"><div class="source-audit-name">'+htmlEscape(r.label)+'</div><div class="source-audit-method">'+htmlEscape(r.mode)+'</div><div class="source-audit-date">'+htmlEscape(dateText(r.date))+'</div><div class="source-audit-state">'+htmlEscape(text)+'</div></div>';
+     const text=r.ready?(r.partial?"Cobertura parcial":r.singleFact?"Hecho puntual":r.stale?"Revisar publicación":r.pending?"Consulta en curso":"Dato disponible"):(r.pending?"Consultando":"Sin datos validados");
+     return '<div class="source-audit-row" role="row"><div class="source-audit-name">'+htmlEscape(r.label)+'</div><div class="source-audit-method">'+htmlEscape(r.mode)+'</div><div class="source-audit-date">'+htmlEscape((r.from?dateText(r.from)+" → ":"")+dateText(r.date))+'</div><div class="source-audit-state">'+htmlEscape(text)+'</div></div>';
    }).join("")+'</div>';
  }
  function paintReport(groups){
