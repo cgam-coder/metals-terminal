@@ -1,0 +1,50 @@
+name: 'Preparar 10A FRED y CFTC (una sola campaña)'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/extend_history_10y.py'
+      - '.github/workflows/prepare-history-10y.yml'
+permissions:
+  contents: write
+concurrency:
+  group: metals-history-10y
+  cancel-in-progress: false
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verificar parser existente sin red
+        run: python -m unittest discover -s scripts -p 'test_*.py' -v
+      - name: Validar 10 años completos de datos oficiales de origen
+        run: python scripts/extend_history_10y.py
+      - name: Confirmar ausencia de regresión o datos inventados
+        run: |
+          python - <<'PY'
+          import json, datetime as dt
+          m=json.load(open("data/series.json"))
+          c=json.load(open("data/v4-cot-snapshot.json"))
+          threshold=(dt.date.today().replace(year=dt.date.today().year-10)+dt.timedelta(days=60)).isoformat()
+          assert all(v[0]['date']<=threshold and len(v)>2200 for v in m['series'].values())
+          assert all(v[0][0]<=threshold and len(v)>485 for v in c['series'].values())
+          assert all(v[-1]['date'] <= (dt.date.today()+dt.timedelta(days=1)).isoformat() for v in m['series'].values())
+          assert all(v[-1][0] <= (dt.date.today()+dt.timedelta(days=1)).isoformat() for v in c['series'].values())
+          print("PASS final precommit 10A", {k:len(v) for k,v in m['series'].items()}, {k:len(v) for k,v in c['series'].items()})
+          PY
+          git diff --check
+      - name: Publicar solo los dos archivos oficiales cualificados
+        run: |
+          if ! git diff --quiet -- data/series.json data/v4-cot-snapshot.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add data/series.json data/v4-cot-snapshot.json
+            git commit -m 'data: verified 10-year FRED macro and GC/SI CFTC source archives'
+            git push
+          fi
