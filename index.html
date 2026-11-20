@@ -1780,20 +1780,26 @@ async function fetchNative(period){
 let cboeHistory=[];let detailKind=null;let detailWindow='1A';
 let cboeHistorySource="Cboe · respaldo reciente",cboeArchiveJoined=false;
 function validateVixHistoryArchive(json){
- if(json?.schema!=="vix-daily-archive-v1"||!Array.isArray(json.rows)||json.rows.length<1100||
-    json.upstream!=="Cboe VIX History"||json.source_last_date!=="2026-09-22"){
-  throw Error("Archivo histórico VIX sin esquema o cobertura acreditados");
- }
+ const v2=json?.schema==="vix-daily-archive-v2";
+ const validV2=v2&&json.source_id==="VIXCLS"&&json.source_url==="https://fred.stlouisfed.org/series/VIXCLS"&&
+  json.original_publisher==="Cboe Global Markets"&&json.license_note?.includes("Citation Required")&&
+  Array.isArray(json.rows)&&json.rows.length>2200;
+ const validV1=json?.schema==="vix-daily-archive-v1"&&
+  json.upstream==="Cboe VIX History"&&json.source_last_date==="2026-09-22"&&
+  Array.isArray(json.rows)&&json.rows.length>=1100;
+ if(!validV1&&!validV2)throw Error("VIX: archivo histórico sin identificación/permiso/cobertura válidos");
  const rows=[];
  for(const item of json.rows){
   const [date,close]=item;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||"")||!Number.isFinite(close)||close<=0||close>=150||
-     (rows.length&&date<=rows.at(-1).date))throw Error("Archivo VIX contiene fechas o cierres no válidos");
+     (rows.length&&date<=rows.at(-1).date))throw Error("VIX: filas de origen no válidas");
   const t=Date.parse(date+"T21:00:00Z")/1000;
-  if(!Number.isFinite(t)||new Date(t*1000).toISOString().slice(0,10)!==date||t>Date.now()/1000+86400)throw Error("Fecha VIX no válida");
+  if(!Number.isFinite(t)||new Date(t*1000).toISOString().slice(0,10)!==date||t>Date.now()/1000+86400)
+    throw Error("VIX: fecha futura o incorrecta");
   rows.push({date,t,c:close});
  }
- if(rows[0].date>"2021-11-01"||rows.at(-1).date!==json.source_last_date)throw Error("Cobertura del archivo VIX insuficiente");
+ if(rows[0].date>(v2?"2016-12-15":"2021-11-01")||rows.at(-1).date!==json.source_last_date)
+   throw Error("VIX: cobertura o fecha final discrepante");
  return rows;
 }
 function mergeVixHistory(older,newer){
@@ -1815,12 +1821,13 @@ async function loadCboeVix(){
  // Dated same-origin Cboe-derived history. The recent embedded Cboe
  // snapshot covers September-November 2026 without estimating missing dates.
  try{
-  const r=await fetch("data/vix-history.json?v=vix5y-20261118",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  const r=await fetch("data/vix-history.json?v=vix10y-20261120",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
   if(!r.ok)throw Error("HTTP "+r.status);
-  const archived=validateVixHistoryArchive(await r.json());
+  const archiveMetadata=await r.json();
+  const archived=validateVixHistoryArchive(archiveMetadata);
   cboeHistory=mergeVixHistory(archived,cboeHistory);
   cboeArchiveJoined=true;
-  cboeHistorySource="Cboe vía datasets/finance-vix + últimos cierres Cboe";
+  cboeHistorySource=archiveMetadata.schema==="vix-daily-archive-v2"?"Cboe vía FRED VIXCLS (cita obligatoria) + últimos cierres Cboe":"Cboe vía datasets/finance-vix + últimos cierres Cboe";
   refreshVixViews();
  }catch(e){console.warn("Archivo histórico VIX no accesible, se indica cobertura limitada",e);}
  // Prefer fresh official direct updates if the browser's CORS policy allows.
