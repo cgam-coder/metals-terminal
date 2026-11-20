@@ -1,0 +1,20 @@
+name: 'Comprobar SEC GLD SLV 10A (solo lectura)'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/probe_sec_10y.py'
+      - '.github/workflows/probe-sec-10y.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Investigar SEC sin escribir archivos ni secretos
+        run: python scripts/probe_sec_10y.py
