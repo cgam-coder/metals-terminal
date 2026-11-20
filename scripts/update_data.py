@@ -21,7 +21,7 @@ def fetch_series(key, start):
     query = urllib.parse.urlencode({'id':key, 'cosd':start})
     req = urllib.request.Request(
         FRED + '?' + query,
-        headers={'User-Agent':'MetalsTerminal/1.0 (personal static site; daily update)',
+        headers={'User-Agent':'MetalsTerminal/4.5 (personal static site; manual historical update)',
                  'Accept':'text/csv,text/plain;q=0.9,*/*;q=0.5'})
     with urllib.request.urlopen(req, timeout=28) as r:
         if r.status != 200:
@@ -44,9 +44,9 @@ def fetch_series(key, start):
 
 def main():
     obj=json.loads(TARGET.read_text(encoding='utf-8')) if TARGET.exists() else {'series':{}}
-    # Keep more than five calendar years so all 5A charts have a true first observation.
+    # Keep more than ten calendar years so 10A charts have real starting observations.
     # The former 400-day window silently erased the 5Y historical archive.
-    start=(dt.date.today()-dt.timedelta(days=5*366+45)).isoformat()
+    start=(dt.date.today()-dt.timedelta(days=10*366+55)).isoformat()
     good=[];bad=[]
     for key in SERIES:
         try:
