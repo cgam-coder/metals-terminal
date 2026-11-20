@@ -5,6 +5,10 @@ on:
     paths:
       - 'index.html'
       - 'quality.js'
+      - 'data/series.json'
+      - 'data/vix-history.json'
+      - 'data/v4-gvz-snapshot.json'
+      - 'data/v4-cot-snapshot.json'
       - '.github/workflows/verify-v45.yml'
 permissions:
   contents: read
@@ -73,7 +77,7 @@ jobs:
               page.on('pageerror',e=>out.errors.push({label,error:e.stack||e.message}));
               try{
                 await page.goto(start+'?period=10y&qa45='+label,{waitUntil:'domcontentloaded',timeout:45000});
-                await page.waitForFunction(()=>macro?.series?.DGS2?.length>=2000&&v4State.cot?.gold?.length>=480,{timeout:40000});
+                await page.waitForFunction(()=>macro?.series?.DGS2?.length>=2000&&v4State.cot?.gold?.length>=480&&v4State.gvz?.length>=2200&&cboeHistory?.length>=2200,{timeout:55000});
                 await page.waitForFunction(()=>window.metalsQualityDone?.has('futures'),{timeout:75000});
                 await page.waitForTimeout(600);
                 let st=await read(page);
@@ -88,6 +92,11 @@ jobs:
                 check(st.cot.gold.n>=485&&st.cot.silver.n>=485,'CFTC decade reports missing');
                 check(lastFull(st.cot.gold.first)&&lastFull(st.cot.silver.first),'CFTC early coverage missing');
                 check(st.cotLine>=480,'COT chart lacks years');
+                check(st.vix.n>=2400&&lastFull(st.vix.first),'VIX ten-year FRED/Cboe history missing');
+                check(st.gvz.n>=2350&&lastFull(st.gvz.first),'GVZ ten-year FRED/Cboe history missing');
+                check(st.gvzSource.includes('FRED'),'GVZ attribution/source missing');
+                check(st.etf.first==='2021-09-30','SEC coverage incorrectly extended without filings');
+                check(st.partial,'ETF historical limit not flagged on 10A');
                 check(st.badgeCount>=12,'quality badges missing');
                 check(st.scrollWidth<=width+1,'horizontal overflow '+label);
                 if(st.futuresProvider==='aethereal'){
