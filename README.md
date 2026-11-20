@@ -1,6 +1,33 @@
-# Metals Terminal V4.4 — Frescura, ventanas estrictas y lectura móvil
+# Metals Terminal V4.5 — Horizonte de 10 años, cobertura acreditada
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.5 — Diez años de historia: selección, validación y límites (20/11/2026)
+
+**Selector global 10A.** Once periodos sincronizados (**1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A, 5A y 10A**) en la cabecera y en los gráficos ampliados. El selector de fechas personalizadas admite un intervalo civil hasta diez años atrás, inclusive, sin permitir días futuros. Se conserva un único estado de periodo y la misma URL para ambos controles, así como los modos Día/Noche.
+
+**Comprobación real del 20/11/2026** en Chromium conectado a Internet, tanto en escritorio como en móvil (no se infiere cobertura solo por la documentación del proveedor):
+
+| Serie o gráfica | Primera observación acreditada | Observaciones comprobadas | Última observación del corte |
+| --- | --- | ---: | --- |
+| Futuros GC, SI, HG y BZ · Aethereal | 2016-10-06 | 2.542–2.544 por instrumento | 2026-11-19 |
+| Referencias XAUS: XAU, XAG, DXY y EUR/USD | 2016-11-21 | 523 semanales por instrumento | 2026-11-20 |
+| Treasury DGS2, DGS10, DGS30 y TIPS DFII10 · FRED | 2016-10-06 | 2.528 por serie | 2026-11-18 |
+| Tipos oficiales Fed DFEDTARU y BCE ECBDFR · FRED | 2016-10-06 | 3.698 por serie | 2026-11-20 |
+| CFTC Disaggregated Futures Only · GC/SI | 2016-10-11 en archivo; 2016-10-04 en consulta directa | 527–528 por metal | 2026-11-10 |
+| VIX · Cboe vía FRED VIXCLS | 2016-10-06 | 2.578 cierres | 2026-11-19 |
+| GVZ · Cboe vía FRED GVZCLS | 2016-10-06 | 2.547 cierres | 2026-11-19 |
+| ETF GLD y SLV · SEC | 2021-09-30 | 20 trimestres comunes | 2026-06-30 |
+
+**Cobertura parcial SEC:** se conserva un selector 10A para GLD/SLV pero **el gráfico no representa diez años completos**. Los datos anteriores a 2021 no se rellenan ni se sustituyen por inferencias. En la tarjeta y el panel de «Fuentes» se marca el alcance real. Los informes anteriores existen en SEC, pero el intento de extracción automatizada desde el ejecutor terminó con HTTP 403 tanto para documentos como para los índices de presentación; no se certificó una serie de 2016–2021 y no se importó ninguna cifra no validada. El contexto WGC/iShares sigue siendo puntual, no una falsa serie decenal; VXSLV y volumen diario CME siguen no integrados.
+
+**Fuentes y derechos:** las nuevas series VIXCLS y GVZCLS proceden del emisor Cboe a través de FRED, con el estado **«Copyrighted: Citation Required»**. Se atribuye expresamente a Cboe y a FRED al mostrar y documentar los datos. Fuente: [VIXCLS](https://fred.stlouisfed.org/series/VIXCLS), [GVZCLS](https://fred.stlouisfed.org/series/GVZCLS), [avisos legales FRED](https://fred.stlouisfed.org/legal/). Su utilización en este terminal personal y no comercial no equivale a una autorización genérica para comercializar o redistribuir el contenido por terceros.
+
+**Procesamiento y rendimiento:** el CSV de Aethereal contiene años anteriores, por lo que la web descarga el mismo archivo original del proveedor y extrae hasta diez años. La caché de cinco años existente puede conservarse como respaldo, pero no impide intentar recuperar el decenio. Las series macro siguen conservando todas sus observaciones oficiales para variaciones y estadísticas; el dibujo 10A utiliza el último cierre real de cada mes para mantener ejes legibles. Los gráficos de precios y COT también reducen la densidad del trazado a observaciones reales mensuales, sin interpolar ni alterar los cálculos basados en fechas comunes. No se añaden costes obligatorios, APIs premium, cron, telemetría ni dependencias de NagameAlert.
+
+**Operación de datos:** `scripts/update_data.py` conserva ahora el horizonte de diez años en la actualización FRED manual. La campaña independiente `scripts/extend_history_10y.py` recuperó y certificó las seis series oficiales y las dos series CFTC; `scripts/extend_volatility_10y.py` hizo lo propio con VIXCLS y GVZCLS, con cotejos frente a los archivos previos. Todos los archivos están fechados y se publican con GitHub Actions únicamente tras validaciones. «Actualizar todo» **no renueva automáticamente** los archivos publicados en GitHub.
+
+**Pruebas:** workflow [Verificar V4.5 - horizonte diez años](.github/workflows/verify-v45.yml) con cobertura de fuentes, temporalidad global/ventanas ampliadas, modo diurno, escritorio 1440px, móvil 390/360px y cortes personalizados históricos.
 
 ## V4.4 — Calidad de fuentes, temporalidad ETF y modal móvil (19/11/2026)
 
