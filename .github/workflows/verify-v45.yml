@@ -1,0 +1,140 @@
+name: 'Verificar V4.5 - horizonte diez años'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'quality.js'
+      - '.github/workflows/verify-v45.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar navegador
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar 10A y cobertura en sitio publicado
+        run: |
+          mkdir -p evidence-v45
+          cat > test.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const out={cases:{},errors:[],at:new Date().toISOString()};
+          const check=(v,m)=>{if(!v)throw Error(m);};
+          const start='https://cgam-coder.github.io/metals-terminal/';
+          const read=async page=>page.evaluate(()=>{
+            const d=v=>v?.date||null;
+            const q=k=>({n:k?.length||0,first:d(k?.[0]),last:d(k?.at?.(-1))});
+            const year=(key)=>q(macro?.series?.[key]);
+            const ts=z=>z?.t?new Date(z.t*1000).toISOString().slice(0,10):null;
+            const ct=k=>q(v4State.cot?.[k]);
+            const etf=v4ETFSelection();
+            return {
+              version:document.getElementById('version')?.innerText,
+              period:nativePeriod,
+              url:location.href,
+              mainButtons:[...document.querySelectorAll('#global-timeframes button')].map(z=>z.textContent.trim()),
+              modalButtons:[...document.querySelectorAll('#detail-timeframes button')].map(z=>z.textContent.trim()),
+              selectedMain:document.querySelector('#global-timeframes .active')?.textContent?.trim(),
+              selectedModal:document.querySelector('#detail-timeframes .active')?.textContent?.trim(),
+              calMin:document.querySelector('#header-dates input[name="from"]')?.min,
+              futures:Object.fromEntries(['gold','silver','copper','brent'].map(k=>[k,q(futuresCache[k])])),
+              futuresProvider:longFuturesProvenance,
+              macro:{DGS2:year('DGS2'),DGS10:year('DGS10'),DGS30:year('DGS30'),DFII10:year('DFII10'),DFEDTARU:year('DFEDTARU'),ECBDFR:year('ECBDFR')},
+              macroLine:macroPlotCache.get('curve-graph')?.dates?.length||0,
+              cot:{gold:ct('gold'),silver:ct('silver')},
+              cotLine:marketChartCache.get('v4-cot-chart')?.dates?.length||0,
+              gvz:q(v4State.gvz),gvzSource:v4State.gvzSource,
+              vix:q(cboeHistory),vixSource:cboeHistorySource,
+              xaus:Object.fromEntries(['gold','silver','dxy','eur'].map(k=>[k,{n:nativeData[k]?.points?.length||0,first:ts(nativeData[k]?.points?.[0]),last:ts(nativeData[k]?.points?.at?.(-1))}])),
+              etf:{n:etf.rows.length,first:etf.rows[0]?.date,last:etf.rows.at(-1)?.date,context:etf.context},
+              badgeCount:document.querySelectorAll('.source-quality').length,
+              partial:document.body.innerText.includes('Cobertura parcial'),
+              etfChart:!!document.querySelector('#v4-flows-chart svg'),
+              chartMain:!!document.querySelector('#chart-main svg'),
+              width:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+              theme:document.documentElement.dataset.theme||'night'
+            };
+          });
+          const lastFull=first=>first&&first<='2016-12-15';
+          try{
+            for(const [label,width,height] of [['desktop',1440,900],['mobile',390,840],['small',360,780]]){
+              const ctx=await browser.newContext({viewport:{width,height}});
+              const page=await ctx.newPage();
+              page.on('pageerror',e=>out.errors.push({label,error:e.stack||e.message}));
+              try{
+                await page.goto(start+'?period=10y&qa45='+label,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.waitForFunction(()=>macro?.series?.DGS2?.length>=2000&&v4State.cot?.gold?.length>=480,{timeout:40000});
+                await page.waitForFunction(()=>window.metalsQualityDone?.has('futures'),{timeout:75000});
+                await page.waitForTimeout(600);
+                let st=await read(page);
+                out.cases[label]=st;
+                check(st.version.includes('V4.5'),'version not deployed');
+                check(st.period==='10y'&&st.selectedMain==='10A','10A not activated');
+                check(st.mainButtons.at(-1)==='10A'&&st.modalButtons.at(-1)==='10A','10A missing in expanded controls');
+                check(st.mainButtons.length===11&&st.modalButtons.length===11,'changed previous intervals');
+                check(st.calMin<'2017-01-01','custom 10y min invalid');
+                for(const [k,v] of Object.entries(st.macro))check(v.n>=2200&&lastFull(v.first),'FRED '+k+' coverage missing: '+JSON.stringify(v));
+                check(st.macroLine>=100&&st.macroLine<=130,'monthly sampled macro plot missing '+st.macroLine);
+                check(st.cot.gold.n>=485&&st.cot.silver.n>=485,'CFTC decade reports missing');
+                check(lastFull(st.cot.gold.first)&&lastFull(st.cot.silver.first),'CFTC early coverage missing');
+                check(st.cotLine>=480,'COT chart lacks years');
+                check(st.badgeCount>=12,'quality badges missing');
+                check(st.scrollWidth<=width+1,'horizontal overflow '+label);
+                if(st.futuresProvider==='aethereal'){
+                  for(const [k,v] of Object.entries(st.futures))check(lastFull(v.first),'futures '+k+' lacks 10Y: '+JSON.stringify(v));
+                  check(st.chartMain,'missing comparable futures chart');
+                }else{
+                  // A market provider may block requests. Explicitly present partial coverage.
+                  check(st.partial,'futures fallback without partial coverage label');
+                }
+                await page.locator('[data-inspect="v4-cot"]').click();
+                check(await page.locator('#detail-timeframes [data-detail-period="10y"]').getAttribute('aria-pressed')==='true','modal selection not synced');
+                await page.locator('#detail-close').click();
+                await page.locator('#theme-toggle').click();
+                await page.waitForTimeout(150);
+                check((await read(page)).scrollWidth<=width+1,'daylight overflow '+label);
+                await page.screenshot({path:'evidence-v45/'+label+'-10a.png',fullPage:false});
+                await page.locator('[data-global-period="5y"]').click();
+                await page.waitForTimeout(700);
+                check((await read(page)).period==='5y','5A navigation regressed');
+              }catch(e){out.errors.push({label,type:'test',error:String(e)})}
+              await ctx.close();
+            }
+            const page=await browser.newPage({viewport:{width:1100,height:800}});
+            page.on('pageerror',e=>out.errors.push({label:'custom',error:e.stack||e.message}));
+            try{
+              await page.goto(start+'?period=custom&from=2016-11-21&to=2017-11-21',{waitUntil:'domcontentloaded',timeout:45000});
+              await page.waitForFunction(()=>v4State.cot?.gold?.length>=480&&macro?.series?.DGS2?.length>=2000,{timeout:40000});
+              const st=await read(page);out.cases.custom=st;
+              check(st.period==='custom','historic custom range rejected');
+              check(st.macroLine>2,'macro custom historic has no 2016 data');
+              check(st.cotLine>2,'COT custom historic has no 2016 data');
+              check(st.scrollWidth<=1101,'custom overflow');
+            }catch(e){out.errors.push({label:'custom',type:'test',error:String(e)})}
+            await page.close();
+          }finally{
+            await browser.close();
+            fs.writeFileSync('evidence-v45/result.json',JSON.stringify(out,null,2));
+            console.log('V45_TEST_RESULT '+JSON.stringify(out));
+            if(out.errors.length)process.exitCode=1;
+          }
+          EOF
+          node test.mjs
+      - name: Guardar resultados y capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v45-ten-year-browser-evidence
+          path: evidence-v45/
+          retention-days: 7
+          if-no-files-found: warn
