@@ -1,0 +1,48 @@
+name: 'Preparar Cboe VIX GVZ 10A con cita FRED'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/extend_volatility_10y.py'
+      - '.github/workflows/prepare-volatility-10y.yml'
+permissions:
+  contents: write
+concurrency:
+  group: metals-volatility-10y
+  cancel-in-progress: false
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recuperar y cotejar series oficiales Cboe via FRED
+        run: python scripts/extend_volatility_10y.py
+      - name: Comprobar cobertura y atribución antes de cualquier commit
+        run: |
+          python - <<'PY'
+          import json
+          v=json.load(open('data/vix-history.json'))
+          g=json.load(open('data/v4-gvz-snapshot.json'))
+          assert v['schema']=='vix-daily-archive-v2' and v['source_id']=='VIXCLS'
+          assert g['schema']=='metals-v4-gvz-fred-v1' and g['series']=='GVZCLS'
+          for x in (v,g):
+              assert len(x['rows'])>2200 and x['rows'][0][0]<'2017-01-01'
+              assert 'Citation Required' in (x.get('license_note') or x.get('copyright_notice',''))
+              print(x['source_id'],len(x['rows']),x['rows'][0][0],x['rows'][-1][0])
+          PY
+          git diff --check
+      - name: Publicar dos respaldos oficiales solo tras PASS
+        run: |
+          if ! git diff --quiet -- data/vix-history.json data/v4-gvz-snapshot.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add data/vix-history.json data/v4-gvz-snapshot.json
+            git commit -m 'data: ten years VIXCLS GVZCLS Cboe via FRED with attribution'
+            git push
+          fi
