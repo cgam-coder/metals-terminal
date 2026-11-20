@@ -925,14 +925,18 @@ const marketChartCache=new Map();
 function marketSampleIndexes(dates){
  const n=dates.length;
  if(n<=360)return dates.map((_,i)=>i);
- const byWeek=new Map();
+ // For ten-year views plot the last REAL observation of each calendar month.
+ // For shorter ranges use the last REAL observation of each ISO week.
+ const monthly=(dates[n-1]-dates[0])>7*365*86400;
+ const selected=new Map();
  for(let i=0;i<n;i++){
    const d=new Date(dates[i]*1000);
    if(!Number.isFinite(d.getTime()))continue;
    const mon=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-((d.getUTCDay()+6)%7));
-   byWeek.set(mon,i);
+   const key=monthly?d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0"):mon;
+   selected.set(key,i);
  }
- return [...new Set([0,...byWeek.values(),n-1])].sort((a,b)=>a-b);
+ return [...new Set([0,...selected.values(),n-1])].sort((a,b)=>a-b);
 }
 function marketAxisLabel(epoch,spanSeconds,period){
  const d=new Date(epoch*1000);
@@ -959,7 +963,7 @@ function nativeChart(id,lines,dates,unit,sub){
    '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+
    ' <strong>'+fmt(line.points.at(-1),2)+unit+'</strong></span>'
  ).join("")+'</div>';
- const thinning=indexes.length<n?'<span>Trazado semanal con cierres reales; '+n+' observaciones usadas en el cálculo.</span>':'';
+ const thinning=indexes.length<n?'<span>Trazado '+((dates.at(-1)-dates[0])>7*365*86400?"mensual":"semanal")+' con observaciones reales; '+n+' registros en el cálculo.</span>':'';
  host.innerHTML='<div class="native-canvas">'+legend+
    '<div class="native-series"><div class="native-tip" role="status"></div></div>'+
    '<div class="native-note">'+sub+thinning+'</div></div>';
@@ -2135,7 +2139,7 @@ function renderCurve(){
        width:390,height:222,dates:plotted.map(r=>r.date),targetId:"curve-graph"
      });
      attachMacroInspector("curve-graph");
-     if(plotted.length<rows.length)$("#curve-caption").textContent+=" · trazado semanal (cierres reales)";
+     if(plotted.length<rows.length)$("#curve-caption").textContent+=" · trazado "+(period==="10A"?"mensual":"semanal")+" (cierres reales)";
    }
  }else{
    // This is a yield curve by *maturity*, not a historical time-series plot.
@@ -2183,7 +2187,7 @@ function renderReals(){
    width:830,height:180,dates:plotted.map(r=>r.date),targetId:"real-graph"
  });
  attachMacroInspector("real-graph");
- if(plotted.length<rows.length)$("#real-dates").textContent+=" · trazado semanal (cierres reales)";
+ if(plotted.length<rows.length)$("#real-dates").textContent+=" · trazado "+(period==="10A"?"mensual":"semanal")+" (cierres reales)";
 }
 function renderPolicy(){
  macroPlotCache.delete("policy-graph");
