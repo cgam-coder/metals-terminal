@@ -687,7 +687,7 @@
     <div class="panel-caption" id="curve-caption">Histórico Treasury · % anual</div><div id="curve-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación del periodo…</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
     <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span><span id="legend-third"><i class="swatch silver"></i>Treasury 30Y</span></div>
-    <div class="curve-bottom"><div class="panel-title" style="font-size:14px">Rendimientos del Treasury</div><div class="mini-stats" id="yield-stats"><div>2 años</div><div>—</div><div>10 años</div><div>—</div><div>30 años</div><div>—</div><div>Spread 10Y − 2Y</div><div>—</div></div></div>
+    <div class="curve-bottom"><h3 class="curve-bottom-title">Últimos rendimientos</h3><div class="mini-stats" id="yield-stats"><div class="yield-metric"><span>Treasury 2Y</span><strong>—</strong></div><div class="yield-metric"><span>Treasury 10Y</span><strong>—</strong></div><div class="yield-metric"><span>Treasury 30Y</span><strong>—</strong></div><div class="yield-metric"><span>Diferencial 10Y − 2Y</span><strong>—</strong></div></div></div>
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
   <section class="panel main-panel" id="comparativa">
@@ -2108,6 +2108,19 @@ function macroPeriodSummary(id,period,fragments){
  el.innerHTML='<span class="macro-period-tag">'+period+'</span>'+fragments.join('<span style="color:#6b8ea5;margin:0 1px">|</span>');
  el.setAttribute("data-macro-period",period);
 }
+function renderCurvePeriodSummary(period,rows,now,then){
+ const el=document.getElementById("curve-range-summary");
+ if(!el)return;
+ const movement=(label,previous,current)=>
+  '<span class="curve-period-move"><span class="curve-move-name">Δ '+label+'</span> '+deltaMarkup(rows.length>1?deltaPp(current,previous):null)+'</span>';
+ el.innerHTML='<span class="curve-period-main"><span class="macro-period-tag">'+period+'</span><span class="curve-observation-count">'+rows.length+(rows.length===1?" cierre":" cierres")+'</span></span>'+
+  '<span class="curve-period-moves">'+
+   movement("2Y",then.DGS2,now.DGS2)+
+   movement("10Y",then.DGS10,now.DGS10)+
+   movement("30Y",then.DGS30,now.DGS30)+
+  '</span>';
+ el.setAttribute("data-macro-period",period);
+}
 function renderCurve(){
  macroPlotCache.delete("curve-graph");
  const keys=["DGS2","DGS10","DGS30"],all=getRows().filter(r=>keys.every(k=>Number.isFinite(r[k])));
@@ -2121,12 +2134,7 @@ function renderCurve(){
    return;
  }
  $("#yield-stamp").textContent="Treasury · "+source+" · último "+prettyDate(now.date);
- macroPeriodSummary("curve-range-summary",period,[
-   rows.length+(rows.length===1?" cierre":" cierres"),
-   "Δ 2Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS2,then.DGS2):null),
-   "Δ 10Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS10,then.DGS10):null),
-   "Δ 30Y "+deltaMarkup(rows.length>1?deltaPp(now.DGS30,then.DGS30):null)
- ]);
+ renderCurvePeriodSummary(period,rows,now,then);
  $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
  $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
  document.getElementById("legend-third").style.display=curveHistorical?"flex":"none";
@@ -2157,7 +2165,11 @@ function renderCurve(){
    attachMacroInspector("curve-graph");
  }
  const spread=now.DGS10-now.DGS2;
- $("#yield-stats").innerHTML='<div>Treasury 2 años</div><div>'+fmt(now.DGS2)+' %</div><div>Treasury 10 años</div><div>'+fmt(now.DGS10)+' %</div><div>Treasury 30 años</div><div>'+fmt(now.DGS30)+' %</div><div>Spread 10Y − 2Y</div><div style="color:'+(spread>=0?"var(--green)":"var(--red)")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</div>';
+ $("#yield-stats").innerHTML=
+  '<div class="yield-metric"><span>Treasury 2Y</span><strong>'+fmt(now.DGS2)+' %</strong></div>'+
+  '<div class="yield-metric"><span>Treasury 10Y</span><strong>'+fmt(now.DGS10)+' %</strong></div>'+
+  '<div class="yield-metric"><span>Treasury 30Y</span><strong>'+fmt(now.DGS30)+' %</strong></div>'+
+  '<div class="yield-metric"><span>Diferencial 10Y − 2Y</span><strong class="'+(spread>=0?"yield-spread-positive":"yield-spread-negative")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</strong></div>';
 }
 function renderReals(){
  macroPlotCache.delete("real-graph");
