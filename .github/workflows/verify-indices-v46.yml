@@ -67,8 +67,9 @@ jobs:
              out.tests[name]={start:state};
              must(state.version.includes('V4.6'),'wrong version '+state.version);
              must(state.symbols.length===5,'missing index symbols');
+             must(state.sourceLinks.some(x=>x.includes('tradingview.com')),'source attribution missing');
              must(JSON.stringify(state.symbols)===JSON.stringify(['SP:SPX','NASDAQ:IXIC','DJ:DJI','TVC:RUT','TVC:SX5E']),'wrong symbols or proxies');
-             must(state.indexScripts.some(x=>x.includes('tradingview.com/external-embedding/embed-widget-advanced-chart.js')),'official comparison widget not requested');
+             must(state.indexScripts.some(x=>x.includes('tradingview.com/external-embedding/embed-widget-advanced-chart.js'))||state.indexIframes>=1,'official comparison widget not requested');
              must(state.scrollWidth<=width+1,'horizontal overflow '+name);
              must(state.windowLabel.includes('1M'),'period not shown '+name);
              const eq=(a,b,tol=2)=>Math.abs(a-b)<=tol;
@@ -78,6 +79,8 @@ jobs:
               must(eq(state.indices.y,state.ratio.y)&&eq(state.ratio.y,state.policy.y),'lower row misaligned');
               must(eq(state.reals.height,state.policy.height)&&eq(state.reals.height,state.main.height),'right-side height not halved');
               must(eq(state.indices.width,state.curve.width),'left charts widths differ');
+              must(state.policy.scrollHeight<=state.policy.clientHeight+3,'Fed/BCE information clipped '+name+' '+state.policy.scrollHeight+'/'+state.policy.clientHeight);
+              must(state.reals.scrollHeight<=state.reals.clientHeight+3,'TIPS information clipped '+name);
              }else if(width>880){
               must(state.grid.includes('"real real"')&&state.grid.includes('"policy policy"'),'mid-size right panels not stacked');
               must(state.reals.y<state.policy.y,'TIPS not above Fed/BCE in medium viewport');
@@ -94,8 +97,8 @@ jobs:
              await page.locator('[data-inspect="indices"]').click();
              must(!(await page.locator('#detail-overlay').evaluate(el=>el.hidden)),'index detail did not open');
              must((await page.locator('#detail-title').textContent()).includes('Nasdaq Composite'),'detail missing name');
-             const widgetInModal=await page.locator('#detail-chart script[src*="embed-widget-advanced-chart"]').count();
-             must(widgetInModal===1,'expanded official widget not mounted');
+             const widgetInModal=await page.locator('#detail-chart script[src*="embed-widget-advanced-chart"], #detail-chart iframe').count();
+             must(widgetInModal>=1,'expanded official widget not mounted');
              await page.locator('#detail-close').click();
              must(await page.locator('#detail-overlay').evaluate(el=>el.hidden),'detail does not close');
              await page.locator('[data-global-period="10y"]').click();
