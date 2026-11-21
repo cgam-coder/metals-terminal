@@ -55,8 +55,12 @@ jobs:
               nativeChart('chart-main',[{label:'Fixture GC',color:'#f4ba3c',points:[0,5,-3]}],dates,'%',"<span>Prueba de disposición</span>");
               nativeChart('chart-ratio',[{label:'Fixture XAU/XAG',color:'#38c9e5',points:[84,79,86]}],dates,'',"<span>Prueba de disposición</span>");
              });
-             await page.waitForTimeout(150);
              const obj=await page.evaluate(()=>{
+               // Atomic fixture/render/measurement prevents real provider fetches
+               // from replacing one test SVG between separate evaluate calls.
+               const dates=[Date.UTC(2026,9,20)/1000,Date.UTC(2026,9,27)/1000,Date.UTC(2026,10,3)/1000];
+               nativeChart('chart-main',[{label:'Fixture GC',color:'#f4ba3c',points:[0,5,-3]}],dates,'%',"<span>Prueba de disposición</span>");
+               nativeChart('chart-ratio',[{label:'Fixture XAU/XAG',color:'#38c9e5',points:[84,79,86]}],dates,'',"<span>Prueba de disposición</span>");
                const box=q=>{const x=document.querySelector(q);if(!x)return null;const r=x.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,scrollHeight:x.scrollHeight,clientHeight:x.clientHeight}};
                const link=document.querySelector('link[href*="theme.css"]');
                const style=getComputedStyle(document.querySelector('.dashboard'));
