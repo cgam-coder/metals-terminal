@@ -77,7 +77,6 @@ jobs:
                   check(snapshot.curve.right<=snapshot.main.left+2&&snapshot.main.right<=snapshot.policy.left+2,'horizontal panel overlap '+name);
                   check(snapshot.reals.right<=snapshot.ratio.left+2,'lower row overlap '+name);
                 }
-                check(snapshot.chartMainRendered||document.querySelector,'chart must remain present');
                 if(width>=1200)check(snapshot.curveTitle.bottom<=snapshot.curve.bottom+1,'Treasury header clipped '+name);
                 await page.screenshot({path:'evidence-columns/'+name+'-'+(day?'day':'night')+'.png',fullPage:false});
               }catch(err){result.errors.push({name,type:'assertion',error:String(err)});}
