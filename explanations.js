@@ -149,6 +149,8 @@
  function close(restoreFocus){
   const wasOpen=!pane.hidden;
   pane.hidden=true;
+  const chart=document.getElementById("detail-chart");
+  if(chart)chart.inert=false; // Restore the embedded index chart after closing the guide.
   toggle.setAttribute("aria-expanded","false");
   toggle.classList.remove("is-active");
   if(wasOpen&&restoreFocus&&!toggle.hidden)toggle.focus({preventScroll:true});
@@ -207,6 +209,10 @@
   const entry=Object.prototype.hasOwnProperty.call(GUIDES,kind)?GUIDES[kind]:null;
   if(!entry)return;
   render(entry);
+  // Prevent TradingView's cross-origin iframe from stealing keyboard focus
+  // while the explanatory overlay is in use.
+  const chart=document.getElementById("detail-chart");
+  if(chart)chart.inert=true;
   pane.hidden=false;
   toggle.setAttribute("aria-expanded","true");
   toggle.classList.add("is-active");
