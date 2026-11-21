@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Aprovechamiento interior de los gráficos — 21/11/2026 · V4.5.4
+
+Las tarjetas del dashboard de escritorio permanecen en filas de **300 px**, con igual altura, distribución horizontal intacta y tema día/noche. Antes, los trazados SVG centrales tenían unos **108 px** y los de Treasury/TIPS unos **88 px**, al reservar 66 px para largas notas de Futuros/Ratio y al imponer altura fija de 90 px a los gráficos macroeconómicos. Además, `svgPlot()` utilizaba valores de reserva cuando el contenedor medía 90 px, reduciendo el tamaño real de los textos y ejes.
+
+**Cambio:** en escritorio las notas metodológicas de los gráficos centrales se presentan en un `<details>` accesible «Método y fuentes» (cerrado por defecto), conservando íntegro el contenido previo para su consulta. Los elementos de leyenda y nota siguen presentes, pero ya no consumen innecesariamente el área de dibujo. En móviles se conserva el texto completo mostrado en línea como antes. Treasury y TIPS recuperan altura flexible, con mínimos suficientes para que `svgPlot` pueda usar el tamaño real. En Treasury se compacta el resumen de cambios (periodo y Δ 2Y/10Y/30Y en una banda) y la etiqueta del spread tiene el nombre completo disponible como `title` para evitar que se corte el pie.
+
+**Evidencia real**: [GitHub Actions #44915710985](https://github.com/cgam-coder/metals-terminal/actions/runs/44915710985), PASS en 1426, 1600, 1200, 1024 y 390 px (el último sin cambios de visualización). En escritorio a 1426 px, trazados SVG **Futuros/Ratio: 148/148 px**, **Treasury/TIPS: 111/143,8 px**, con cuatro tarjetas exteriores de 300 px y sin recorte de texto. Las alturas de los gráficos laterales no son idénticas porque contienen cantidades de metadatos distintas; la prioridad es que cada uno utilice el área disponible sin tapar estadísticas. La metodología de Futuros se puede desplegar sin perder información ni modificar datos. Regresiones de tema, distribución, temporalidades y guías de interpretación PASS.
+
 ## Filas compactas iguales — 21/11/2026
 
 Las dos filas de la cuadrícula de escritorio ocupaban aproximadamente 554 px cada una y el usuario solicitó compactarlas manteniendo la igualdad. V4.5.3 las reduce a **300 px cada una** para pantallas de 881 px de ancho o más; permanecen en paralelo y alineadas Futuros/Treasury y Ratio/TIPS. Se mantienen las columnas 26,5 % / 46,9 % / 26,5 %, mientras Fed/BCE ocupa ambas filas en escritorio ancho. En móvil se preserva el apilado existente.
