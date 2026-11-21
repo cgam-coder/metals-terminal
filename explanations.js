@@ -150,7 +150,7 @@
   const wasOpen=!pane.hidden;
   pane.hidden=true;
   const chart=document.getElementById("detail-chart");
-  if(chart)chart.inert=false; // Restore the embedded index chart after closing the guide.
+  if(chart){chart.inert=false;chart.style.display='';} // Restore embedded iframe and graph when guide closes.
   toggle.setAttribute("aria-expanded","false");
   toggle.classList.remove("is-active");
   if(wasOpen&&restoreFocus&&!toggle.hidden)toggle.focus({preventScroll:true});
@@ -212,7 +212,7 @@
   // Prevent TradingView's cross-origin iframe from stealing keyboard focus
   // while the explanatory overlay is in use.
   const chart=document.getElementById("detail-chart");
-  if(chart)chart.inert=true;
+  if(chart){chart.inert=true;chart.style.display='none';} // Hidden iframe cannot steal focus from the guide.
   pane.hidden=false;
   toggle.setAttribute("aria-expanded","true");
   toggle.classList.add("is-active");
