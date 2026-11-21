@@ -1,0 +1,69 @@
+name: 'Cualificar widget bursatil 5 series'
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/probe-indices-widget.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar integración real del proveedor sin extraer cotizaciones
+        run: |
+          mkdir -p evidence-indices-provider
+          cat > probe.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const b=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const page=await b.newPage({viewport:{width:1495,height:820}});
+          const data={checks:{},errors:[],network:[]};
+          page.on('pageerror',e=>data.errors.push('PAGE '+e.message));
+          page.on('requestfailed',r=>{if(r.url().includes('tradingview'))data.network.push({url:r.url().slice(0,110),reason:r.failure()?.errorText})});
+          try{
+            await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&probe=indices-5',{waitUntil:'domcontentloaded',timeout:48000});
+            await page.waitForFunction(()=>window.METALS_INDICES_SYMBOLS?.length===5,null,{timeout:12000});
+            await page.locator('#indices-comparison iframe').waitFor({timeout:35000});
+            const outer=page.locator('#indices-comparison iframe').first();
+            const frame=await (await outer.elementHandle()).contentFrame();
+            data.checks.outerUrl=await outer.getAttribute('src');
+            data.checks.frameUrl=frame?.url()||null;
+            data.checks.frameTitle=frame?await frame.title().catch(()=>null):null;
+            const candidates=['[data-name="legend-source-item"]','[data-name="legend"]','.pane-legend-item','.chart-widget__bottom-toolbar'];
+            for(const selector of candidates){
+              try{
+                const loc=frame.locator(selector);
+                data.checks[selector]={count:await loc.count(),labels:(await loc.allTextContents()).map(x=>x.trim().slice(0,75)).slice(0,10)};
+              }catch(e){data.checks[selector]={error:String(e).slice(0,100)}}
+            }
+            data.checks.providerVisible=await outer.isVisible();
+            data.checks.indexSymbols=await page.evaluate(()=>window.METALS_INDICES_SYMBOLS);
+            // A descriptive provider iframe does not prove those lines rendered.
+            // Report observed legend metadata without collecting protected prices.
+            data.checks.hasComparisonConfig=await page.evaluate(async()=>{
+              const url='./indices.js';const s=await (await fetch(url)).text();
+              return s.includes('compareSymbols:')&&s.includes('position:"SameScale"');
+            });
+            if(!data.checks.providerVisible||!data.checks.hasComparisonConfig||data.checks.indexSymbols.length!==5)
+              throw Error('five-series official comparison not established');
+            await page.locator('.dashboard').screenshot({path:'evidence-indices-provider/screenshot.png',timeout:30000});
+          }catch(e){data.errors.push(String(e))}
+          await b.close();
+          fs.writeFileSync('evidence-indices-provider/report.json',JSON.stringify(data,null,2));
+          console.log('INDICES_PROVIDER_PROBE '+JSON.stringify(data));
+          if(data.errors.length)process.exitCode=1;
+          EOF
+          node probe.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: indices-provider-readonly-evidence
+          path: evidence-indices-provider/
+          retention-days: 7
