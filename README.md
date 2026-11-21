@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Corrección visual «Curva de rendimientos» — 21/11/2026
+
+La tarjeta Treasury de escritorio tenía dos problemas combinados: el texto de la cabecera y las variaciones 2Y/10Y/30Y se envolvían de forma irregular en las columnas estrechas, y la fila superior del dashboard (300–365 px) era insuficiente para mostrar a la vez gráfico, leyenda y los cuatro valores inferiores; el pie se recortaba.
+
+Se distribuyeron título y controles en filas intencionadas; los cambios del periodo se organizan como tres columnas bajo el selector y el recuento; los últimos rendimientos se presentan en una cuadrícula 2×2 con unidad y diferencial identificados. La altura de la primera fila del dashboard se adapta para que todos los textos sean visibles, manteniendo las mismas áreas, instrumentos, fuentes, series y fórmulas. Se conserva la accesibilidad diurna/nocturna y móvil.
+
+**Evidencia independiente:** workflow [Verificar legibilidad de curva Treasury](.github/workflows/verify-curve-layout.yml) con comprobaciones visuales y geométricas (ausencia de recortes, solapamientos, desbordamientos y conservación de tres cambios y cuatro rendimientos) en escritorio a 1920/1440/1280/1024/900 px y móvil a 390/360 px, tanto en 1M como en 10A donde se ha ejercitado. Resultado PASS [GitHub Actions #44912665177](https://github.com/cgam-coder/metals-terminal/actions/runs/44912665177).
+
 ## Guías «Explicación» en gráficos ampliados — 21/11/2026
 
 En las ventanas **Ampliar** de ocho indicadores se incorpora el botón **ⓘ Explicación**: comparativa de futuros GC/SI/HG, ratio oro/plata XAU/XAG, curva Treasury 2Y/10Y/30Y, TIPS real 10Y e inflación implícita, COT Managed Money, interés abierto CFTC, GVZ y tenencias físicas de ETF GLD/SLV.
