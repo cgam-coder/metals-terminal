@@ -957,3 +957,81 @@ html[data-theme="day"] .curve-panel .curve-bottom{
    min-height:110px;flex:1 1 auto;
  }
 }
+
+
+/* V4.5.4: use the area INSIDE 300px desktop cards for actual plots.
+   Important: the full original methodology remains available via <details>;
+   on mobile it stays inline as before. */
+.native-note-disclosure{display:none}
+.native-note-mobile{display:contents}
+@media(min-width:881px){
+ .site .dashboard>.main-panel .native-canvas .native-note,
+ .site .dashboard>.ratio-panel .native-canvas .native-note{
+  display:flex;position:relative;z-index:9;
+  box-sizing:border-box;flex:0 0 26px;
+  min-height:26px;max-height:26px;
+  padding:0;overflow:visible;
+  width:100%;align-items:center;justify-content:stretch;
+ }
+ .site .dashboard>.main-panel .native-note-mobile,
+ .site .dashboard>.ratio-panel .native-note-mobile{display:none}
+ .site .dashboard>.main-panel .native-note-disclosure,
+ .site .dashboard>.ratio-panel .native-note-disclosure{
+  display:block;position:relative;flex:1 1 auto;
+  width:100%;min-width:0;
+ }
+ .site .dashboard>.main-panel .native-note-disclosure summary,
+ .site .dashboard>.ratio-panel .native-note-disclosure summary{
+  position:relative;display:block;list-style:none;
+  cursor:pointer;max-width:100%;width:100%;
+  border-top:1px solid #314c5a;padding:5px 20px 4px 4px;
+  line-height:1.25;font-size:10px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#9cc8db;box-sizing:border-box;
+ }
+ .site .dashboard .native-note-disclosure summary::-webkit-details-marker{display:none}
+ .site .dashboard .native-note-disclosure summary::after{
+  content:"⌄";font-size:13px;position:absolute;right:5px;top:2px;
+ }
+ .site .dashboard .native-note-disclosure[open] summary::after{content:"⌃"}
+ .site .dashboard .native-note-disclosure summary:focus-visible{
+  outline:2px solid #d3ac59;outline-offset:1px;
+ }
+ .site .dashboard .native-note-disclosure .native-note-popover{
+  display:block;position:absolute;
+  bottom:calc(100% + 4px);left:0;right:0;
+  z-index:20;max-height:155px;overflow-y:auto;
+  padding:9px 11px;line-height:1.55;
+  font-size:11px;color:#d8e6ef;
+  background:#132a39;border:1px solid #648397;
+  border-radius:7px;box-shadow:0 10px 25px #000a;
+ }
+ .site .dashboard .native-note-disclosure .native-note-popover a{
+  color:#92d7f5;text-decoration:underline;
+ }
+ .site .dashboard>.main-panel .native-canvas .native-series,
+ .site .dashboard>.ratio-panel .native-canvas .native-series{
+  flex:1 1 auto;min-height:105px;
+ }
+ /* Different cards contain different amounts of essential information:
+    each SVG grows into its OWN remaining area rather than imposing 90px
+    on both and leaving blank spaces. */
+ .site .dashboard>.curve-panel #curve-graph{
+  box-sizing:border-box;min-height:113px;max-height:none;
+  height:auto;flex:1 1 auto;
+ }
+ .site .dashboard>.real-panel #real-graph{
+  box-sizing:border-box;min-height:145px;max-height:none;
+  height:auto;flex:1 1 auto;
+ }
+}
+html[data-theme="day"] .site .dashboard .native-note-disclosure summary{
+ color:#24566d;border-top-color:#c5d8df;
+}
+html[data-theme="day"] .site .dashboard .native-note-disclosure .native-note-popover{
+ color:#2c4654;background:#fbfdfb;
+ border-color:#bed1d7;box-shadow:0 10px 24px #2f4d5942;
+}
+html[data-theme="day"] .site .dashboard .native-note-disclosure .native-note-popover a{
+ color:#116c8a;
+}
