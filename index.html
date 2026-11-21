@@ -658,19 +658,29 @@
 @media(max-width:880px){.dashboard>.policy-panel{order:4;min-height:355px;height:355px;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{min-height:140px;flex:1 1 auto}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261121-plot-fill-v454" />
+<link rel="stylesheet" href="./theme.css?v=20261121-indices-v46" />
 <style id="dashboard-layout-critical">
 /* Critical layout is deliberately AFTER the optional theme stylesheet.
    An existing browser cache of theme.css cannot restore unequal grid rows. */
 @media (min-width:1200px){
- .site .dashboard{grid-template-rows:repeat(2,300px)}
+ .site .dashboard{
+  grid-template-areas:"curve main real" "indices ratio policy";
+  grid-template-rows:repeat(2,300px)
+ }
 }
 @media (min-width:881px) and (max-width:1199px){
- .site .dashboard{grid-template-rows:repeat(2,300px) 180px}
+ .site .dashboard{
+  grid-template-columns:minmax(0,1fr) minmax(0,1.65fr);
+  grid-template-areas:"curve main" "indices ratio" "real real" "policy policy";
+  grid-template-rows:300px 300px 300px 300px;
+ }
 }
 @media (min-width:881px){
  /* Match both cards' padding and flex subtrees even with a previously cached
     theme.css. Without this, different note/legend heights distort SVG plots. */
+ .site .dashboard>.indices-panel{grid-area:indices;min-width:0;min-height:0;}
+ .site .dashboard>.real-panel{grid-area:real;}
+ .site .dashboard>.policy-panel{grid-area:policy;}
  .site .dashboard>.main-panel,
  .site .dashboard>.ratio-panel{padding-bottom:15px}
  .site .dashboard>.main-panel>.tv-chart,
@@ -757,6 +767,22 @@
     <div class="policy-legend"><span class="legend"><i class="swatch"></i>Fed (techo rango)</span><strong id="fed-value">—</strong><span class="legend"><i class="swatch cyan"></i>BCE (depósito)</span><strong id="ecb-value">—</strong></div>
     <div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div>
   </section>
+  <section class="panel indices-panel" id="indices-renta-variable">
+    <div class="panel-head"><div><h2 class="panel-title">Índices bursátiles · Comparativa</h2>
+      <div class="indices-subtitle">S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50</div></div>
+      <button type="button" class="market-inspect" data-inspect="indices" title="Ampliar comparativa de cinco índices">Ampliar ↗</button>
+    </div>
+    <div class="indices-symbol-list" aria-label="Índices representados">
+      <span>S&P 500</span><span>Nasdaq</span><span>Dow Jones</span><span>Russell 2000</span><span>Euro Stoxx 50</span>
+    </div>
+    <div id="indices-comparison" class="indices-comparison" role="region" aria-label="Comparación porcentual de cinco índices bursátiles">
+      <div class="indices-wait">Conectando con el gráfico oficial de TradingView…</div>
+    </div>
+    <div class="indices-foot">
+      <span id="indices-window">Periodo solicitado: 1M</span>
+      <a href="https://www.tradingview.com/markets/indices/" target="_blank" rel="noopener noreferrer">Gráfico y fuente · TradingView</a>
+    </div>
+  </section>
   <section class="panel real-panel">
     <div class="panel-head"><h2 class="panel-title">Tipo real 10Y e inflación implícita</h2><div class="real-top-stats"><span style="color:var(--purple)">TIPS <strong id="tips-value">—</strong></span><span style="color:var(--gold)">Breakeven <strong id="breakeven-value">—</strong></span></div><button type="button" class="macro-expand" data-expand-macro="reals" title="Ampliar el tipo real y la inflación implícita">⤢ Ampliar</button></div>
     <div class="legend"><span><i class="swatch purple"></i>Tipo real 10Y (TIPS)</span><span><i class="swatch"></i>Inflación implícita 10Y (nominal − TIPS)</span></div>
@@ -799,7 +825,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.5.4</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.6</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1787,6 +1813,7 @@ async function fetchNative(period){
  if(etfContext2Y){etfContext2Y=false;syncETFContextControls();}
  persistGlobalPeriod(period);
  const token=++nativeRequest;nativePeriod=period;nativeData={};
+ window.renderIndicesPanel?.();
  for(const key of ["dxy","eur"])document.getElementById("q-"+key).innerHTML='<div class="metal-wait">Consultando '+FUTURES_PUBLIC[key].code+' para '+activePeriodLabel()+'…</div>';
  syncMacroToMaster(period);
  renderFuturesCards();
@@ -2447,12 +2474,13 @@ async function bootMacro(){
 
 function openMarketDetail(kind){
  detailKind=kind;detailWindow=activePeriodLabel();
+ if(kind==="indices")window.openIndicesDetail?.();
  syncETFContextControls();
  window.syncTerminalExplanation?.(kind);
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
  document.getElementById("detail-method").open=!window.matchMedia("(max-width: 780px)").matches;
- const names={vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
+ const names={indices:"S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50",vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
  document.querySelectorAll("#detail-timeframes button").forEach(button=>{
   const active=button.dataset.detailPeriod===nativePeriod;
@@ -2463,6 +2491,7 @@ function openMarketDetail(kind){
  drawMarketDetail();
 }
 function closeMarketDetail(){
+ window.closeIndicesDetail?.();
  const el=document.getElementById('detail-overlay');el.hidden=true;
  const chart=document.getElementById('detail-chart');
  chart.innerHTML='';chart.classList.remove("macro-focus-chart");
@@ -2470,6 +2499,7 @@ function closeMarketDetail(){
 }
 function drawMarketDetail(){
  const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
+ if(detailKind==="indices"){window.drawIndicesDetail?.(host,foot);return;}
  if(detailKind?.startsWith('v4-')){drawV4Detail(detailKind,host,foot);return;}
  if(detailKind&&detailKind.startsWith("macro-")){
    const sourceId={"macro-curve":"curve-graph","macro-reals":"real-graph","macro-policy":"policy-graph"}[detailKind];
@@ -2921,10 +2951,12 @@ init();
     if(day)root.dataset.theme="day";else root.removeAttribute("data-theme");
     try{localStorage.setItem("metals-terminal-theme",day?"day":"night");}catch(e){/* Keep in-memory theme */}
     syncTheme();
+    window.renderIndicesPanel?.(true);
   });
   syncTheme();
 })();
 </script>
 <script defer src="./quality.js"></script>
 <script defer src="./explanations.js"></script>
+<script defer src="./indices.js"></script>
 </body></html>
