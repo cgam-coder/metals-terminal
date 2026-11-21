@@ -856,3 +856,104 @@ html[data-theme="day"] .curve-panel .curve-bottom{
   .dashboard>.real-panel .source-meta,
   .dashboard>.real-panel #real-dates{margin-top:auto}
 }
+
+
+/* Compact paired desktop rows: roughly half of the former 545px tracks.
+   Keep the 26.5/47/26.5 column proportions, do not affect mobile stack.
+   Content stays available via Ampliar and Fuentes; no financial changes. */
+@media(min-width:881px){
+ .site .dashboard{grid-template-rows:repeat(2,300px)}
+ .site .dashboard>.panel{min-height:0;box-sizing:border-box;padding:10px 12px}
+ .site .dashboard>.main-panel>.panel-head,
+ .site .dashboard>.ratio-panel>.panel-head{
+   flex:0 0 42px;height:42px;min-height:42px;
+   margin-bottom:5px;align-items:flex-start;
+ }
+ .site .dashboard>.main-panel .native-canvas .native-legend,
+ .site .dashboard>.ratio-panel .native-canvas .native-legend{
+   flex:0 0 20px;min-height:20px;max-height:20px;
+   font-size:9.5px;gap:8px;
+ }
+ .site .dashboard>.main-panel .native-canvas .native-note,
+ .site .dashboard>.ratio-panel .native-canvas .native-note{
+   flex:0 0 42px;min-height:42px;max-height:42px;
+   padding-top:3px;font-size:9px;line-height:1.25;
+   align-content:start;
+ }
+ .site .dashboard>.main-panel .native-canvas .native-series,
+ .site .dashboard>.ratio-panel .native-canvas .native-series{
+   min-height:90px;flex:1 1 auto;
+ }
+ .site .dashboard>.curve-panel .panel-head{
+   margin-bottom:3px;gap:3px;flex:0 0 auto;
+ }
+ .site .dashboard>.curve-panel .panel-head .panel-title{
+   font-size:15px;line-height:1.2;margin:0;
+ }
+ .site .dashboard>.curve-panel .macro-controls{gap:7px}
+ .site .dashboard>.curve-panel .macro-controls button{min-height:23px;padding:3px 6px;font-size:10px}
+ .site .dashboard>.curve-panel .panel-caption{
+   font-size:9px;line-height:1.2;white-space:nowrap;overflow:hidden;
+   text-overflow:ellipsis;margin:2px 0 4px;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary{
+   min-height:0;gap:3px;padding:4px 5px;margin:2px 0 4px;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-main{
+   font-size:9px;gap:6px;line-height:1.15;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-main .macro-period-tag{
+   padding:1px 4px;font-size:9px;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-moves{gap:0}
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-move{
+   flex-direction:row;gap:4px;padding:0 2px;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-move-name{font-size:8px}
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-move strong{font-size:9px}
+ .site .dashboard>.curve-panel #curve-graph,
+ .site .dashboard>.real-panel #real-graph{
+   height:90px;min-height:90px;max-height:90px;flex:0 0 90px;
+ }
+ .site .dashboard>.curve-panel .legend{
+   flex:0 0 auto;gap:6px;margin:3px 0;line-height:1.15;
+ }
+ .site .dashboard>.curve-panel .legend>span{font-size:8.5px;gap:3px}
+ .site .dashboard>.curve-panel .legend .swatch{width:9px}
+ .site .dashboard>.curve-panel .curve-bottom{margin-top:2px;padding-top:4px}
+ .site .dashboard>.curve-panel .curve-bottom-title{
+   font-size:10px;margin:0 0 3px;line-height:1.15;
+ }
+ .site .dashboard>.curve-panel .mini-stats{
+   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+   gap:3px;margin:0;
+ }
+ .site .dashboard>.curve-panel .mini-stats .yield-metric{
+   gap:2px;padding:1px 0;min-width:0;
+ }
+ .site .dashboard>.curve-panel .mini-stats .yield-metric span{
+   font-size:8px;line-height:1.1;letter-spacing:-.1px;white-space:normal;
+ }
+ .site .dashboard>.curve-panel .mini-stats .yield-metric strong{
+   font-size:10px;line-height:1.15;
+ }
+ .site .dashboard>.curve-panel .yield-note{
+   font-size:8px;line-height:1.1;margin-top:5px;
+ }
+ .site .dashboard>.real-panel .panel-head{margin-bottom:2px}
+ .site .dashboard>.real-panel .panel-head .panel-title{font-size:13px}
+ .site .dashboard>.real-panel .real-top-stats{gap:5px}
+ .site .dashboard>.real-panel .real-top-stats strong{font-size:10px}
+ .site .dashboard>.real-panel .legend{gap:7px;margin:4px 0}
+ .site .dashboard>.real-panel .legend span{font-size:8.5px}
+ .site .dashboard>.real-panel .macro-period-bar{
+   padding:4px 5px;margin:3px 0 4px;gap:5px;font-size:9px;
+ }
+ .site .dashboard>.real-panel .source-meta,
+ .site .dashboard>.real-panel #real-dates{
+   font-size:8px;line-height:1.2;margin-top:auto;
+ }
+ .site .dashboard>.policy-panel .chart-container{
+   min-height:110px;flex:1 1 auto;
+ }
+}
