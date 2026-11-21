@@ -2,6 +2,16 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Guías «Explicación» en gráficos ampliados — 21/11/2026
+
+En las ventanas **Ampliar** de ocho indicadores se incorpora el botón **ⓘ Explicación**: comparativa de futuros GC/SI/HG, ratio oro/plata XAU/XAG, curva Treasury 2Y/10Y/30Y, TIPS real 10Y e inflación implícita, COT Managed Money, interés abierto CFTC, GVZ y tenencias físicas de ETF GLD/SLV.
+
+Al pulsarlo se abre un panel de lectura independiente: qué mide la serie, qué indican las subidas o bajadas, cómo interpretar divergencias y cruces, cómo contrastarlo con otros indicadores y cuáles son sus límites. Los textos incluyen ejemplos porcentuales, la diferencia entre precio/OI/COT/tenencias, la periodicidad y cobertura real, y enlaces a fuentes oficiales o proveedores. Se advierte expresamente que **no son señales automáticas de compra o venta**, que GVZ representa solo oro y que GLD/SLV conserva una cobertura SEC parcial en 10A.
+
+La explicación permanece **cerrada por defecto**, no cambia el gráfico, los precios ni el periodo seleccionado y se cierra mediante su botón, pulsando de nuevo «Explicación» o con Escape, devolviendo el foco al control. Al cerrar el gráfico se restablece la guía para que no aparezca abierta en otro indicador. En móvil la lectura es desplazable; en escritorio aparece en un lateral; se adapta a Día y Noche. No se añade nueva dependencia de datos, almacenamiento ni servicio.
+
+Implementación: `explanations.js` mantiene ocho guías estáticas y la lógica accesible, `index.html` contiene el control y panel comunes y `theme.css` presenta los dos temas. La verificación independiente `.github/workflows/verify-explanations.yml` comprueba las ocho correspondencias, contenido, visibilidad, Escape, cierre, enfoque y ausencia de desbordamiento en 1440, 1024, 390 y 360 píxeles. Los gráficos individuales de futuros, las divisas, VIX y los tipos oficiales no añaden este botón porque no forman parte de las ocho explicaciones solicitadas.
+
 ## V4.5 — Diez años de historia: selección, validación y límites (20/11/2026)
 
 **Selector global 10A.** Once periodos sincronizados (**1D, 3D, 1S, 2S, 1M, 3M, 6M, 1A, 2A, 5A y 10A**) en la cabecera y en los gráficos ampliados. El selector de fechas personalizadas admite un intervalo civil hasta diez años atrás, inclusive, sin permitir días futuros. Se conserva un único estado de periodo y la misma URL para ambos controles, así como los modos Día/Noche.
