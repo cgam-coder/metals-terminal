@@ -2480,6 +2480,7 @@ function openMarketDetail(kind){
  window.syncTerminalExplanation?.(kind);
  const root=document.getElementById('detail-overlay'),title=document.getElementById('detail-title');
  root.hidden=false;document.body.style.overflow="hidden";
+ const underlying=document.querySelector(".site");if(underlying)underlying.inert=true; // Prevent embedded background iframe stealing modal focus.
  document.getElementById("detail-method").open=!window.matchMedia("(max-width: 780px)").matches;
  const names={indices:"S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50",vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
@@ -2496,7 +2497,7 @@ function closeMarketDetail(){
  const el=document.getElementById('detail-overlay');el.hidden=true;
  const chart=document.getElementById('detail-chart');
  chart.innerHTML='';chart.classList.remove("macro-focus-chart");
- document.body.style.overflow='';detailKind=null;syncETFContextControls();window.closeTerminalExplanation?.(false);
+ document.body.style.overflow='';const underlying=document.querySelector('.site');if(underlying)underlying.inert=false;detailKind=null;syncETFContextControls();window.closeTerminalExplanation?.(false);
 }
 function drawMarketDetail(){
  const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
