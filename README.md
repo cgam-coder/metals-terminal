@@ -2,6 +2,12 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Corrección de altura real de los gráficos SVG — 21/11/2026
+
+Una captura posterior detectó que la prueba anterior validaba únicamente las **tarjetas externas** con igual altura, no el área de dibujo contenida. Diagnóstico independiente [run #44913740830](https://github.com/cgam-coder/metals-terminal/actions/runs/44913740830): en 1426 px, ambas tarjetas centrales medían 562 px, pero sus SVG tenían aproximadamente 383 px (futuros) y 434 px (ratio); Treasury/TIPS medían 189 px y 379 px. La captura parcial de una ventana de 763 px de alto solo mostraba el comienzo de la segunda fila; el documento completo sigue siendo desplazable.
+
+Se igualan realmente las áreas gráficas con CSS aplicado solo en escritorio desde 881 px: mismas alturas de cabecera, leyenda y notas para los dos gráficos centrales, y mismo alto fijo de 175 px para los canvas laterales Treasury/TIPS, sin recortar las fuentes ni los textos de los futuros. La vista móvil permanece sin cambios. A 1426 px, la segunda medición [run #44913911026](https://github.com/cgam-coder/metals-terminal/actions/runs/44913911026) confirma **304,77 px / 304,77 px** para SVG de futuros y ratio y **173 px / 173 px** para SVG de Treasury y TIPS. Paneles externos iguales, notas y leyendas no cortadas. Las regresiones de Treasury, columnas y guías Explicación también PASS.
+
 ## Corrección de alturas y alineación vertical — 21/11/2026
 
 Tras redistribuir las anchuras, permanecía un desajuste de filas heredado del ajuste visual de Treasury: la primera fila tenía un mínimo de 545 px (535 px entre 881–1199 px) y la segunda solo 305 px (235 px). Como consecuencia, «Futuros comparados» y «Ratio Oro/Plata» tenían alturas distintas, igual que Treasury y TIPS a su izquierda.
