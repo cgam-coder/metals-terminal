@@ -1035,3 +1035,36 @@ html[data-theme="day"] .site .dashboard .native-note-disclosure .native-note-pop
 html[data-theme="day"] .site .dashboard .native-note-disclosure .native-note-popover a{
  color:#116c8a;
 }
+
+
+/* The fixed-height Treasury card must allocate room for its real plot.
+   Put its period plus 2Y/10Y/30Y changes in a single four-column strip,
+   instead of two stacked lines; full figures remain visible. */
+@media(min-width:881px){
+ .site .dashboard>.curve-panel #curve-range-summary{
+  display:grid;grid-template-columns:minmax(0,1.04fr) repeat(3,minmax(0,1fr));
+  align-items:center;gap:2px;
+  padding:3px 4px;margin:1px 0 3px;
+  min-height:0;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-main{
+  display:flex;gap:3px;flex-wrap:wrap;align-items:center;
+  line-height:1.1;font-size:9px;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-moves{
+  display:contents;
+ }
+ .site .dashboard>.curve-panel #curve-range-summary .curve-period-move{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;padding:1px 1px;white-space:nowrap;
+ }
+ .site .dashboard>.curve-panel .legend{
+  margin:1px 0;gap:5px;
+ }
+ .site .dashboard>.curve-panel .curve-bottom-title{
+  margin-bottom:1px;
+ }
+ .site .dashboard>.curve-panel .yield-note{
+  margin-top:2px;
+ }
+}
