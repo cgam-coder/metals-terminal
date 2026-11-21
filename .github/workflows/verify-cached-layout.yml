@@ -1,0 +1,97 @@
+name: 'Verificar alineación incluso con CSS antiguo en caché'
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/verify-cached-layout.yml']
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Chromium y CSS anterior
+        run: |
+          git show 2947ae61e4a9725e719b1a1dde47f6a560a4dcc7:theme.css > legacy-theme.css
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar página actual con estilo nuevo y estilo obsoleto
+        run: |
+          mkdir -p evidence-cache-layout
+          cat > check-cache.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const legacy=fs.readFileSync('legacy-theme.css','utf8');
+          const result={cases:{},errors:[]};
+          const base='https://cgam-coder.github.io/metals-terminal/?version=20261121-v451-layout';
+          const check=(ok,why)=>{if(!ok)throw Error(why);};
+          for(const [name,width,height] of [['user-image',1495,774],['desktop',1440,900],['medium',1200,820],['small-desktop',1024,820],['mobile',390,844]]){
+           for(const oldCSS of [false,true]){
+            const mode=oldCSS?'legacy-css':'fresh-css';
+            const key=name+'-'+mode;
+            const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+            const page=await context.newPage();
+            page.on('pageerror',e=>result.errors.push({key,type:'pageerror',error:e.stack||e.message}));
+            if(oldCSS)await page.route(/\/theme\.css(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'text/css',body:legacy}));
+            try{
+             await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
+             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.5.1'),null,{timeout:28000});
+             await page.waitForFunction(()=>document.querySelector('#chart-main svg[data-market-svg]')&&document.querySelector('#chart-ratio svg[data-market-svg]'),null,{timeout:85000});
+             await page.waitForTimeout(500);
+             const obj=await page.evaluate(()=>{
+               const box=q=>{const x=document.querySelector(q);if(!x)return null;const r=x.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,scrollHeight:x.scrollHeight,clientHeight:x.clientHeight}};
+               const link=document.querySelector('link[href*="theme.css"]');
+               const style=getComputedStyle(document.querySelector('.dashboard'));
+               const main=box('.main-panel'),ratio=box('.ratio-panel'),treasury=box('.curve-panel'),tips=box('.real-panel');
+               return {
+                version:document.querySelector('#version')?.textContent,href:link?.getAttribute('href'),
+                cssRows:style.gridTemplateRows,width:innerWidth,overflow:document.documentElement.scrollWidth,
+                main,ratio,treasury,tips,
+                futureSvg:box('#chart-main svg'),ratioSvg:box('#chart-ratio svg'),
+                curveSvg:box('#curve-graph svg'),tipsSvg:box('#real-graph svg')
+               };
+             });
+             result.cases[key]=obj;
+             check(obj.href.includes('?v=20261121-equal-rows-2'),'stylesheet does not use new asset URL');
+             check(obj.version.includes('V4.5.1'),'stale HTML');
+             check(obj.overflow<=width+1,'overflow '+key);
+             if(width>880){
+              const same=(a,b)=>Math.abs(a.height-b.height)<=2;
+              check(same(obj.main,obj.ratio),'main/ratio not equal '+key);
+              check(same(obj.treasury,obj.tips),'Treasury/TIPS not equal '+key);
+              check(same(obj.main,obj.treasury),'upper row not aligned '+key);
+              check(same(obj.futureSvg,obj.ratioSvg),'real futures/ratio SVGs unequal '+key);
+              check(same(obj.curveSvg,obj.tipsSvg),'real Treasury/TIPS SVGs unequal '+key);
+              check(obj.futureSvg.height>=180&&obj.ratioSvg.height>=180,'plots too short '+key);
+              check(obj.main.height>=540,'desktop panel short due to legacy CSS '+key);
+             }
+             await page.locator('.dashboard').screenshot({path:'evidence-cache-layout/'+key+'.png',timeout:30000});
+            }catch(e){result.errors.push({key,type:'assertion',error:String(e)});}
+            await context.close();
+           }
+          }
+          await browser.close();
+          fs.writeFileSync('evidence-cache-layout/report.json',JSON.stringify(result,null,2));
+          console.log('LAYOUT_CACHE_RESULT '+JSON.stringify(result));
+          if(result.errors.length)process.exitCode=1;
+          EOF
+          node check-cache.mjs
+      - name: Guardar métricas y capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-layout-with-stale-css
+          path: evidence-cache-layout/
+          retention-days: 7
