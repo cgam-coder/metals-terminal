@@ -65,6 +65,16 @@ jobs:
                 check(snapshot.chartMainText.includes('Futuros comparados')&&snapshot.ratioText.includes('Ratio Oro/Plata'),'panel identity changed');
                 check(snapshot.main.width>0&&snapshot.ratio.width>0&&snapshot.curve.width>0&&snapshot.policy.width>0,'panel missing '+name);
                 check(snapshot.mainChart.width>0&&snapshot.ratioChart.width>0,'chart container missing '+name);
+                if(width>880){
+                  const equal=(a,b)=>Math.abs(a.height-b.height)<=2;
+                  check(equal(snapshot.main,snapshot.ratio),'centre panel rows unequal '+name+': '+snapshot.main.height+' vs '+snapshot.ratio.height);
+                  check(equal(snapshot.curve,snapshot.main),'Treasury not aligned with Futures '+name);
+                  check(equal(snapshot.reals,snapshot.ratio),'TIPS not aligned with Ratio '+name);
+                  check(Math.abs(snapshot.curve.top-snapshot.main.top)<=2,'top row vertical misalignment '+name);
+                  check(Math.abs(snapshot.reals.top-snapshot.ratio.top)<=2,'bottom row vertical misalignment '+name);
+                  check(snapshot.mainChart.height>=120&&snapshot.ratioChart.height>=120,'centre charts must remain legible '+name);
+                  if(width>=1200)check(Math.abs(snapshot.policy.height-(snapshot.main.height+snapshot.ratio.height+10))<=3,'policy must span both equal rows '+name);
+                }
                 if(width>=1200){
                   const sum=snapshot.curve.width+snapshot.main.width+snapshot.policy.width;
                   const fractions=[snapshot.curve.width/sum,snapshot.main.width/sum,snapshot.policy.width/sum];
