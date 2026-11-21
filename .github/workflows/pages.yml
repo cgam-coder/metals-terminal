@@ -61,6 +61,10 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+      # GitHub's artifact API can temporarily return zero results immediately
+      # after a successful upload; delay metadata lookup without duplicating jobs.
+      - name: Esperar a la indexación del artefacto de Pages
+        run: sleep 10
       - name: Desplegar
         id: deployment
         uses: actions/deploy-pages@v4
