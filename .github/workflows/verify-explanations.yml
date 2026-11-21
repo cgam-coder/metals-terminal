@@ -1,0 +1,141 @@
+name: 'Verificar explicaciones de indicadores'
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Comprobar sintaxis de guías
+        run: node --check explanations.js
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar los ocho indicadores en la página pública
+        run: |
+          mkdir -p evidence-explanations
+          cat > verify-explanations.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const report={errors:[],cases:{},createdAt:new Date().toISOString()};
+          const must=(v,msg)=>{if(!v)throw Error(msg)};
+          const cases=[
+           {kind:'futures',selector:'[data-inspect="futures"]',heading:'Comparativa de futuros',tokens:['Cruces','Cobre','rollover']},
+           {kind:'ratio',selector:'[data-inspect="ratio"]',heading:'Ratio oro/plata',tokens:['85 a 75','reversión']},
+           {kind:'macro-curve',selector:'[data-expand-macro="curve"]',heading:'Curva de rendimientos',tokens:['inversión','10Y','2Y']},
+           {kind:'macro-reals',selector:'[data-expand-macro="reals"]',heading:'Tipo real TIPS',tokens:['breakeven','cruzan']},
+           {kind:'v4-cot',selector:'[data-inspect="v4-cot"]',heading:'COT',tokens:['P95','Managed Money']},
+           {kind:'v4-oi',selector:'[data-inspect="v4-oi"]',heading:'Interés abierto semanal',tokens:['Precio','OI','contratos']},
+           {kind:'v4-volatility',selector:'[data-inspect="v4-volatility"]',heading:'Volatilidad implícita GVZ',tokens:['VXSLV','30 días']},
+           {kind:'v4-flows',selector:'[data-inspect="v4-flows"]',heading:'ETF físicos GLD',tokens:['2021','trimestrales','flujos']}
+          ];
+          const expected=cases.map(c=>c.kind);
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&guideTest=20261121';
+          const stat=async page=>page.evaluate(()=>{
+           const modal=document.querySelector('#detail-overlay'),drawer=document.querySelector('#detail-explanation-pane');
+           const button=document.querySelector('#detail-explanation-toggle');
+           const bounds=(node)=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}};
+           return {
+             modalHidden:modal.hidden,drawerHidden:drawer.hidden,buttonHidden:button.hidden,
+             expanded:button.getAttribute('aria-expanded'),heading:document.querySelector('#detail-explanation-heading')?.textContent,
+             sectionCount:drawer.querySelectorAll('.detail-guide-section').length,
+             sourceCount:drawer.querySelectorAll('.detail-guide-sources a').length,
+             text:drawer.querySelector('#detail-explanation-content')?.textContent||'',
+             scrollW:document.documentElement.scrollWidth,viewport:innerWidth,
+             drawerBounds:bounds(drawer),contentScrollHeight:document.querySelector('#detail-explanation-content').scrollHeight,
+             contentClientHeight:document.querySelector('#detail-explanation-content').clientHeight,
+             focused:document.activeElement?.id,
+             chartHtml:document.querySelector('#detail-chart')?.innerHTML||''
+           };
+          });
+          try{
+           for(const [name,width,height,day] of [['desktop',1440,900,false],['tablet',1024,800,true],['mobile',390,844,true],['small',360,780,false]]){
+            const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+            const page=await context.newPage();
+            page.on('pageerror',e=>report.errors.push({name,type:'pageerror',error:e.stack||e.message}));
+            try{
+             await page.goto(base,{waitUntil:'domcontentloaded',timeout:50000});
+             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===8,null,{timeout:15000});
+             const actual=await page.evaluate(()=>window.METALS_EXPLANATION_KEYS);
+             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not eight specific panels');
+             if(day){await page.locator('#theme-toggle').click();}
+             const casesOut={};
+             for(const c of cases){
+              await page.locator(c.selector).click();
+              let before=await stat(page);
+              must(!before.modalHidden,'modal not open '+c.kind);
+              must(!before.buttonHidden,'explanation button hidden '+c.kind);
+              must(before.drawerHidden&&before.expanded==='false','drawer should start closed '+c.kind);
+              const chartBefore=before.chartHtml;
+              await page.locator('#detail-explanation-toggle').click();
+              let opened=await stat(page);
+              must(!opened.drawerHidden&&opened.expanded==='true','cannot open guide '+c.kind);
+              must(opened.heading.includes(c.heading),'guide heading mismatch '+c.kind);
+              must(opened.sectionCount===4&&opened.sourceCount>=1,'guide missing sections/sources '+c.kind);
+              must(c.tokens.every(token=>opened.text.includes(token)),'guide missing key explanations '+c.kind);
+              must(opened.chartHtml===chartBefore,'explanation modified the chart '+c.kind);
+              must(opened.scrollW<=width+1,'horizontal overflow '+name+' '+c.kind);
+              must(opened.drawerBounds.left>=0&&opened.drawerBounds.right<=width+1,'guide off-screen '+name+' '+c.kind);
+              must(opened.drawerBounds.height>=210,'unusable guide height '+c.kind);
+              if(width<=390){
+               must(opened.contentScrollHeight>opened.contentClientHeight,'mobile guide not scrollable '+c.kind);
+               const scrolled=await page.locator('#detail-explanation-content').evaluate(el=>{el.scrollTop=el.scrollHeight;return el.scrollTop});
+               must(scrolled>0,'cannot read bottom of mobile guide '+c.kind);
+              }
+              await page.keyboard.press('Escape');
+              let closed=await stat(page);
+              must(closed.drawerHidden&&!closed.modalHidden&&closed.expanded==='false','Escape must close guide, not chart '+c.kind);
+              must(closed.focused==='detail-explanation-toggle','focus not restored '+c.kind);
+              await page.locator('#detail-explanation-toggle').click();
+              await page.locator('#detail-explanation-close').click();
+              must((await stat(page)).drawerHidden,'close button failed '+c.kind);
+              await page.locator('#detail-explanation-toggle').click();
+              await page.locator('#detail-close').click();
+              let final=await stat(page);
+              must(final.modalHidden&&final.drawerHidden,'closing chart did not reset guide '+c.kind);
+              casesOut[c.kind]={heading:opened.heading,sections:opened.sectionCount,sources:opened.sourceCount,canScroll:opened.contentScrollHeight>opened.contentClientHeight};
+             }
+             // Ensure unsupported panels have no unexpected explanation.
+             for(const selector of ['[data-inspect="gold"]','[data-inspect="vix"]','[data-inspect="dxy"]','[data-expand-macro="policy"]']){
+               await page.locator(selector).click();
+               must((await stat(page)).buttonHidden,'guide should be absent for '+selector);
+               await page.locator('#detail-close').click();
+             }
+             await page.locator('[data-inspect="v4-flows"]').click();
+             await page.locator('#detail-explanation-toggle').click();
+             await page.screenshot({path:'evidence-explanations/'+name+(day?'-day':'-night')+'.png',fullPage:false});
+             await page.locator('#detail-close').click();
+             report.cases[name]={width,day,verified:casesOut};
+            }catch(e){report.errors.push({name,type:'assertion',error:String(e)});}
+            await context.close();
+           }
+          }finally{
+           await browser.close();
+           fs.writeFileSync('evidence-explanations/result.json',JSON.stringify(report,null,2));
+           console.log('EXPLANATION_RESULT '+JSON.stringify(report));
+           if(report.errors.length)process.exitCode=1;
+          }
+          EOF
+          node verify-explanations.mjs
+      - name: Conservar capturas y verificaciones
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-interpretation-guides
+          path: evidence-explanations/
+          retention-days: 7
+          if-no-files-found: warn
