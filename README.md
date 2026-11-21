@@ -2,6 +2,12 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Ajuste de anchuras del dashboard — 21/11/2026
+
+La distribución de escritorio (a partir de 1200 px) se ajusta sobre la rejilla existente de tres columnas, conservando las mismas tarjetas y sus áreas: `1,30fr / 2,30fr / 1,30fr` en lugar de `1,06fr / 2,85fr / 1,07fr`. Porcentaje aproximado del ancho útil: **26,5 % Treasury/TIPS · 46,9 % Futuros/Ratio · 26,5 % Tipos oficiales**. Se reparte de manera equilibrada el espacio recuperado del centro entre ambos laterales, sin tocar fuentes, cálculos, temporalidades, gráficos ampliados ni la disposición móvil. La distribución alternativa de 881–1199 px y la columna única en móvil se mantienen.
+
+**Prueba real:** [Verificar redistribución horizontal](.github/workflows/verify-columns.yml), PASS en 1920, 1600, 1440, 1280, 1200, 1024, 390 y 360 px. Para 1920 px la tarjeta central mide 882 px, ambas laterales 499 px; a 1440 px, 657 px en el centro y 371 px en cada lateral. Sin desbordamientos. Regresiones de legibilidad Treasury y explicaciones también PASS. [Evidencias GitHub Actions](https://github.com/cgam-coder/metals-terminal/actions/runs/44913152441).
+
 ## Corrección visual «Curva de rendimientos» — 21/11/2026
 
 La tarjeta Treasury de escritorio tenía dos problemas combinados: el texto de la cabecera y las variaciones 2Y/10Y/30Y se envolvían de forma irregular en las columnas estrechas, y la fila superior del dashboard (300–365 px) era insuficiente para mostrar a la vez gráfico, leyenda y los cuatro valores inferiores; el pie se recortaba.
