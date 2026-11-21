@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Corrección de alturas y alineación vertical — 21/11/2026
+
+Tras redistribuir las anchuras, permanecía un desajuste de filas heredado del ajuste visual de Treasury: la primera fila tenía un mínimo de 545 px (535 px entre 881–1199 px) y la segunda solo 305 px (235 px). Como consecuencia, «Futuros comparados» y «Ratio Oro/Plata» tenían alturas distintas, igual que Treasury y TIPS a su izquierda.
+
+Se sustituyeron las filas de escritorio por **dos pistas iguales** usando `grid-template-rows:repeat(2,minmax(545px,1fr))` desde 1200 px y `repeat(2,minmax(535px,1fr)) 180px` de 881 a 1199 px. En ambos casos, Futuros/Ratio y Treasury/TIPS tienen alturas idénticas y bordes horizontales alineados; Fed/BCE continúa ocupando las dos filas centrales desde 1200 px y permanece en su propia fila en la disposición intermedia. No cambia ninguna anchura, fuente, fórmula, gráfico ni vista móvil.
+
+**Verificación visual real:** [GitHub Actions #44913501104](https://github.com/cgam-coder/metals-terminal/actions/runs/44913501104), PASS de las ocho resoluciones, comprobando matemáticamente igualdad de alturas con 2 px de tolerancia, alineación, visibilidad de los gráficos y ausencia de desbordamiento. En escritorio a 1440 px, las cuatro tarjetas alineadas miden **558,55 px cada una**; los gráficos centrales tienen alturas de **481,06 y 490,06 px** respectivamente. También PASS las regresiones independientes de legibilidad Treasury y explicaciones (mismos datos, temas y controles).
+
 ## Ajuste de anchuras del dashboard — 21/11/2026
 
 La distribución de escritorio (a partir de 1200 px) se ajusta sobre la rejilla existente de tres columnas, conservando las mismas tarjetas y sus áreas: `1,30fr / 2,30fr / 1,30fr` en lugar de `1,06fr / 2,85fr / 1,07fr`. Porcentaje aproximado del ancho útil: **26,5 % Treasury/TIPS · 46,9 % Futuros/Ratio · 26,5 % Tipos oficiales**. Se reparte de manera equilibrada el espacio recuperado del centro entre ambos laterales, sin tocar fuentes, cálculos, temporalidades, gráficos ampliados ni la disposición móvil. La distribución alternativa de 881–1199 px y la columna única en móvil se mantienen.
