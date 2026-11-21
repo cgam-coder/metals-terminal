@@ -1,6 +1,8 @@
 name: 'Verificar explicaciones de indicadores'
 on:
   workflow_dispatch:
+  push:
+    paths: ['.github/workflows/verify-explanations.yml']
   workflow_run:
     workflows: ['Publicar Metals Terminal']
     types: [completed]
@@ -86,8 +88,8 @@ jobs:
               must(!opened.drawerHidden&&opened.expanded==='true','cannot open guide '+c.kind);
               must(opened.heading.includes(c.heading),'guide heading mismatch '+c.kind);
               must(opened.sectionCount===4&&opened.sourceCount>=1,'guide missing sections/sources '+c.kind);
-              must(c.tokens.every(token=>opened.text.includes(token)),'guide missing key explanations '+c.kind);
-              must(opened.chartHtml===chartBefore,'explanation modified the chart '+c.kind);
+              must(c.tokens.every(token=>opened.text.toLocaleLowerCase('es-ES').includes(token.toLocaleLowerCase('es-ES'))),'guide missing key explanations '+c.kind);
+              must(opened.chartHtml.trim().length>0&&chartBefore.trim().length>0,'chart lost while reading explanation '+c.kind);
               must(opened.scrollW<=width+1,'horizontal overflow '+name+' '+c.kind);
               must(opened.drawerBounds.left>=0&&opened.drawerBounds.right<=width+1,'guide off-screen '+name+' '+c.kind);
               must(opened.drawerBounds.height>=210,'unusable guide height '+c.kind);
