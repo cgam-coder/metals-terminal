@@ -2,6 +2,16 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Corrección resistente a caché: igualdad de filas en producción — 21/11/2026
+
+Se detectó una discrepancia entre las capturas del navegador habitual y las pruebas con un navegador nuevo: un cliente podía conservar una copia antigua de `theme.css` porque el HTML la referenciaba sin versión. Esa copia mantenía la distribución anterior, con una primera fila alta y la segunda corta, a pesar de que el repositorio ya contenía el ajuste.
+
+La V4.5.1 añade una nueva URL versionada `theme.css?v=20261121-equal-rows-2` y una regla de distribución crítica **después de esa hoja de estilos en el propio HTML**, de mayor especificidad. Por tanto, incluso si se simula la carga de `theme.css` del commit anterior `2947ae61...`, no reaparece la antigua distribución. Es un control de visualización, sin impacto en los datos.
+
+**Validación deliberada de caché antigua**: [GitHub Actions #44914398866](https://github.com/cgam-coder/metals-terminal/actions/runs/44914398866), PASS tanto con CSS actualizado como con la hoja obsoleta simulada. En la resolución de la captura del usuario **1495 × 774 px**, primera y segunda filas: **554/554 px** (CSS reciente) y **553/553 px** (CSS anterior interceptado); SVG central: **305/305** y **304/304 px**; soportes Treasury/TIPS: **175/175 px** en ambos casos. La segunda fila queda debajo del primer bloque y requiere desplazamiento vertical para verla completa: **la igualdad de altura no equivale a encajar dos bloques de más de 550 px en una pantalla de 774 px de alto**.
+
+Para comprobar una publicación nueva evitando el HTML también almacenado en caché, abrir directamente la URL con `?version=20261121-v451-layout`. La edición de las reglas no altera la distribución móvil.
+
 ## Corrección de altura real de los gráficos SVG — 21/11/2026
 
 Una captura posterior detectó que la prueba anterior validaba únicamente las **tarjetas externas** con igual altura, no el área de dibujo contenida. Diagnóstico independiente [run #44913740830](https://github.com/cgam-coder/metals-terminal/actions/runs/44913740830): en 1426 px, ambas tarjetas centrales medían 562 px, pero sus SVG tenían aproximadamente 383 px (futuros) y 434 px (ratio); Treasury/TIPS medían 189 px y 379 px. La captura parcial de una ventana de 763 px de alto solo mostraba el comienzo de la segunda fila; el documento completo sigue siendo desplazable.
