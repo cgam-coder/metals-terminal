@@ -1,0 +1,100 @@
+name: 'Verificar redistribucion horizontal dashboard'
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar anchuras, graficos y temas publicados
+        run: |
+          mkdir -p evidence-columns
+          cat > verify-columns.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const result={cases:{},errors:[],createdAt:new Date().toISOString()};
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&columnTest=20261121';
+          const check=(cond,msg)=>{if(!cond)throw Error(msg)};
+          const get=async page=>page.evaluate(()=>{
+            const box=s=>{const el=document.querySelector(s);if(!el)return null;const r=el.getBoundingClientRect();return {x:r.x,y:r.y,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}};
+            const f=s=>document.querySelector(s)?.textContent?.trim()||'';
+            const info=el=>el?{top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}:null;
+            return {
+              viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,theme:document.documentElement.dataset.theme||'night',
+              dashboard:box('.dashboard'),curve:box('.curve-panel'),reals:box('.real-panel'),main:box('.main-panel'),ratio:box('.ratio-panel'),policy:box('.policy-panel'),
+              mainChart:box('#chart-main'),ratioChart:box('#chart-ratio'),
+              mainTitle:box('.main-panel .panel-title'),ratioTitle:box('.ratio-panel .panel-title'),policyTitle:box('.policy-panel .panel-title'),
+              curveTitle:box('.curve-panel .panel-title'),
+              chartMainRendered:!!document.querySelector('#chart-main svg'),
+              chartRatioRendered:!!document.querySelector('#chart-ratio svg'),
+              curveRendered:!!document.querySelector('#curve-graph svg'),
+              mainButton:box('[data-inspect="futures"]'),ratioButton:box('[data-inspect="ratio"]'),
+              chartMainText:f('.main-panel .panel-title'),ratioText:f('.ratio-panel .panel-title'),
+              active:document.querySelector('#global-timeframes .active')?.textContent
+            };
+          });
+          try{
+            for(const [name,width,height,day] of [['wide',1920,1080,false],['desktop',1600,1000,true],['laptop',1440,900,false],['desktop-small',1280,900,true],['breakpoint',1200,850,false],['tablet',1024,850,true],['mobile',390,844,true],['small',360,780,false]]){
+              const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+              const page=await context.newPage();
+              page.on('pageerror',e=>result.errors.push({name,type:'pageerror',error:e.stack||e.message}));
+              try{
+                await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.waitForSelector('.dashboard .main-panel .panel-title',{timeout:12000});
+                if(day)await page.locator('#theme-toggle').click();
+                const snapshot=await get(page);
+                result.cases[name]=snapshot;
+                check(snapshot.scrollWidth<=width+1,'horizontal overflow '+name);
+                check(snapshot.chartMainText.includes('Futuros comparados')&&snapshot.ratioText.includes('Ratio Oro/Plata'),'panel identity changed');
+                check(snapshot.main.width>0&&snapshot.ratio.width>0&&snapshot.curve.width>0&&snapshot.policy.width>0,'panel missing '+name);
+                check(snapshot.mainChart.width>0&&snapshot.ratioChart.width>0,'chart container missing '+name);
+                if(width>=1200){
+                  const sum=snapshot.curve.width+snapshot.main.width+snapshot.policy.width;
+                  const fractions=[snapshot.curve.width/sum,snapshot.main.width/sum,snapshot.policy.width/sum];
+                  result.cases[name].fractions=fractions;
+                  check(fractions[0]>.25&&fractions[0]<.28,'Treasury side not widened '+name+JSON.stringify(fractions));
+                  check(fractions[1]>.45&&fractions[1]<.49,'center not reduced '+name+JSON.stringify(fractions));
+                  check(fractions[2]>.25&&fractions[2]<.28,'right side not widened '+name+JSON.stringify(fractions));
+                  check(Math.abs(snapshot.curve.width-snapshot.policy.width)<3,'side widths unbalanced '+name);
+                  check(Math.abs(snapshot.main.x-snapshot.ratio.x)<3&&Math.abs(snapshot.main.width-snapshot.ratio.width)<3,'main/ratio not aligned '+name);
+                  check(snapshot.curve.right<=snapshot.main.left+2&&snapshot.main.right<=snapshot.policy.left+2,'horizontal panel overlap '+name);
+                  check(snapshot.reals.right<=snapshot.ratio.left+2,'lower row overlap '+name);
+                }
+                check(snapshot.chartMainRendered||document.querySelector,'chart must remain present');
+                if(width>=1200)check(snapshot.curveTitle.bottom<=snapshot.curve.bottom+1,'Treasury header clipped '+name);
+                await page.screenshot({path:'evidence-columns/'+name+'-'+(day?'day':'night')+'.png',fullPage:false});
+              }catch(err){result.errors.push({name,type:'assertion',error:String(err)});}
+              await context.close();
+            }
+          }finally{
+            await browser.close();
+            fs.writeFileSync('evidence-columns/result.json',JSON.stringify(result,null,2));
+            console.log('COLUMNS_TEST_RESULT '+JSON.stringify(result));
+            if(result.errors.length)process.exitCode=1;
+          }
+          EOF
+          node verify-columns.mjs
+      - name: Guardar resultados y capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-widths
+          path: evidence-columns/
+          retention-days: 7
