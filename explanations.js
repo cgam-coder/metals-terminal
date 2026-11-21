@@ -20,19 +20,19 @@
    sources:[["Proveedor histórico de cierres de futuros","https://dataset.aethereal.top/datasets/commodity-prices"]]
   },
   indices:{
-   title:"Comparativa de índices bursátiles · EE. UU. y Europa",
-   intro:"Cinco índices bursátiles de precios comparados con el motor SVG nativo de los futuros: S&P 500, Nasdaq Composite (no Nasdaq-100), Dow Jones Industrial Average, Russell 2000 y EURO STOXX 50. Cada curva indica variación acumulada desde la primera sesión común; no compara puntos nominales ni usa ETF como sustitutos.",
+   title:"Comparativa de índices bursátiles y Bitcoin · EE. UU. y Europa",
+   intro:"Cinco índices bursátiles de precios (S&P 500, Nasdaq Composite —no Nasdaq-100—, Dow Jones, Russell 2000 y EURO STOXX 50) junto a Bitcoin BTC/USD, todos expresados como variación acumulada porcentual desde la primera sesión común. Se utiliza el mismo motor SVG nativo que en futuros. Bitcoin es un criptoactivo, no un índice bursátil ni un ETF que lo represente.",
    blocks:[
-    ["Subidas, bajadas y origen porcentual",
-     '<p>Cada índice parte de <strong>0 % en la primera sesión común</strong>. Un +4 % indica que ha subido un 4 % desde esa fecha, no en la última sesión. No son rentabilidades invertibles: no incluyen dividendos, comisiones ni conversión de divisa.</p>'],
-    ["Cruces, distancias y liderazgos",
-     '<p>Si Nasdaq acumula +8 % y Dow +3 %, su diferencia son <strong>5 puntos porcentuales</strong>. El cruce de líneas indica cambio de liderazgo relativo, no igualdad de sus niveles nominales.</p><p>Russell 2000 por delante del S&P 500 puede sugerir fortaleza relativa de las pequeñas capitalizaciones; hay que contrastarlo con tipos, crédito y otros indicadores. Una divergencia europea puede reflejar composición sectorial y condiciones macroeconómicas distintas.</p>'],
-    ["Sesiones comunes y límites",
-     '<p>Se utilizan exclusivamente cierres diarios coincidentes entre las series que hayan respondido correctamente. Los festivos de EE. UU. y Europa difieren; no se rellenan fechas ni se interpolan valores. La leyenda y el pie indican <strong>cuántos índices</strong> están disponibles. Si no hay al menos dos índices y dos cierres comunes, no se dibuja curva.</p><p>El selector 1D no ofrece una curva intradía: estas observaciones son de cierre diario. Los periodos superiores y el calendario personalizado utilizan las fechas reales disponibles, que pueden cubrir un horizonte menor al solicitado.</p>'],
-    ["Proveedor, trazabilidad y condiciones de uso",
-     '<p>Los datos se solicitan a demanda desde el navegador al endpoint no oficial Yahoo Finance v8 chart, pasando por cors.dev para resolver las restricciones CORS. No se alojan cierres de terceros en GitHub Pages ni se muestran precios simulados. Ni la fuente ni el proxy garantizan disponibilidad, precisión futura o derechos generales de redistribución; para ciertos usos sería necesario contratar datos licenciados.</p>']
+    ["Qué comparan las seis curvas",
+     '<p>Cada serie arranca en <strong>0 % en la primera sesión compartida</strong>. Un +4 % indica una subida del 4 % desde esa fecha, no necesariamente durante la última sesión. Los índices son de precios y no incluyen dividendos, comisiones ni ajustes de divisa; Bitcoin se representa mediante su cotización BTC/USD, sin apalancamiento.</p>'],
+    ["BTC y apetito por riesgo: relación que hay que comprobar",
+     '<p>Una subida simultánea de Bitcoin y Nasdaq puede ser compatible con mayor apetito por activos de riesgo; sin embargo, <strong>su correlación no es fija</strong> ni implica una relación causal. Bitcoin también responde a flujos de ETF, liquidez cripto, regulación y factores propios. Una divergencia con Russell 2000 o el S&P 500 es una pista para investigar, no una señal automática sobre oro, plata o renta variable.</p>'],
+    ["Cruces, diferencias y sesiones no simultáneas",
+     '<p>Si Bitcoin acumula +10 % y el S&P 500 +3 %, la diferencia es de <strong>7 puntos porcentuales</strong> desde el origen de comparación, no una rentabilidad futura. El cruce indica cambio de liderazgo relativo. Bitcoin cotiza <strong>24 horas, siete días</strong>; los índices solo en días de mercado. La comparación usa fechas bursátiles compartidas, omite los movimientos exclusivamente de fines de semana y <strong>no equipara la hora del cierre diario de BTC con la hora de cierre de las bolsas</strong>. No se interpolan festivos.</p>'],
+    ["Disponibilidad, fuente y limitaciones",
+     '<p>Se obtienen cierres diarios reales de Yahoo Finance mediante su endpoint gráfico no oficial y el proxy gratuito cors.dev. Si falla Bitcoin o su cobertura temporal, los índices siguen mostrándose y se advierte la ausencia; si faltan índices, se informa de la cobertura parcial. La vista 1D no ofrece curvas intradía. Datos externos consultados en el navegador, no alojados ni inventados en GitHub Pages: los servicios no garantizan estabilidad, exactitud futura ni derechos generales de redistribución.</p>']
    ],
-   sources:[["Yahoo Finance · índices mundiales","https://finance.yahoo.com/markets/world-indices/"],["EURO STOXX 50 · ticker original","https://finance.yahoo.com/quote/%5ESTOXX50E/"],["cors.dev · limitaciones y arquitectura","https://cors.dev/guides/yahoo-finance-api-cors"]]
+   sources:[["Yahoo Finance · índices mundiales","https://finance.yahoo.com/markets/world-indices/"],["Bitcoin BTC/USD","https://finance.yahoo.com/quote/BTC-USD/"],["cors.dev · condiciones del intermediario","https://cors.dev/guides/yahoo-finance-api-cors"]]
   },
   ratio:{
    title:"Ratio oro/plata · XAU/XAG",

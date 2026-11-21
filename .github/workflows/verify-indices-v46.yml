@@ -1,4 +1,4 @@
-name: 'Verificar índices bursátiles SVG y distribución'
+name: 'Verificar índices y Bitcoin SVG nativos'
 on:
   workflow_dispatch:
   workflow_run:
@@ -22,7 +22,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.58.2
           npx playwright install chromium
-      - name: Verificar SVG, cinco índices, temporalidad, modal y responsive
+      - name: Verificar SVG, cinco índices más BTC, temporalidad y responsive
         run: |
           mkdir -p evidence-indices-native
           python3 -m http.server 8753 --bind 127.0.0.1 >/tmp/metals-local.log 2>&1 &
@@ -32,9 +32,10 @@ jobs:
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           const output={at:new Date().toISOString(),tests:[],errors:[]};
           const assert=(ok,msg)=>{if(!ok)throw Error(msg)};
-          const timestamps=[];
+          const timestamps=[],bitcoinTimestamps=[];
           for(let t=Date.UTC(2022,0,3);t<=Date.UTC(2026,10,20);t+=86400000){
            const day=new Date(t).getUTCDay();
+           bitcoinTimestamps.push(Math.floor(t/1000));
            if(day>0&&day<6)timestamps.push(Math.floor((t+18*3600000)/1000));
           }
           try{
@@ -43,20 +44,22 @@ jobs:
             const page=await ctx.newPage();
             page.on('pageerror',e=>output.errors.push({width,type:'runtime',error:String(e)}));
             // CI-ONLY synthetic fixture. Intercepted in an isolated browser, never published.
-            await page.route('https://proxy.cors.dev/**',route=>{
+            const fixture=(route,blockBitcoin=false)=>{
              const url=route.request().url(),match=url.match(/\/chart\/([^?]+)/);
              if(!match)return route.abort();
              const symbol=decodeURIComponent(match[1]);
-             const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E'];
-             const index=codes.indexOf(symbol);
-             if(index<0)return route.abort();
-             const closes=timestamps.map((t,i)=>Number((600+index*170+i*(0.33+index/18)+12*Math.sin(i/15+index)).toFixed(3)));
+             const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E','BTC-USD'];
+             const index=codes.indexOf(symbol),btc=symbol==='BTC-USD';
+             if(index<0||(btc&&blockBitcoin))return route.abort();
+             const stamps=btc?bitcoinTimestamps:timestamps;
+             const closes=stamps.map((t,i)=>Number((600+index*170+i*(0.33+index/18)+12*Math.sin(i/15+index)).toFixed(3)));
              return route.fulfill({status:200,contentType:'application/json',
               headers:{'access-control-allow-origin':'*'},
               body:JSON.stringify({chart:{error:null,result:[{
-               meta:{symbol},timestamp:timestamps,indicators:{quote:[{close:closes}]}
+               meta:{symbol},timestamp:stamps,indicators:{quote:[{close:closes}]}
               }]}})});
-            });
+            };
+            await page.route('https://proxy.cors.dev/**',route=>fixture(route));
             try{
              await page.goto('http://127.0.0.1:8753/?period=1mo',{waitUntil:'domcontentloaded',timeout:40000});
              await page.waitForSelector('#indices-comparison svg[data-market-svg="1"]',{timeout:15000});
@@ -65,6 +68,8 @@ jobs:
               return {version:document.getElementById('version').textContent,
                symbols:window.METALS_INDICES_SYMBOLS,
                count:document.querySelector('#indices-comparison').dataset.indicesCount,
+               btc:document.querySelector('#indices-comparison').dataset.bitcoinState,
+               series:document.querySelector('#indices-comparison').dataset.comparisonSeriesCount,
                lines:document.querySelectorAll('#indices-comparison svg path').length,
                frames:document.querySelectorAll('#indices-comparison iframe').length,
                source:[...panel.querySelectorAll('a')].map(a=>a.href),
@@ -72,15 +77,16 @@ jobs:
                panel:{width:rect.width,height:rect.height},
                pageWidth:document.documentElement.scrollWidth};
              });
-             assert(state.version.includes('V4.7'),'wrong version');
-             assert(JSON.stringify(state.symbols)===JSON.stringify(['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E']),'symbols');
-             assert(state.lines===5&&state.count==='5','five native lines absent');
+             assert(state.version.includes('V4.8'),'wrong version');
+             assert(JSON.stringify(state.symbols)===JSON.stringify(['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E','BTC-USD']),'symbols');
+             assert(state.lines===6&&state.count==='5'&&state.btc==='available'&&state.series==='6',
+              'five indices plus Bitcoin six SVG lines absent');
              assert(!state.frames,'third-party iframe present');
              assert(state.source.some(x=>x.includes('yahoo.com')),'missing attribution');
-             assert(state.label.includes('5/5'),'coverage label incorrect');
+             assert(state.label.includes('5/5')&&state.label.includes('BTC incluido'),'coverage label incorrect');
              assert(state.pageWidth<=width+2,'horizontal overflow');
              await page.locator('[data-inspect="indices"]').click();
-             assert(await page.locator('#detail-chart svg path').count()===5,'modal is not native');
+             assert(await page.locator('#detail-chart svg path').count()===6,'expanded BTC+indices chart not native');
              await page.locator('#detail-close').click();
              await page.locator('[data-global-period="10y"]').click();
              await page.waitForFunction(()=>document.getElementById('indices-window')?.textContent.includes('10A'),null,{timeout:10000});
@@ -89,6 +95,24 @@ jobs:
              await page.locator('[data-global-period="1d"]').click();
              await page.waitForFunction(()=>document.getElementById('indices-comparison')?.textContent.includes('intradía'),null,{timeout:10000});
              assert(await page.locator('#indices-comparison svg').count()===0,'fabricated intraday');
+             // With the crypto provider blocked, the five equity curves must survive.
+             if(width===1600){
+              const noBtc=await ctx.newPage();
+              await noBtc.route('https://proxy.cors.dev/**',route=>fixture(route,true));
+              try{
+               await noBtc.goto('http://127.0.0.1:8753/?period=1mo',{waitUntil:'domcontentloaded',timeout:40000});
+               await noBtc.waitForFunction(()=>document.getElementById('indices-comparison')?.dataset.indicesCount==='5',null,{timeout:15000});
+               await noBtc.waitForFunction(()=>document.getElementById('indices-comparison')?.dataset.bitcoinState==='unavailable',null,{timeout:15000});
+               const fallback=await noBtc.evaluate(()=>({
+                paths:document.querySelectorAll('#indices-comparison svg path').length,
+                note:document.getElementById('indices-window')?.textContent,
+                state:document.getElementById('indices-comparison')?.dataset.indicesState
+               }));
+               assert(fallback.paths===5&&fallback.note.includes('BTC no disponible')&&fallback.state==='partial',
+                'failed BTC must retain five real-stock series');
+               output.fallback=fallback;
+              }finally{await noBtc.close();}
+             }
              await page.screenshot({path:'evidence-indices-native/'+width+'.png'});
              output.tests.push({width,passed:true,state});
             }catch(e){output.errors.push({width,type:'assertion',error:String(e)})}
@@ -102,12 +126,12 @@ jobs:
           }
           EOF
           node check-indices.mjs
-      - name: Consultar 5 proveedores reales sin fixture (diagnóstico)
+      - name: Consultar 5 índices y BTC reales sin fixture (diagnóstico)
         continue-on-error: true
         if: always()
         run: |
           node --input-type=module - <<'EOF'
-          const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E'];
+          const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E','BTC-USD'];
           const result=await Promise.all(codes.map(async symbol=>{
            const url='https://proxy.cors.dev/https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?range=1mo&interval=1d';
            try{
@@ -121,7 +145,7 @@ jobs:
           console.log('REAL_SOURCE_DIAGNOSTIC '+JSON.stringify(result));
           if(result.some(x=>!x.available))process.exitCode=1;
           EOF
-      - name: Probar curva real de cinco índices en el navegador publicado
+      - name: Probar curva real de cinco índices y BTC publicado
         run: |
           node --input-type=module - <<'EOF'
           import {chromium} from 'playwright';
@@ -131,30 +155,33 @@ jobs:
            for(let n=1;n<=2&&!pass;n++){
             const page=await browser.newPage({viewport:{width:1450,height:850}});
             try{
-             await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&realindex=v47',{waitUntil:'domcontentloaded',timeout:42000});
+             await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&realindex=v48-btc',{waitUntil:'domcontentloaded',timeout:42000});
              await page.waitForFunction(()=>{
               const host=document.getElementById('indices-comparison');
-              return host?.dataset.indicesCount==='5'&&host.querySelectorAll('svg path').length===5;
+              return host?.dataset.indicesCount==='5'&&host?.dataset.bitcoinState==='available'&&
+               host?.dataset.comparisonSeriesCount==='6'&&host.querySelectorAll('svg path').length===6;
              },null,{timeout:35000});
              const result=await page.evaluate(()=>({
               version:document.getElementById('version')?.textContent,
               count:document.getElementById('indices-comparison')?.dataset.indicesCount,
+              bitcoin:document.getElementById('indices-comparison')?.dataset.bitcoinState,
+              six:document.getElementById('indices-comparison')?.dataset.comparisonSeriesCount,
               until:document.getElementById('indices-comparison')?.dataset.indicesLast,
               dates:document.getElementById('indices-window')?.textContent,
               paths:document.querySelectorAll('#indices-comparison svg path').length
              }));
              console.log('REAL_BROWSER_INDICES '+JSON.stringify(result));
-             if(result.count==='5'&&result.paths===5){pass=true;break;}
+             if(result.count==='5'&&result.bitcoin==='available'&&result.paths===6){pass=true;break;}
             }catch(e){last=String(e);console.warn('Real browser attempt '+n+': '+last)}
             finally{await page.close();}
            }
           }finally{await browser.close();}
-          if(!pass)throw Error('La curva real de cinco índices no cargó en el navegador: '+last);
+          if(!pass)throw Error('La curva real de cinco índices y BTC no cargó en el navegador: '+last);
           EOF
       - name: Conservar evidencias
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: equity-indices-native
+          name: equity-indices-plus-bitcoin-native
           path: evidence-indices-native/
           retention-days: 7

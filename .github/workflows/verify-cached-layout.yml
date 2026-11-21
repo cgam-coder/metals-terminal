@@ -1,8 +1,6 @@
 name: 'Verificar alineación incluso con CSS antiguo en caché'
 on:
   workflow_dispatch:
-  push:
-    paths: ['.github/workflows/verify-cached-layout.yml']
   workflow_run:
     workflows: ['Publicar Metals Terminal']
     types: [completed]
@@ -47,7 +45,7 @@ jobs:
             if(oldCSS)await page.route(/\/theme\.css(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'text/css',body:legacy}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
-             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.7'),null,{timeout:28000});
+             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.8'),null,{timeout:28000});
              // Isolated test-only fixtures: prove actual SVG geometry without
              // relying on slow third-party market APIs or altering production data.
              await page.evaluate(()=>{
@@ -75,7 +73,7 @@ jobs:
              });
              result.cases[key]=obj;
              check(obj.href.includes('?v=20261121-indices-v47'),'stylesheet does not use new asset URL');
-             check(obj.version.includes('V4.7'),'stale HTML');
+             check(obj.version.includes('V4.8'),'stale HTML');
              check(obj.overflow<=width+1,'overflow '+key);
              if(width>880){
               const same=(a,b)=>Math.abs(a.height-b.height)<=2;

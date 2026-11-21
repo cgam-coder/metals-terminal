@@ -77,7 +77,7 @@ jobs:
                 await page.waitForTimeout(600);
                 let st=await read(page);
                 out.cases[label]=st;
-                check((st.version.includes('V4.5')||st.version.includes('V4.6')||st.version.includes('V4.7')),'version not deployed');
+                check((st.version.includes('V4.5')||st.version.includes('V4.6')||st.version.includes('V4.7')||st.version.includes('V4.8')),'version not deployed');
                 check(st.period==='10y'&&st.selectedMain==='10A','10A not activated');
                 check(st.mainButtons.at(-1)==='10A'&&st.modalButtons.at(-1)==='10A','10A missing in expanded controls');
                 check(st.mainButtons.length===11&&st.modalButtons.length===11,'changed previous intervals');

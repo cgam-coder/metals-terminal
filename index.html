@@ -768,11 +768,11 @@
     <details class="policy-method"><summary>Precisiones metodológicas</summary><div class="source-meta">Series de tipos oficiales <strong>no directamente equivalentes</strong>. Las actualizaciones se muestran con su fecha de observación.</div></details>
   </section>
   <section class="panel indices-panel" id="indices-renta-variable">
-    <div class="panel-head"><div><h2 class="panel-title">Índices bursátiles · Comparativa</h2>
-      <div class="indices-subtitle">S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50</div></div>
-      <button type="button" class="market-inspect" data-inspect="indices" title="Ampliar comparativa de cinco índices">Ampliar ↗</button>
+    <div class="panel-head"><div><h2 class="panel-title">Índices bursátiles + Bitcoin</h2>
+      <div class="indices-subtitle">Cinco índices bursátiles + BTC/USD · variación acumulada (%)</div></div>
+      <button type="button" class="market-inspect" data-inspect="indices" title="Ampliar comparativa de índices y Bitcoin">Ampliar ↗</button>
     </div>
-    <div id="indices-comparison" class="indices-comparison" role="region" aria-label="Comparación porcentual de cinco índices bursátiles">
+    <div id="indices-comparison" class="indices-comparison" role="region" aria-label="Comparación porcentual de cinco índices bursátiles y Bitcoin">
       <div class="native-error">Consultando datos diarios de índices bursátiles…</div>
     </div>
     <div class="indices-foot">
@@ -822,7 +822,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.7</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.8</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -2482,7 +2482,7 @@ function openMarketDetail(kind){
  const backgroundWidget=document.getElementById("indices-comparison");
  if(backgroundWidget)backgroundWidget.style.visibility="hidden"; // Fully suspend focusable external iframe behind modal.
  document.getElementById("detail-method").open=!window.matchMedia("(max-width: 780px)").matches;
- const names={indices:"S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50",vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
+ const names={indices:"S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50 · Bitcoin BTC/USD",vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
  title.textContent=V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
  document.querySelectorAll("#detail-timeframes button").forEach(button=>{
   const active=button.dataset.detailPeriod===nativePeriod;
@@ -2964,5 +2964,5 @@ init();
 </script>
 <script defer src="./quality.js"></script>
 <script defer src="./explanations.js"></script>
-<script defer src="./indices.js?v=20261121-v47"></script>
+<script defer src="./indices.js?v=20261121-v48-btc"></script>
 </body></html>

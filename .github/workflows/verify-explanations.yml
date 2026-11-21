@@ -1,8 +1,6 @@
 name: 'Verificar explicaciones de indicadores'
 on:
   workflow_dispatch:
-  push:
-    paths: ['.github/workflows/verify-explanations.yml']
   workflow_run:
     workflows: ['Publicar Metals Terminal']
     types: [completed]
@@ -37,7 +35,7 @@ jobs:
           const must=(v,msg)=>{if(!v)throw Error(msg)};
           const cases=[
            {kind:'futures',selector:'[data-inspect="futures"]',heading:'Comparativa de futuros',tokens:['Cruces','Cobre','rollover']},
-           {kind:'indices',selector:'[data-inspect="indices"]',heading:'Comparativa de índices',tokens:['Russell 2000','Nasdaq','Yahoo Finance','cors.dev']},
+           {kind:'indices',selector:'[data-inspect="indices"]',heading:'Comparativa de índices',tokens:['Russell 2000','Nasdaq','Yahoo Finance','cors.dev','Bitcoin']},
            {kind:'ratio',selector:'[data-inspect="ratio"]',heading:'Ratio oro/plata',tokens:['85 a 75','reversión']},
            {kind:'macro-curve',selector:'[data-expand-macro="curve"]',heading:'Curva de rendimientos',tokens:['inversión','10Y','2Y']},
            {kind:'macro-reals',selector:'[data-expand-macro="reals"]',heading:'Tipo real TIPS',tokens:['breakeven','cruzan']},

@@ -1,6 +1,18 @@
-# Metals Terminal V4.7 — Índices bursátiles SVG nativos
+# Metals Terminal V4.8 — Comparación bursátil con Bitcoin
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.8 — Bitcoin BTC/USD como sexta curva (21/11/2026)
+
+La tarjeta «Índices bursátiles + Bitcoin» incorpora la cotización **Bitcoin BTC/USD (símbolo Yahoo Finance \`BTC-USD\`)** como sexta serie porcentual en el **mismo gráfico nativo SVG** que los cinco índices existentes, sin cambiar la estructura de tarjetas ni añadir widgets externos. El BTC se distingue mediante la línea naranja, con la misma base de comparación (0 %) y la misma interacción, ampliación, temporalidad global (3D–10A o fechas personalizadas) y modo día/noche.
+
+**Comparación metodológica:** los cinco índices forman el calendario principal de fechas de cierre comunes. Bitcoin se negocia 24/7, pero aquí **solo se representan sus observaciones diarias correspondientes a esas fechas bursátiles**: los sábados y domingos sin sesiones de bolsa no se añaden al eje ni se inventan. Tampoco se afirma que el corte diario de BTC sea simultáneo al cierre de Nueva York o Europa. Si BTC no responde o aporta menos del 75 % de las fechas comunes, o no llega a la última, **se conservan intactas las cinco series bursátiles** y aparece «BTC no disponible»; nunca se sustituye Bitcoin por ETF ni por un precio estimado. La adición de BTC exige dos o más cierres reales comunes y una identidad de ticker válida.
+
+La leyenda, el pie, la explicación del indicador y el panel ampliado identifican a BTC separadamente de los índices de bolsa. La relación con el apetito por riesgo es una **hipótesis variable**: una correlación visual entre BTC y acciones no acredita causalidad ni permite deducir automáticamente la trayectoria de oro o plata.
+
+**Fuentes y costes:** Yahoo Finance para las seis series, incluida \`https://finance.yahoo.com/quote/BTC-USD/\`, consultado mediante el mismo proxy gratuito cors.dev de V4.7. No hay licencias nuevas, servicios de pago ni precios de BTC archivados en GitHub Pages. El endpoint y el proxy son gratuitos pero no oficiales ni garantizados contractualmente.
+
+La verificación mantiene los cinco índices originales y añade pruebas para la sexta curva, su continuidad cuando falla el proveedor de BTC, la falta deliberada de intradía y el gráfico real publicado. Se conservan las salvaguardas previas contra datos sintéticos en producción.
 
 ## V4.7 — Índices bursátiles mediante SVG nativo (21/11/2026)
 
