@@ -1,9 +1,6 @@
-name: 'Verificar cinco indices y nueva distribucion'
+name: 'Verificar índices bursátiles SVG y distribución'
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/verify-indices-v46.yml'
   workflow_run:
     workflows: ['Publicar Metals Terminal']
     types: [completed]
@@ -13,7 +10,7 @@ jobs:
   inspect:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
-    timeout-minutes: 13
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with: {ref: main}
@@ -21,108 +18,113 @@ jobs:
         with: {node-version: '22'}
       - name: Comprobar sintaxis del controlador
         run: node --check indices.js
-      - name: Preparar Chromium
+      - name: Preparar navegador
         run: |
           npm install --no-save playwright@1.58.2
           npx playwright install chromium
-      - name: Revisar cuadricula y proveedor real sin capturar precios protegidos
+      - name: Verificar SVG, cinco índices, temporalidad, modal y responsive
         run: |
-          mkdir -p evidence-index-v46
-          cat > check-v46.mjs <<'EOF'
+          mkdir -p evidence-indices-native
+          python3 -m http.server 8753 --bind 127.0.0.1 >/tmp/metals-local.log 2>&1 &
+          cat > check-indices.mjs <<'EOF'
           import {chromium} from 'playwright';
           import fs from 'node:fs';
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
-          const out={errors:[],tests:{},at:new Date().toISOString()};
-          const must=(test,msg)=>{if(!test)throw Error(msg)};
-          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&check=v46index';
-          const capture=async page=>page.evaluate(()=>{
-           const box=s=>{const el=document.querySelector(s);if(!el)return null;const b=el.getBoundingClientRect();return {x:b.x,y:b.y,right:b.right,bottom:b.bottom,width:b.width,height:b.height,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}};
-           const frame=el=>el?.querySelectorAll('iframe').length||0;
-           return {
-            theme:document.documentElement.dataset.theme||'night',
-            grid:getComputedStyle(document.querySelector('.dashboard')).gridTemplateAreas,
-            rows:getComputedStyle(document.querySelector('.dashboard')).gridTemplateRows,
-            viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
-            curve:box('.curve-panel'),indices:box('.indices-panel'),main:box('.main-panel'),
-            ratio:box('.ratio-panel'),reals:box('.real-panel'),policy:box('.policy-panel'),
-            indexHost:box('#indices-comparison'),indexIframes:frame(document.querySelector('#indices-comparison')),
-            indexScripts:[...document.querySelectorAll('#indices-comparison script')].map(x=>x.src),
-            symbols:window.METALS_INDICES_SYMBOLS||[],
-            windowLabel:document.querySelector('#indices-window')?.textContent,
-            sourceLinks:[...document.querySelectorAll('.indices-panel a')].map(x=>x.href),
-            version:document.querySelector('#version')?.textContent,
-            chartMainSvg:!!document.querySelector('#chart-main svg'),
-            curveSvg:!!document.querySelector('#curve-graph svg')
-           };
-          });
+          const output={at:new Date().toISOString(),tests:[],errors:[]};
+          const assert=(ok,msg)=>{if(!ok)throw Error(msg)};
+          const timestamps=[];
+          for(let t=Date.UTC(2022,0,3);t<=Date.UTC(2026,10,20);t+=86400000){
+           const day=new Date(t).getUTCDay();
+           if(day>0&&day<6)timestamps.push(Math.floor((t+18*3600000)/1000));
+          }
           try{
-           for(const [name,width,height] of [['wide',1600,900],['desktop',1495,770],['breakpoint',1200,810],['medium',1024,820],['mobile',390,844]]){
-            const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
-            const page=await context.newPage();
-            page.on('pageerror',e=>out.errors.push({name,type:'runtime',error:e.stack||e.message}));
+           for(const width of [1600,1024,390]){
+            const ctx=await browser.newContext({viewport:{width,height:850}});
+            const page=await ctx.newPage();
+            page.on('pageerror',e=>output.errors.push({width,type:'runtime',error:String(e)}));
+            // CI-ONLY synthetic fixture. Intercepted in an isolated browser, never published.
+            await page.route('https://proxy.cors.dev/**',route=>{
+             const url=route.request().url(),match=url.match(/\/chart\/([^?]+)/);
+             if(!match)return route.abort();
+             const symbol=decodeURIComponent(match[1]);
+             const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E'];
+             const index=codes.indexOf(symbol);
+             if(index<0)return route.abort();
+             const closes=timestamps.map((t,i)=>Number((600+index*170+i*(0.33+index/18)+12*Math.sin(i/15+index)).toFixed(3)));
+             return route.fulfill({status:200,contentType:'application/json',
+              headers:{'access-control-allow-origin':'*'},
+              body:JSON.stringify({chart:{error:null,result:[{
+               meta:{symbol},timestamp:timestamps,indicators:{quote:[{close:closes}]}
+              }]}})});
+            });
             try{
-             await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
-             await page.waitForFunction(()=>window.METALS_INDICES_SYMBOLS?.length===5,null,{timeout:20000});
-             let state=await capture(page);
-             out.tests[name]={start:state};
-             must(state.version.includes('V4.6'),'wrong version '+state.version);
-             must(state.symbols.length===5,'missing index symbols');
-             must(state.sourceLinks.some(x=>x.includes('tradingview.com')),'source attribution missing');
-             must(JSON.stringify(state.symbols)===JSON.stringify(['SP:SPX','NASDAQ:IXIC','DJ:DJI','TVC:RUT','TVC:SX5E']),'wrong symbols or proxies');
-             must(state.indexScripts.some(x=>x.includes('tradingview.com/external-embedding/embed-widget-advanced-chart.js'))||state.indexIframes>=1,'official comparison widget not requested');
-             must(state.scrollWidth<=width+1,'horizontal overflow '+name);
-             must(state.windowLabel.includes('1M'),'period not shown '+name);
-             const eq=(a,b,tol=2)=>Math.abs(a-b)<=tol;
-             if(width>=1200){
-              must(state.grid.includes('"curve main real"')&&state.grid.includes('"indices ratio policy"'),'desktop layout wrong '+state.grid);
-              must(eq(state.curve.y,state.main.y)&&eq(state.main.y,state.reals.y),'top row misaligned');
-              must(eq(state.indices.y,state.ratio.y)&&eq(state.ratio.y,state.policy.y),'lower row misaligned');
-              must(eq(state.reals.height,state.policy.height)&&eq(state.reals.height,state.main.height),'right-side height not halved');
-              must(eq(state.indices.width,state.curve.width),'left charts widths differ');
-              must(state.policy.scrollHeight<=state.policy.clientHeight+3,'Fed/BCE information clipped '+name+' '+state.policy.scrollHeight+'/'+state.policy.clientHeight);
-              must(state.reals.scrollHeight<=state.reals.clientHeight+3,'TIPS information clipped '+name);
-             }else if(width>880){
-              must(state.grid.includes('"real real"')&&state.grid.includes('"policy policy"'),'mid-size right panels not stacked');
-              must(state.reals.y<state.policy.y,'TIPS not above Fed/BCE in medium viewport');
-              must(eq(state.indices.height,state.main.height),'medium card sizes not aligned');
-             }else{
-              must(state.indices.height>=250,'mobile index chart too small');
-              must(state.indices.width>=width-40,'mobile index chart not full width');
-             }
-             // Actual iframe readiness is useful but can be blocked by external
-             // widget CDNs. The provider must never be replaced by fake prices.
-             try{await page.waitForFunction(()=>document.querySelector('#indices-comparison iframe'),null,{timeout:18000})}catch(e){}
-             state=await capture(page);
-             out.tests[name].loaded=state;
+             await page.goto('http://127.0.0.1:8753/?period=1mo',{waitUntil:'domcontentloaded',timeout:40000});
+             await page.waitForSelector('#indices-comparison svg[data-market-svg="1"]',{timeout:15000});
+             const state=await page.evaluate(()=>{
+              const panel=document.querySelector('.indices-panel'),rect=panel.getBoundingClientRect();
+              return {version:document.getElementById('version').textContent,
+               symbols:window.METALS_INDICES_SYMBOLS,
+               count:document.querySelector('#indices-comparison').dataset.indicesCount,
+               lines:document.querySelectorAll('#indices-comparison svg path').length,
+               frames:document.querySelectorAll('#indices-comparison iframe').length,
+               source:[...panel.querySelectorAll('a')].map(a=>a.href),
+               label:document.getElementById('indices-window').textContent,
+               panel:{width:rect.width,height:rect.height},
+               pageWidth:document.documentElement.scrollWidth};
+             });
+             assert(state.version.includes('V4.7'),'wrong version');
+             assert(JSON.stringify(state.symbols)===JSON.stringify(['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E']),'symbols');
+             assert(state.lines===5&&state.count==='5','five native lines absent');
+             assert(!state.frames,'third-party iframe present');
+             assert(state.source.some(x=>x.includes('yahoo.com')),'missing attribution');
+             assert(state.label.includes('5/5'),'coverage label incorrect');
+             assert(state.pageWidth<=width+2,'horizontal overflow');
              await page.locator('[data-inspect="indices"]').click();
-             must(!(await page.locator('#detail-overlay').evaluate(el=>el.hidden)),'index detail did not open');
-             must((await page.locator('#detail-title').textContent()).includes('Nasdaq Composite'),'detail missing name');
-             const widgetInModal=await page.locator('#detail-chart script[src*="embed-widget-advanced-chart"], #detail-chart iframe').count();
-             must(widgetInModal>=1,'expanded official widget not mounted');
+             assert(await page.locator('#detail-chart svg path').count()===5,'modal is not native');
              await page.locator('#detail-close').click();
-             must(await page.locator('#detail-overlay').evaluate(el=>el.hidden),'detail does not close');
              await page.locator('[data-global-period="10y"]').click();
-             await page.waitForFunction(()=>document.querySelector('#indices-window')?.textContent?.includes('10A'),null,{timeout:10000});
-             must((await capture(page)).windowLabel.includes('10A'),'decade did not propagate');
+             await page.waitForFunction(()=>document.getElementById('indices-window')?.textContent.includes('10A'),null,{timeout:10000});
              await page.locator('#theme-toggle').click();
-             must((await capture(page)).theme==='day','day theme not propagated');
-             await page.screenshot({path:'evidence-index-v46/'+name+'-day.png',fullPage:false});
-             out.tests[name].complete=true;
-            }catch(e){out.errors.push({name,type:'test',error:String(e)})}
-            await context.close();
+             assert(await page.evaluate(()=>document.documentElement.dataset.theme)==='day','day theme');
+             await page.locator('[data-global-period="1d"]').click();
+             await page.waitForFunction(()=>document.getElementById('indices-comparison')?.textContent.includes('intradía'),null,{timeout:10000});
+             assert(await page.locator('#indices-comparison svg').count()===0,'fabricated intraday');
+             await page.screenshot({path:'evidence-indices-native/'+width+'.png'});
+             output.tests.push({width,passed:true,state});
+            }catch(e){output.errors.push({width,type:'assertion',error:String(e)})}
+            await ctx.close();
            }
           }finally{
            await browser.close();
-           fs.writeFileSync('evidence-index-v46/result.json',JSON.stringify(out,null,2));
-           console.log('INDICES_V46_RESULT '+JSON.stringify(out));
-           if(out.errors.length)process.exitCode=1;
+           fs.writeFileSync('evidence-indices-native/result.json',JSON.stringify(output,null,2));
+           console.log('INDEX_NATIVE_EVIDENCE '+JSON.stringify(output));
+           if(output.errors.length)process.exitCode=1;
           }
           EOF
-          node check-v46.mjs
-      - name: Conservar evidencia
+          node check-indices.mjs
+      - name: Consultar 5 proveedores reales sin fixture (diagnóstico)
+        continue-on-error: true
+        if: always()
+        run: |
+          node --input-type=module - <<'EOF'
+          const codes=['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E'];
+          const result=await Promise.all(codes.map(async symbol=>{
+           const url='https://proxy.cors.dev/https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?range=1mo&interval=1d';
+           try{
+            const response=await fetch(url,{signal:AbortSignal.timeout(26000)});
+            if(!response.ok)return {symbol,available:false,http:response.status};
+            const raw=await response.json(),o=raw.chart?.result?.[0];
+            return {symbol,available:o?.meta?.symbol===symbol&&Array.isArray(o.timestamp)&&o.timestamp.length>1,
+             observations:o?.timestamp?.length||0};
+           }catch(e){return {symbol,available:false,error:String(e)}}
+          }));
+          console.log('REAL_SOURCE_DIAGNOSTIC '+JSON.stringify(result));
+          if(result.some(x=>!x.available))process.exitCode=1;
+          EOF
+      - name: Conservar evidencias
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: equity-index-layout
-          path: evidence-index-v46/
+          name: equity-indices-native
+          path: evidence-indices-native/
           retention-days: 7

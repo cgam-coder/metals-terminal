@@ -1159,31 +1159,51 @@ html[data-theme="day"] .site .dashboard .native-note-disclosure .native-note-pop
  border:1px solid #314f63;border-radius:7px;
  background:#0d202e;
 }
-.indices-tv-embed{
- display:flex;flex-direction:column;
- width:100%;height:100%;min-height:0;flex:1 1 auto;
- box-sizing:border-box;
+/* V4.7: native equity comparison; style matches the native futures chart. */
+.indices-comparison .native-canvas{min-width:0;min-height:0;flex:1 1 auto}
+.indices-comparison .native-canvas .native-legend{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 7px;flex:0 0 auto;
 }
-.indices-tv-embed .tradingview-widget-container__widget{
- min-height:0;flex:1 1 auto;width:100%;height:100%;
+.indices-comparison .native-canvas .native-legend span{
+ display:flex;min-width:0;gap:4px;align-items:center;
+ font-size:9px;white-space:nowrap;overflow:hidden;
 }
-.indices-tv-embed iframe{
- border:0;display:block;width:100%!important;
- height:100%!important;min-height:70px;
+.indices-comparison .native-canvas .native-legend .native-dot{width:9px;flex:0 0 9px}
+.indices-comparison .native-canvas .native-legend strong{
+ margin-left:auto;font-size:9px;font-variant-numeric:tabular-nums;
 }
-.indices-tv-credit{
- color:#92bed2;text-align:right;text-decoration:none;
- font-size:9px;padding:3px 8px 4px;flex:0 0 auto;
+.indices-comparison .native-canvas .native-series{min-height:130px}
+.indices-comparison .native-canvas .native-tip,
+#detail-chart.indices-detail-chart .native-tip{
+ white-space:normal;max-width:90%;line-height:1.45;overflow-wrap:normal;
 }
-.indices-tv-credit:hover{text-decoration:underline}
-.indices-wait,.indices-tv-wait{
- position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
- padding:10px 12px;box-sizing:border-box;
- text-align:center;font-size:11px;line-height:1.4;
- color:#b9d0db;background:#0d202e;z-index:0;pointer-events:none;
+.indices-panel .native-note-mobile{display:none}
+.indices-panel .native-note-disclosure{display:block;position:relative;flex:1 1 auto;min-width:0}
+.indices-panel .native-canvas .native-note{
+ display:flex;position:relative;z-index:9;align-items:center;
+ flex:0 0 24px;min-height:24px;max-height:24px;box-sizing:border-box;overflow:visible;
 }
-.indices-tv-wait[hidden]{display:none}
-.indices-tv-error{color:#e9b3a1}
+.indices-panel .native-note-disclosure>summary{
+ display:block;position:relative;cursor:pointer;list-style:none;
+ color:#9cc8db;border-top:1px solid #314c5a;
+ padding:5px 18px 4px 4px;font-weight:600;font-size:9px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.indices-panel .native-note-disclosure>summary::-webkit-details-marker{display:none}
+.indices-panel .native-note-disclosure>summary::after{
+ content:"⌄";position:absolute;right:5px;top:2px;
+}
+.indices-panel .native-note-disclosure[open]>summary::after{content:"⌃"}
+.indices-panel .native-note-disclosure .native-note-popover{
+ position:absolute;left:0;right:0;bottom:calc(100% + 3px);z-index:15;
+ max-height:170px;overflow-y:auto;
+ color:#d7eaf0;background:#142e3b;border:1px solid #5f8291;
+ border-radius:7px;padding:8px;line-height:1.55;font-size:10px;
+ box-shadow:0 9px 22px #0009;
+}
+html[data-theme="day"] .indices-panel .native-note-disclosure>summary{color:#24566d;border-color:#c5d8df}
+html[data-theme="day"] .indices-panel .native-note-popover{background:#fbfdfb;color:#2b4657;border-color:#bed1d7}
+
 .indices-foot{
  display:flex;align-items:center;justify-content:space-between;
  gap:6px;flex:0 0 auto;min-width:0;font-size:9px;color:var(--muted);
@@ -1200,21 +1220,10 @@ html[data-theme="day"] .indices-symbol-list span{
 html[data-theme="day"] .indices-comparison{
  background:#f4f8f5;border-color:#b9cdd7;
 }
-html[data-theme="day"] .indices-wait,
-html[data-theme="day"] .indices-tv-wait{
- background:#f4f8f5;color:#436272;
-}
-html[data-theme="day"] .indices-tv-credit{color:#416e83}
 html[data-theme="day"] .indices-foot a{color:#1a6686}
 #detail-chart.indices-detail-chart{
  min-height:0;overflow:hidden;display:flex;flex-direction:column;
  background:transparent;
-}
-#detail-chart.indices-detail-chart .indices-tv-embed{
- flex:1 1 auto;min-height:0;width:100%;
-}
-#detail-chart.indices-detail-chart .tradingview-widget-container__widget{
- flex:1 1 auto;min-height:0;
 }
 @media(min-width:881px){
  .site .dashboard>.indices-panel{padding:10px 12px}

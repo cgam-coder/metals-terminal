@@ -1,6 +1,18 @@
-# Metals Terminal V4.5 — Horizonte de 10 años, cobertura acreditada
+# Metals Terminal V4.7 — Índices bursátiles SVG nativos
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+## V4.7 — Índices bursátiles mediante SVG nativo (21/11/2026)
+
+El panel «Índices bursátiles · Comparativa» ya **no usa el widget TradingView**. Reutiliza el renderizador SVG de «Oro, Plata y Cobre — Futuros comparados», con cinco curvas porcentuales normalizadas desde la primera fecha de cierre común (base 0 %), leyenda, cursor, inspección táctil, ampliación, modo día/noche y periodos 3D–10A o personalizados. Mantiene S&P 500 (^GSPC), Nasdaq Composite (^IXIC, no Nasdaq-100), Dow Jones (^DJI), Russell 2000 (^RUT) y EURO STOXX 50 (^STOXX50E): índices reales, no ETF ni futuros como sustitutos.
+
+Los cierres diarios se consultan a demanda **en el navegador**, sin archivarlos ni redistribuirlos en GitHub Pages. Se usa el endpoint gráfico no oficial de Yahoo Finance mediante el intermediario CORS gratuito proxy.cors.dev; no se añaden gastos recurrentes, credenciales ni un backend. **Limitación material:** Yahoo Finance no ofrece una API pública estable ni garantiza permisos generales de exhibición; el intermediario gratuito tampoco garantiza disponibilidad. Si falla el feed se informa con claridad, sin fabricar datos. Una explotación comercial o de mayor fiabilidad necesitaría una fuente con licencia y SLA adecuados.
+
+Se valida la identidad exacta de cada ticker y el formato de cierres positivos y fechados. Se comparan exclusivamente días comunes entre los índices recibidos, sin interpolar festivos ni mezclar periodos. Si falla alguna fuente se informa la cobertura parcial y su nombre. Si no se dispone de al menos dos índices y dos sesiones comunes no se representa una curva. Las series muestran índices de precios sin dividendos y sin conversión EUR/USD. En el selector **1D** se comunica expresamente la falta de intradía.
+
+El workflow de verificación de índices comprueba motor, responsive, modal, temas y periodo global utilizando series sintéticas **exclusivamente dentro de tests interceptados**, nunca desplegadas. Una prueba independiente informa del estado real del proveedor cuando el acceso de red lo permite.
+
+**Histórico:** el apartado V4.6 siguiente documenta la integración externa anterior, ahora sustituida por V4.7. La distribución de tarjetas V4.6 se conserva.
 
 ## V4.6 — Renta variable mundial y redistribución de TIPS/Fed-BCE (21/11/2026)
 

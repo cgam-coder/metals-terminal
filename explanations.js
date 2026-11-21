@@ -21,18 +21,18 @@
   },
   indices:{
    title:"Comparativa de índices bursátiles · EE. UU. y Europa",
-   intro:"Cinco índices bursátiles de precios superpuestos en la escala porcentual del proveedor TradingView: S&P 500, Nasdaq Composite, Dow Jones Industrial Average, Russell 2000 y EURO STOXX 50. No se comparan puntos absolutos ni se emplean ETF como sustitutos.",
+   intro:"Cinco índices bursátiles de precios comparados con el motor SVG nativo de los futuros: S&P 500, Nasdaq Composite (no Nasdaq-100), Dow Jones Industrial Average, Russell 2000 y EURO STOXX 50. Cada curva indica variación acumulada desde la primera sesión común; no compara puntos nominales ni usa ETF como sustitutos.",
    blocks:[
-    ["Subidas, bajadas y qué significa el porcentaje",
-     '<p>Un índice que se sitúa por encima del nivel inicial de referencia ha subido porcentualmente desde esa base; una línea que cae, ha perdido valor relativo a ese punto. <strong>No son rentabilidades diarias independientes:</strong> la curva acumula variaciones entre las sesiones del horizonte visualizado. El proveedor gestiona la escala y su base.</p>'],
+    ["Subidas, bajadas y origen porcentual",
+     '<p>Cada índice parte de <strong>0 % en la primera sesión común</strong>. Un +4 % indica que ha subido un 4 % desde esa fecha, no en la última sesión. No son rentabilidades invertibles: no incluyen dividendos, comisiones ni conversión de divisa.</p>'],
     ["Cruces, distancias y liderazgos",
-     '<p>Si el Nasdaq Composite acumula +8 % y el Dow Jones +3 %, el Nasdaq supera al Dow por <strong>5 puntos porcentuales</strong> desde la base visualizada. Un cruce cambia el liderazgo en variación acumulada: no significa que ambos índices tengan el mismo valor en puntos.</p>'],
-    ["Qué indican las divergencias",
-     '<p><strong>Russell 2000 por delante de S&P 500:</strong> compatible con mayor fortaleza relativa de compañías pequeñas estadounidenses. <strong>Nasdaq por delante de Dow Jones:</strong> compatible con liderazgo de compañías cotizadas en Nasdaq, frecuentemente más expuestas a crecimiento/tecnología. <strong>EURO STOXX 50 divergente:</strong> puede reflejar diferencias macroeconómicas o sectoriales entre Europa y EE. UU. Son hipótesis, no diagnósticos automáticos.</p>'],
-    ["Cierre diario, fuente y límites",
-     '<p>El gráfico utiliza TradingView con superposición «SameScale»; los mercados de EE. UU. y Europa <strong>cierran en horarios y festivos diferentes</strong>, por lo que la última lectura no siempre corresponde al mismo día. El S&P 500, Nasdaq, Dow y Russell están denominados en USD y el EURO STOXX 50 en EUR: comparar variaciones de índices <strong>no incluye conversión de divisas</strong>. Son índices de precios, sin dividendos. Los datos de Russell 2000 y EURO STOXX 50 se muestran mediante referencias TVC de TradingView.</p><p>La temporalidad global solicita un rango al widget, pero la fecha inicial efectiva depende del proveedor; los rangos personalizados del terminal <strong>no pueden reproducirse exactamente</strong> mediante esta integración. No se inventan ni redistribuyen cierres de proveedores protegidos.</p>']
+     '<p>Si Nasdaq acumula +8 % y Dow +3 %, su diferencia son <strong>5 puntos porcentuales</strong>. El cruce de líneas indica cambio de liderazgo relativo, no igualdad de sus niveles nominales.</p><p>Russell 2000 por delante del S&P 500 puede sugerir fortaleza relativa de las pequeñas capitalizaciones; hay que contrastarlo con tipos, crédito y otros indicadores. Una divergencia europea puede reflejar composición sectorial y condiciones macroeconómicas distintas.</p>'],
+    ["Sesiones comunes y límites",
+     '<p>Se utilizan exclusivamente cierres diarios coincidentes entre las series que hayan respondido correctamente. Los festivos de EE. UU. y Europa difieren; no se rellenan fechas ni se interpolan valores. La leyenda y el pie indican <strong>cuántos índices</strong> están disponibles. Si no hay al menos dos índices y dos cierres comunes, no se dibuja curva.</p><p>El selector 1D no ofrece una curva intradía: estas observaciones son de cierre diario. Los periodos superiores y el calendario personalizado utilizan las fechas reales disponibles, que pueden cubrir un horizonte menor al solicitado.</p>'],
+    ["Proveedor, trazabilidad y condiciones de uso",
+     '<p>Los datos se solicitan a demanda desde el navegador al endpoint no oficial Yahoo Finance v8 chart, pasando por cors.dev para resolver las restricciones CORS. No se alojan cierres de terceros en GitHub Pages ni se muestran precios simulados. Ni la fuente ni el proxy garantizan disponibilidad, precisión futura o derechos generales de redistribución; para ciertos usos sería necesario contratar datos licenciados.</p>']
    ],
-   sources:[["TradingView · índices bursátiles","https://www.tradingview.com/markets/indices/"],["Comparación porcentual TradingView","https://www.tradingview.com/support/solutions/43000543053-compare-see-how-symbols-perform-side-by-side/"]]
+   sources:[["Yahoo Finance · índices mundiales","https://finance.yahoo.com/markets/world-indices/"],["EURO STOXX 50 · ticker original","https://finance.yahoo.com/quote/%5ESTOXX50E/"],["cors.dev · limitaciones y arquitectura","https://cors.dev/guides/yahoo-finance-api-cors"]]
   },
   ratio:{
    title:"Ratio oro/plata · XAU/XAG",

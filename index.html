@@ -658,7 +658,7 @@
 @media(max-width:880px){.dashboard>.policy-panel{order:4;min-height:355px;height:355px;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{min-height:140px;flex:1 1 auto}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261121-indices-v46" />
+<link rel="stylesheet" href="./theme.css?v=20261121-indices-v47" />
 <style id="dashboard-layout-critical">
 /* Critical layout is deliberately AFTER the optional theme stylesheet.
    An existing browser cache of theme.css cannot restore unequal grid rows. */
@@ -772,15 +772,12 @@
       <div class="indices-subtitle">S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50</div></div>
       <button type="button" class="market-inspect" data-inspect="indices" title="Ampliar comparativa de cinco índices">Ampliar ↗</button>
     </div>
-    <div class="indices-symbol-list" aria-label="Índices representados">
-      <span>S&P 500</span><span>Nasdaq</span><span>Dow Jones</span><span>Russell 2000</span><span>Euro Stoxx 50</span>
-    </div>
     <div id="indices-comparison" class="indices-comparison" role="region" aria-label="Comparación porcentual de cinco índices bursátiles">
-      <div class="indices-wait">Conectando con el gráfico oficial de TradingView…</div>
+      <div class="native-error">Consultando datos diarios de índices bursátiles…</div>
     </div>
     <div class="indices-foot">
       <span id="indices-window">Periodo solicitado: 1M</span>
-      <a href="https://www.tradingview.com/markets/indices/" target="_blank" rel="noopener noreferrer">Gráfico y fuente · TradingView</a>
+      <a href="https://finance.yahoo.com/markets/world-indices/" target="_blank" rel="noopener noreferrer">Fuente · Yahoo Finance</a>
     </div>
   </section>
   <section class="panel real-panel">
@@ -825,7 +822,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.6</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.7</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -933,7 +930,7 @@ function clearChartInspector(chart){
 }
 // Capture the touch before the target graph processes it; its own inspector
 // then shows the newly touched point. This also works for empty charts.
-const chartTouchAreas=".ticker-card,#chart-main,#chart-ratio,#curve-graph,#real-graph,#policy-graph,#detail-chart";
+const chartTouchAreas=".ticker-card,#chart-main,#chart-ratio,#indices-comparison,#curve-graph,#real-graph,#policy-graph,#detail-chart";
 function resetInspectionOnTouch(event){
  if(event.target instanceof Element&&event.target.closest(chartTouchAreas))clearAllChartInspections();
 }
@@ -1045,10 +1042,11 @@ function nativeChart(id,lines,dates,unit,sub){
  // The two central dashboard charts preserve the full method but collapse it
  // on desktop: their plotted area, not a long footnote, gets priority.
  // On mobile the original complete note remains visible, unchanged.
- const central=id==="chart-main"||id==="chart-ratio";
+ const central=id==="chart-main"||id==="chart-ratio"||id==="indices-comparison";
  const fullNote=sub+thinning;
  const compactDescription=id==="chart-main"
    ? n+" cierres · "+activePeriodLabel()+" · Método y fuentes"
+   : id==="indices-comparison" ? n+" cierres · "+activePeriodLabel()+" · Método y fuentes"
    : "Ratio spot · "+n+" observaciones · Método y fuentes";
  const noteMarkup=central
    ? '<div class="native-note native-note-central"><div class="native-note-mobile">'+fullNote+'</div>'+
@@ -2890,6 +2888,7 @@ window.addEventListener('resize',()=>{
  if(macro?.series){renderCurve();renderReals();renderPolicy();}
  if(Object.keys(nativeData).length)renderNative();
  else {renderFuturesCards();renderVixCard();renderFuturesComparison();}
+ window.renderIndicesPanel?.(true);
  if(detailKind)drawMarketDetail();
 });
 $('#global-timeframes').addEventListener('click',event=>{
@@ -2965,5 +2964,5 @@ init();
 </script>
 <script defer src="./quality.js"></script>
 <script defer src="./explanations.js"></script>
-<script defer src="./indices.js"></script>
+<script defer src="./indices.js?v=20261121-v47"></script>
 </body></html>
