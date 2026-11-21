@@ -19,6 +19,21 @@
    ],
    sources:[["Proveedor histórico de cierres de futuros","https://dataset.aethereal.top/datasets/commodity-prices"]]
   },
+  indices:{
+   title:"Comparativa de índices bursátiles · EE. UU. y Europa",
+   intro:"Cinco índices bursátiles de precios superpuestos en la escala porcentual del proveedor TradingView: S&P 500, Nasdaq Composite, Dow Jones Industrial Average, Russell 2000 y EURO STOXX 50. No se comparan puntos absolutos ni se emplean ETF como sustitutos.",
+   blocks:[
+    ["Subidas, bajadas y qué significa el porcentaje",
+     '<p>Un índice que se sitúa por encima del nivel inicial de referencia ha subido porcentualmente desde esa base; una línea que cae, ha perdido valor relativo a ese punto. <strong>No son rentabilidades diarias independientes:</strong> la curva acumula variaciones entre las sesiones del horizonte visualizado. El proveedor gestiona la escala y su base.</p>'],
+    ["Cruces, distancias y liderazgos",
+     '<p>Si el Nasdaq Composite acumula +8 % y el Dow Jones +3 %, el Nasdaq supera al Dow por <strong>5 puntos porcentuales</strong> desde la base visualizada. Un cruce cambia el liderazgo en variación acumulada: no significa que ambos índices tengan el mismo valor en puntos.</p>'],
+    ["Qué indican las divergencias",
+     '<p><strong>Russell 2000 por delante de S&P 500:</strong> compatible con mayor fortaleza relativa de compañías pequeñas estadounidenses. <strong>Nasdaq por delante de Dow Jones:</strong> compatible con liderazgo de compañías cotizadas en Nasdaq, frecuentemente más expuestas a crecimiento/tecnología. <strong>EURO STOXX 50 divergente:</strong> puede reflejar diferencias macroeconómicas o sectoriales entre Europa y EE. UU. Son hipótesis, no diagnósticos automáticos.</p>'],
+    ["Cierre diario, fuente y límites",
+     '<p>El gráfico utiliza TradingView con superposición «SameScale»; los mercados de EE. UU. y Europa <strong>cierran en horarios y festivos diferentes</strong>, por lo que la última lectura no siempre corresponde al mismo día. El S&P 500, Nasdaq, Dow y Russell están denominados en USD y el EURO STOXX 50 en EUR: comparar variaciones de índices <strong>no incluye conversión de divisas</strong>. Son índices de precios, sin dividendos. Los datos de Russell 2000 y EURO STOXX 50 se muestran mediante referencias TVC de TradingView.</p><p>La temporalidad global solicita un rango al widget, pero la fecha inicial efectiva depende del proveedor; los rangos personalizados del terminal <strong>no pueden reproducirse exactamente</strong> mediante esta integración. No se inventan ni redistribuyen cierres de proveedores protegidos.</p>']
+   ],
+   sources:[["TradingView · índices bursátiles","https://www.tradingview.com/markets/indices/"],["Comparación porcentual TradingView","https://www.tradingview.com/support/solutions/43000543053-compare-see-how-symbols-perform-side-by-side/"]]
+  },
   ratio:{
    title:"Ratio oro/plata · XAU/XAG",
    intro:"Número de onzas de plata cuyo valor equivale a una onza de oro, calculado con referencias spot XAU y XAG de la misma fuente y fechas comparables. No es el cociente de los futuros GC/SI.",
