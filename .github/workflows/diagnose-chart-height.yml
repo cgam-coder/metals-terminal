@@ -24,14 +24,14 @@ jobs:
           import {chromium} from 'playwright';
           import fs from 'node:fs';
           const b=await chromium.launch({headless:true,args:['--no-sandbox']});
-          const result={test:'interior-plot-vs-panel',cases:{},errors:[]};
+          const result={test:'compact-equal-desktop-plot-v452',cases:{},errors:[]};
           for(const [name,width,height,day] of [['desktop-1426',1426,763,false],['desktop-1600',1600,900,true],['desktop-1200',1200,800,false],['tablet-1024',1024,850,true],['mobile-390',390,844,false]]){
             const page=await b.newPage({viewport:{width,height}});
             page.on('pageerror',e=>result.errors.push({name,error:e.stack||e.message}));
             try{
-              await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&measure=height20261121',{waitUntil:'domcontentloaded',timeout:47000});
+              await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&measure=compact20261121',{waitUntil:'domcontentloaded',timeout:47000});
               await page.waitForFunction(()=>marketChartCache.has('chart-main')&&marketChartCache.has('chart-ratio')&&macroPlotCache.has('curve-graph')&&macroPlotCache.has('real-graph'),null,{timeout:110000});
-              await page.waitForTimeout(550);
+              await page.waitForTimeout(400);
               if(day)await page.locator('#theme-toggle').click();
               const measure=await page.evaluate(()=>{
                 const box=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();const style=getComputedStyle(e);return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,clientHeight:e.clientHeight,scrollHeight:e.scrollHeight,cssHeight:style.height,cssMinHeight:style.minHeight,flex:style.flex,align:style.alignItems,overflow:style.overflow}};
@@ -58,16 +58,21 @@ jobs:
             const close=(a,b,tol=3)=>Math.abs(a-b)<=tol;
             const futures=panels.futures,ratio=panels.ratio,treasury=panels.treasury,tips=panels.tips;
             if(!close(futures.panel.height,ratio.panel.height))result.errors.push({name,error:'Centre cards have different heights'});
+            if(futures.panel.height>310||futures.panel.height<295)result.errors.push({name,error:'Desktop panels should be ~300px, found '+futures.panel.height});
             if(!close(treasury.panel.height,tips.panel.height))result.errors.push({name,error:'Side cards have different heights'});
+            if(treasury.panel.height>310||treasury.panel.height<295)result.errors.push({name,error:'Side panels not compact: '+treasury.panel.height});
             if(!close(futures.svg.height,ratio.svg.height))result.errors.push({name,error:'Centre SVG heights differ '+futures.svg.height+' vs '+ratio.svg.height});
             if(!close(treasury.svg.height,tips.svg.height))result.errors.push({name,error:'Side SVG heights differ '+treasury.svg.height+' vs '+tips.svg.height});
             for(const key of ['futures','ratio']){
               const note=panels[key].note,legend=panels[key].legend;
               if(note.scrollHeight>note.clientHeight+2)result.errors.push({name,error:key+' note clipped '+note.scrollHeight+'/'+note.clientHeight});
               if(legend.scrollHeight>legend.clientHeight+2)result.errors.push({name,error:key+' legend clipped '+legend.scrollHeight+'/'+legend.clientHeight});
-              if(panels[key].svg.height<175)result.errors.push({name,error:key+' chart is too short'});
+              if(panels[key].svg.height<95)result.errors.push({name,error:key+' chart is too short: '+panels[key].svg.height});
             }
-            if(treasury.svg.height<160||tips.svg.height<160)result.errors.push({name,error:'Sidebar plot area too short'});
+            if(treasury.svg.height<80||tips.svg.height<80)result.errors.push({name,error:'Sidebar plot area too short'});
+            for(const key of ['futures','ratio','treasury','tips']){
+              const g=panels[key];if(g.panel.scrollHeight>g.panel.clientHeight+2)result.errors.push({name,error:key+' panel content overflow '+g.panel.scrollHeight+'/'+g.panel.clientHeight});
+            }
           }
           fs.writeFileSync('evidence-plot-heights/results.json',JSON.stringify(result,null,2));
           console.log('PLOT_HEIGHT_DIAGNOSTIC '+JSON.stringify(result));
