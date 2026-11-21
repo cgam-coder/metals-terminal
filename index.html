@@ -2365,6 +2365,7 @@ function renderPolicy(){
  });
  attachMacroInspector("policy-graph");
  $("#policy-dates").textContent=period+" · "+source+" · "+prettyDate(start)+" – "+prettyDate(end)+" · "+changeCount+" cambios oficiales · Fed "+latestF.date+" / BCE "+latestB.date;
+ $("#policy-dates").title=$("#policy-dates").textContent; // Full text available when compact card ellipsizes the date range.
 }
 function renderMacro(){
  if(!macro?.series)return;
