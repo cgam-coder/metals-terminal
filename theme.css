@@ -1235,3 +1235,60 @@ html[data-theme="day"] .indices-foot a{color:#1a6686}
  .indices-symbol-list span{font-size:9px;padding:3px 5px}
  .indices-foot{font-size:9px}
 }
+
+
+/* V4.6: right-hand policy card remains compact (300px) with no lost
+   methodological explanation. Long dated provenance is available by title. */
+@media(min-width:1200px){
+ .site .dashboard>.policy-panel{
+  display:flex;flex-direction:column;gap:0;
+  min-height:0;overflow:visible;
+ }
+ .site .dashboard>.policy-panel .panel-head{
+  margin-bottom:2px;min-height:30px;flex:0 0 auto;
+ }
+ .site .dashboard>.policy-panel .panel-caption{
+  margin:2px 0 2px;line-height:1.2;
+ }
+ .site .dashboard>.policy-panel #policy-graph{
+  height:auto;min-height:86px;flex:1 1 86px;
+ }
+ .site .dashboard>.policy-panel #policy-range-summary{
+  padding:3px 5px;margin:3px 0 2px;min-height:0;
+  font-size:9px;line-height:1.15;
+ }
+ .site .dashboard>.policy-panel #policy-dates{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:block;width:100%;
+  min-height:13px;max-height:13px;
+  font-size:9px;line-height:1.3;margin:2px 0;
+ }
+ .site .dashboard>.policy-panel .policy-legend{
+  padding-top:3px;margin:3px 0;
+  gap:1px;line-height:1.2;font-size:10px;
+ }
+}
+.policy-method{
+ flex:0 0 auto;position:relative;min-height:20px;margin-top:2px;
+ border-top:1px solid #395365;
+}
+.policy-method>summary{
+ color:#9fc4d8;font-weight:600;list-style:none;
+ cursor:pointer;padding:4px 14px 3px 2px;
+ font-size:9px;line-height:1.2;position:relative;
+}
+.policy-method>summary::-webkit-details-marker{display:none}
+.policy-method>summary::after{content:"⌄";position:absolute;right:3px;top:2px}
+.policy-method[open]>summary::after{content:"⌃"}
+.policy-method .source-meta{
+ position:absolute;z-index:20;bottom:100%;right:0;left:0;
+ background:#173344;border:1px solid #547688;border-radius:6px;
+ box-shadow:0 8px 26px #0007;
+ color:#d0e4ea;font-size:11px;line-height:1.5;
+ margin:0;padding:10px 12px;
+}
+html[data-theme="day"] .policy-method{border-top-color:#ccdce1}
+html[data-theme="day"] .policy-method>summary{color:#31677e}
+html[data-theme="day"] .policy-method .source-meta{
+ background:#f9fbf6;color:#375464;border-color:#bbd0d6;
+}
