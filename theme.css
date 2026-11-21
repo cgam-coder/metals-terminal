@@ -676,3 +676,14 @@ html[data-theme="day"] .detail-guide-sources a{color:#12627b}
  .detail-explanation-head{gap:5px}
  .detail-guide-section h4{font-size:12px}
 }
+
+/* Contextual label for the selected chart window, no live market claims. */
+.detail-guide-period{
+  margin:-5px 0 16px;padding:7px 9px;
+  border:1px solid #355668;border-radius:6px;
+  background:#102b3b;color:#b4cfdc;
+  font-size:10.5px;line-height:1.5;
+}
+html[data-theme="day"] .detail-guide-period{
+  border-color:#c1d4d8;background:#f1f6f3;color:#506976;
+}
