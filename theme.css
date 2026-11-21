@@ -687,3 +687,109 @@ html[data-theme="day"] .detail-guide-sources a{color:#12627b}
 html[data-theme="day"] .detail-guide-period{
   border-color:#c1d4d8;background:#f1f6f3;color:#506976;
 }
+
+
+/* Treasury curve, desktop: intentionally separate the heading, controls and
+   yield summary so narrow dashboard columns do not create awkward wraps. */
+.curve-panel .panel-head{
+  display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:flex-start;gap:6px;min-width:0;
+  margin-bottom:7px;
+}
+.curve-panel .panel-head .panel-title{
+  max-width:100%;font-size:clamp(15px,1.15vw,18px);
+  line-height:1.24;letter-spacing:-.27px;overflow-wrap:normal;
+}
+.curve-panel .macro-controls{
+  width:100%;min-width:0;display:flex;justify-content:flex-start;
+  align-items:center;gap:9px;flex-wrap:nowrap;
+}
+.curve-panel .macro-controls .link-small,
+.curve-panel .macro-controls .macro-expand{
+  flex:0 0 auto;min-height:29px;white-space:nowrap;
+}
+.curve-panel .panel-caption{
+  font-size:10px;line-height:1.45;
+  overflow-wrap:break-word;margin:3px 0 7px;
+}
+#curve-range-summary{
+  display:flex;flex-direction:column;align-items:stretch;
+  flex-wrap:nowrap;gap:6px;padding:7px 8px;
+  min-width:0;line-height:1.35;margin:3px 0 8px;
+}
+#curve-range-summary .curve-period-main{
+  display:flex;align-items:center;gap:9px;min-width:0;
+  color:var(--text);font-size:10.5px;
+}
+#curve-range-summary .curve-period-main .macro-period-tag{
+  flex:0 0 auto;white-space:nowrap;margin-right:0;
+}
+#curve-range-summary .curve-observation-count{
+  font-size:10px;white-space:nowrap;opacity:.95;
+}
+#curve-range-summary .curve-period-moves{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  width:100%;min-width:0;gap:0;
+}
+#curve-range-summary .curve-period-move{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;min-width:0;padding:3px 2px;
+  border-left:1px solid #304b5b;text-align:center;
+}
+#curve-range-summary .curve-period-move:first-child{border-left:0}
+#curve-range-summary .curve-move-name{
+  font-size:9px;line-height:1.2;white-space:nowrap;color:var(--muted);
+}
+#curve-range-summary .curve-period-move strong{
+  font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  line-height:1.35;letter-spacing:-.1px;
+}
+.curve-panel .curve-bottom{
+  flex:0 0 auto;border-top:1px solid #294556;
+  min-width:0;margin-top:5px;padding-top:7px;
+}
+.curve-panel .curve-bottom-title{
+  color:var(--text);font-size:12px;font-weight:720;
+  letter-spacing:-.1px;margin:0 0 6px;line-height:1.25;
+}
+.curve-panel .mini-stats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px 11px;margin:0;padding:0;
+}
+.curve-panel .mini-stats .yield-metric{
+  display:flex;flex-direction:column;align-items:flex-start;
+  min-width:0;gap:3px;padding:2px 0;
+  font-size:10px;line-height:1.35;
+  white-space:normal;
+}
+.curve-panel .mini-stats .yield-metric span{
+  color:var(--muted);font-size:9.5px;line-height:1.25;
+  overflow-wrap:normal;
+}
+.curve-panel .mini-stats .yield-metric strong{
+  font-size:12px;font-weight:740;line-height:1.2;
+  font-variant-numeric:tabular-nums;color:var(--text);
+  white-space:nowrap;
+}
+.curve-panel .mini-stats .yield-metric .yield-spread-positive{color:var(--green)}
+.curve-panel .mini-stats .yield-metric .yield-spread-negative{color:var(--red)}
+.curve-panel .yield-note{
+  font-size:9px;line-height:1.3;margin-top:8px;
+  overflow-wrap:anywhere;
+}
+html[data-theme="day"] #curve-range-summary .curve-period-move{
+  border-left-color:#c9d8dc;
+}
+html[data-theme="day"] .curve-panel .curve-bottom{
+  border-top-color:#cbd9dc;
+}
+@media(max-width:880px){
+ .curve-panel .panel-head{gap:5px}
+ .curve-panel .panel-head .panel-title{font-size:16px}
+ .curve-panel .curve-bottom-title{font-size:12px}
+ .curve-panel .mini-stats{gap:8px 12px}
+}
+@media(max-width:365px){
+ #curve-range-summary .curve-period-move strong{font-size:9.5px}
+ .curve-panel .mini-stats .yield-metric strong{font-size:11px}
+}
