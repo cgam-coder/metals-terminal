@@ -35,7 +35,7 @@ jobs:
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           const legacy=fs.readFileSync('legacy-theme.css','utf8');
           const result={cases:{},errors:[]};
-          const base='https://cgam-coder.github.io/metals-terminal/?version=20261121-v453-compact';
+          const base='https://cgam-coder.github.io/metals-terminal/?version=20261121-v454-filled';
           const check=(ok,why)=>{if(!ok)throw Error(why);};
           for(const [name,width,height] of [['user-image',1495,774],['desktop',1440,900],['medium',1200,820],['small-desktop',1024,820],['mobile',390,844]]){
            for(const oldCSS of [false,true]){
@@ -47,7 +47,7 @@ jobs:
             if(oldCSS)await page.route(/\/theme\.css(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'text/css',body:legacy}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
-             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.5.3'),null,{timeout:28000});
+             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.5.4'),null,{timeout:28000});
              // Isolated test-only fixtures: prove actual SVG geometry without
              // relying on slow third-party market APIs or altering production data.
              await page.evaluate(()=>{
@@ -70,8 +70,8 @@ jobs:
                };
              });
              result.cases[key]=obj;
-             check(obj.href.includes('?v=20261121-compact-rows-4'),'stylesheet does not use new asset URL');
-             check(obj.version.includes('V4.5.3'),'stale HTML');
+             check(obj.href.includes('?v=20261121-plot-fill-v454'),'stylesheet does not use new asset URL');
+             check(obj.version.includes('V4.5.4'),'stale HTML');
              check(obj.overflow<=width+1,'overflow '+key);
              if(width>880){
               const same=(a,b)=>Math.abs(a.height-b.height)<=2;
@@ -79,8 +79,8 @@ jobs:
               check(same(obj.treasury,obj.tips),'Treasury/TIPS not equal '+key);
               check(same(obj.main,obj.treasury),'upper row not aligned '+key);
               check(same(obj.futureSvg,obj.ratioSvg),'real futures/ratio SVGs unequal '+key);
-              check(same(obj.curveSvg,obj.tipsSvg),'real Treasury/TIPS SVGs unequal '+key);
-              check(obj.futureSvg.height>=95&&obj.ratioSvg.height>=95,'plots too short '+key);
+              check(obj.curveSvg.height>=100&&obj.tipsSvg.height>=140,'macro plots underused '+key);
+              check(obj.futureSvg.height>=140&&obj.ratioSvg.height>=140,'plots too short '+key);
               check(obj.main.height>=295&&obj.main.height<=305,'desktop panel short due to legacy CSS '+key);
              }
              await page.locator('.dashboard').screenshot({path:'evidence-cache-layout/'+key+'.png',timeout:30000});
