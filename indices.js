@@ -67,7 +67,7 @@
   const previous=full?detailConfig:cardConfig;
   if(previous===signature&&host.querySelector(".indices-tv-embed"))return;
   const parent=document.createElement("div");
-  parent.className="indices-tv-embed";
+  parent.className="indices-tv-embed tradingview-widget-container";
   const placeholder=document.createElement("div");
   placeholder.className="indices-tv-wait";placeholder.textContent="Cargando comparación de cinco índices con TradingView…";
   const body=document.createElement("div");
