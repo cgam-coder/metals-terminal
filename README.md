@@ -2,6 +2,27 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## V4.6 — Renta variable mundial y redistribución de TIPS/Fed-BCE (21/11/2026)
+
+La cuadrícula principal de escritorio mantiene tres columnas y dos filas de 300 px, con proporciones aproximadas 26,5 % / 46,9 % / 26,5 %. El nuevo reparto (≥ 1200 px) es:
+
+| Fila | Columna izquierda | Centro | Derecha |
+| --- | --- | --- | --- |
+| Superior | Curva Treasury 2/10/30Y | Futuros oro/plata/cobre | TIPS real 10Y e inflación implícita |
+| Inferior | **Índices bursátiles (5)** | Ratio oro/plata | Tipos oficiales Fed/BCE |
+
+Así, TIPS se sitúa directamente encima de Fed/BCE; la tarjeta de tipos ya **no ocupa dos filas**, sino 300 px, igual que las demás. No se comprimen sus datos: el detalle de fechas queda disponible en el atributo `title`, y las advertencias metodológicas en el control desplegable «Precisiones metodológicas». El gráfico mantiene cierres y escalas propios. En pantallas intermedias de 881–1199 px, la cuadrícula pasa a dos columnas (Treasury/Futuros; Índices/Ratio) y posteriormente dos filas anchas consecutivas TIPS y Fed/BCE, en ese orden. En móvil cada tarjeta ocupa su propia fila, sin alterar los datos originales.
+
+**Comparación de cinco índices bursátiles:** S&P 500 (símbolo TradingView `SP:SPX`), **Nasdaq Composite** (`NASDAQ:IXIC`, no Nasdaq-100), Dow Jones Industrial Average (`DJ:DJI`), Russell 2000 (`TVC:RUT`) y EURO STOXX 50 (`TVC:SX5E`). El gráfico utiliza el widget gratuito oficial de TradingView, cuyos símbolos de comparación usan la escala común `SameScale` (porcentajes comparativos a partir de la referencia del gráfico). **No compara puntos nominales** de los cinco índices, ni presenta sus cifras como rentabilidades incluyendo dividendos. Russell 2000 y EURO STOXX 50 se suministran aquí como **referencias calculadas TVC**, no como cierres directos certificados del administrador del índice.
+
+**Justificación de la fuente:** FRED publica las series SP500, DJIA y NASDAQCOM, pero SP500 está expresamente identificado como «Copyrighted: Pre-Approval Required». STOXX protege sus descargas históricas. La alternativa elegida utiliza un widget alojado y publicado por TradingView, que permite comparar varios índices sin volver a alojar ni redistribuir en GitHub sus cierres protegidos. No incorpora ninguna API premium, credenciales de usuario ni servicio de pago. En caso de bloqueo de TradingView, el panel muestra un mensaje y un enlace al proveedor; no se generan datos sustitutos.
+
+**Periodos:** el control global solicita al widget un rango asociado (por ejemplo 1M, 12M, 60M o 120M). No debe considerarse una garantía de que TradingView reproduzca exactamente los límites de fechas del terminal: los días hábiles, cierres y referencia porcentual son gestionados por TradingView. Los periodos 3D y 2S se aproximan a 5D y 1M respectivamente; **un periodo personalizado no se puede sincronizar exactamente** mediante este widget y se avisa expresamente. No se interpolan ni fusionan series de los cinco índices. Europa y Estados Unidos tienen horarios y festivos diferentes; los índices se expresan en sus propias divisas (EURO STOXX 50 en EUR, índices estadounidenses en USD), sin conversión FX.
+
+Se añade además «Explicación» al gráfico ampliado para interpretar subidas, caídas, cruces, diferencias porcentuales, pequeñas/grandes capitalizaciones y limitaciones de comparación internacional. El widget conserva el enlace de atribución a TradingView.
+
+**Verificación:** workflow [Verificar cinco índices y nueva distribución](.github/workflows/verify-indices-v46.yml), con comprobación de ubicación, alineación, altura, enlaces de fuente, los cinco símbolos, periodo global, modal ampliado, tema diurno y responsive en 1600, 1495, 1200, 1024 y 390 px. [Evidencia de una prueba integral PASS](https://github.com/cgam-coder/metals-terminal/actions/runs/44916868188). Fuente y métodos: [TradingView · Advanced Chart](https://www.tradingview.com/widget-docs/widgets/charts/advanced-chart/), [comparación a la misma escala porcentual](https://www.tradingview.com/support/solutions/43000543053-compare-see-how-symbols-perform-side-by-side/), [FRED SP500](https://fred.stlouisfed.org/series/SP500) y [STOXX](https://www.stoxx.com/help).
+
 ## Aprovechamiento interior de los gráficos — 21/11/2026 · V4.5.4
 
 Las tarjetas del dashboard de escritorio permanecen en filas de **300 px**, con igual altura, distribución horizontal intacta y tema día/noche. Antes, los trazados SVG centrales tenían unos **108 px** y los de Treasury/TIPS unos **88 px**, al reservar 66 px para largas notas de Futuros/Ratio y al imponer altura fija de 90 px a los gráficos macroeconómicos. Además, `svgPlot()` utilizaba valores de reserva cuando el contenedor medía 90 px, reduciendo el tamaño real de los textos y ejes.
