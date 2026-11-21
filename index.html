@@ -658,7 +658,7 @@
 @media(max-width:880px){.dashboard>.policy-panel{order:4;min-height:355px;height:355px;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{min-height:140px;flex:1 1 auto}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261121-compact-rows-4" />
+<link rel="stylesheet" href="./theme.css?v=20261121-plot-fill-v454" />
 <style id="dashboard-layout-critical">
 /* Critical layout is deliberately AFTER the optional theme stylesheet.
    An existing browser cache of theme.css cannot restore unequal grid rows. */
@@ -694,17 +694,20 @@
  }
  .site .dashboard>.main-panel .native-canvas .native-note,
  .site .dashboard>.ratio-panel .native-canvas .native-note{
-  box-sizing:border-box;flex:0 0 66px;min-height:66px;max-height:66px;
-  overflow:hidden;align-content:flex-start;
+  box-sizing:border-box;flex:0 0 26px;min-height:26px;max-height:26px;
+  overflow:visible;align-content:flex-start;
  }
  .site .dashboard>.main-panel .native-canvas .native-series,
  .site .dashboard>.ratio-panel .native-canvas .native-series{
   flex:1 1 auto;min-height:90px;
  }
- .site .dashboard>.curve-panel #curve-graph,
+ .site .dashboard>.curve-panel #curve-graph{
+  box-sizing:border-box;min-height:113px;max-height:none;height:auto;
+  flex:1 1 auto;
+ }
  .site .dashboard>.real-panel #real-graph{
-  box-sizing:border-box;height:90px;min-height:90px;
-  max-height:90px;flex:0 0 90px;
+  box-sizing:border-box;min-height:145px;max-height:none;height:auto;
+  flex:1 1 auto;
  }
 }
 </style>
@@ -796,7 +799,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.5.3</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.5.4</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1013,9 +1016,22 @@ function nativeChart(id,lines,dates,unit,sub){
    ' <strong>'+fmt(line.points.at(-1),2)+unit+'</strong></span>'
  ).join("")+'</div>';
  const thinning=indexes.length<n?'<span>Trazado '+((dates.at(-1)-dates[0])>7*365*86400?"mensual":"semanal")+' con observaciones reales; '+n+' registros en el cálculo.</span>':'';
+ // The two central dashboard charts preserve the full method but collapse it
+ // on desktop: their plotted area, not a long footnote, gets priority.
+ // On mobile the original complete note remains visible, unchanged.
+ const central=id==="chart-main"||id==="chart-ratio";
+ const fullNote=sub+thinning;
+ const compactDescription=id==="chart-main"
+   ? n+" cierres · "+activePeriodLabel()+" · Método y fuentes"
+   : "Ratio spot · "+n+" observaciones · Método y fuentes";
+ const noteMarkup=central
+   ? '<div class="native-note native-note-central"><div class="native-note-mobile">'+fullNote+'</div>'+
+     '<details class="native-note-disclosure"><summary>'+compactDescription+'</summary>'+
+     '<div class="native-note-popover">'+fullNote+'</div></details></div>'
+   : '<div class="native-note">'+fullNote+'</div>';
  host.innerHTML='<div class="native-canvas">'+legend+
    '<div class="native-series"><div class="native-tip" role="status"></div></div>'+
-   '<div class="native-note">'+sub+thinning+'</div></div>';
+   noteMarkup+'</div>';
  const frame=host.querySelector(".native-series"),tip=frame.querySelector(".native-tip");
  const box=frame.getBoundingClientRect(),hostBox=host.getBoundingClientRect();
  const W=Math.max(184,Math.round(box.width||hostBox.width||390));
