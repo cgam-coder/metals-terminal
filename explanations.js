@@ -145,6 +145,10 @@
   intro.className="detail-guide-intro";
   intro.textContent=entry.intro;
   content.appendChild(intro);
+  const period=document.createElement("p");
+  period.className="detail-guide-period";
+  period.textContent="Periodo seleccionado: "+(typeof activePeriodLabel==="function"?activePeriodLabel():"—")+" · verifica la cobertura real en «Fuente, fechas y metodología».";
+  content.appendChild(period);
   for(const [title,html] of entry.blocks){
    const section=document.createElement("section");
    section.className="detail-guide-section";
