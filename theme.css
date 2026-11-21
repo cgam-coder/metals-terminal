@@ -537,3 +537,142 @@ html[data-theme="day"] .v4-extra-method{background:#f5f9f7;color:#32556a;border-
  .detail-actions .v4-context-button{font-size:9px;padding:4px 5px}
  .detail-timeframes button{font-size:10px}
 }
+
+
+/* Expanded-chart explanations: independent reading drawer.
+   Hidden by default, opens only by explicit user action. */
+.detail-box{position:relative}
+.detail-explanation-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:35px;padding:7px 11px;font-size:12px;font-weight:720;
+  border-color:#6b8c9c;color:#d5ecf6;background:#143142;
+}
+.detail-explanation-toggle[hidden],
+.detail-explanation-pane[hidden]{display:none!important}
+.detail-explanation-toggle:hover,
+.detail-explanation-toggle.is-active{
+  background:#584621;color:#ffe6a4;border-color:#c29343;
+}
+.detail-explanation-pane{
+  position:absolute;z-index:15;
+  top:62px;right:12px;bottom:12px;
+  width:min(455px,calc(100% - 24px));
+  min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;
+  border:1px solid #6e8796;border-radius:12px;
+  background:#0c1d29;color:#e4edf4;
+  box-shadow:0 13px 38px #000b;
+}
+.detail-explanation-head{
+  display:flex;align-items:start;justify-content:space-between;gap:11px;
+  flex:0 0 auto;padding:15px 16px 12px;
+  border-bottom:1px solid #314957;
+  background:linear-gradient(135deg,#122c3a,#0e2330);
+}
+.detail-explanation-eyebrow{
+  font-size:9px;font-weight:800;letter-spacing:.11em;
+  color:#d4ae61;margin-bottom:6px;
+}
+.detail-explanation-head h3{
+  font-size:17px;line-height:1.25;letter-spacing:-.24px;
+  font-weight:760;color:#f1f4f5;margin:0;
+}
+.detail-explanation-close{
+  flex:0 0 33px;display:grid;place-items:center;
+  width:33px;height:33px;padding:0;border-radius:8px;
+  border:1px solid #476375;background:#153041;
+  color:#d9eaf4;font-size:15px;cursor:pointer;
+}
+.detail-explanation-close:hover{background:#324e5e;border-color:#e4ba6b}
+.detail-explanation-pane button:focus-visible,
+.detail-explanation-pane a:focus-visible{
+  outline:2px solid var(--gold);outline-offset:3px;
+}
+.detail-explanation-content{
+  padding:16px 17px 24px;flex:1 1 auto;min-height:0;
+  overflow-y:auto;overscroll-behavior:contain;
+  font-size:12px;line-height:1.62;color:#bcd0da;
+  scrollbar-width:thin;scrollbar-color:#537487 transparent;
+}
+.detail-guide-intro{
+  border-left:3px solid #d6a844;padding:7px 0 7px 11px;
+  margin:0 0 17px;color:#e1e7eb;font-size:12.3px;line-height:1.58;
+}
+.detail-guide-section{margin:0 0 19px}
+.detail-guide-section h4{
+  margin:0 0 8px;font-size:12.5px;line-height:1.32;
+  color:#f3cc7d;font-weight:780;
+}
+.detail-guide-body{color:inherit}
+.detail-guide-body p{margin:0 0 10px}
+.detail-guide-body p:last-child{margin-bottom:0}
+.detail-guide-body ul{margin:0 0 9px;padding-left:18px}
+.detail-guide-body li{margin:0 0 7px}
+.detail-guide-body strong{color:#eff5f7;font-weight:720}
+.detail-guide-caution{
+  border-top:1px solid #415361;padding-top:12px;
+  margin:7px 0 14px;color:#e6c999;font-size:11px;
+}
+.detail-guide-sources{
+  border-top:1px solid #415361;padding-top:12px;
+  font-size:10.5px;line-height:1.7;color:#a9c1cf;
+}
+.detail-guide-sources strong{color:#dde7ea}
+.detail-guide-sources a{color:#8cceeb;text-decoration:underline;text-underline-offset:2px}
+
+/* Day mode: preserve clear labels, series colors and readable explanatory text. */
+html[data-theme="day"] .detail-explanation-toggle{
+  background:#edf4f3;color:#28546c;border-color:#adc6d1;
+}
+html[data-theme="day"] .detail-explanation-toggle:hover,
+html[data-theme="day"] .detail-explanation-toggle.is-active{
+  background:#f7e9cd;color:#875915;border-color:#c69d50;
+}
+html[data-theme="day"] .detail-explanation-pane{
+  background:#fffdf8;color:#435c6a;
+  border-color:#b8ccd2;box-shadow:0 12px 35px #24374332;
+}
+html[data-theme="day"] .detail-explanation-head{
+  background:linear-gradient(135deg,#fbf7ea,#f5f2e9);
+  border-bottom-color:#d5dfe0;
+}
+html[data-theme="day"] .detail-explanation-eyebrow{color:#97671c}
+html[data-theme="day"] .detail-explanation-head h3{color:#243848}
+html[data-theme="day"] .detail-explanation-close{
+  background:#f4f5f0;color:#40586a;border-color:#beced4;
+}
+html[data-theme="day"] .detail-explanation-close:hover{background:#e6ebe9}
+html[data-theme="day"] .detail-explanation-content{
+  color:#3a5665;scrollbar-color:#a5b9c1 transparent;
+}
+html[data-theme="day"] .detail-guide-intro{
+  color:#2b4351;border-left-color:#a67926;
+}
+html[data-theme="day"] .detail-guide-section h4{color:#8c6021}
+html[data-theme="day"] .detail-guide-body strong{color:#203745}
+html[data-theme="day"] .detail-guide-caution{
+  border-top-color:#d7e1e1;color:#805a25;
+}
+html[data-theme="day"] .detail-guide-sources{border-top-color:#d7e1e1;color:#536c78}
+html[data-theme="day"] .detail-guide-sources strong{color:#29414e}
+html[data-theme="day"] .detail-guide-sources a{color:#12627b}
+
+/* Small phones: title remains visible, guide fills graph area only when opened. */
+@media(max-width:780px){
+ .detail-explanation-toggle{padding:6px 8px;font-size:10.5px;min-height:33px;gap:5px}
+ .detail-explanation-pane{
+  left:7px;right:7px;width:auto;top:53px;bottom:7px;
+  border-radius:10px;
+ }
+ .detail-explanation-head{padding:12px 13px 10px}
+ .detail-explanation-head h3{font-size:15px}
+ .detail-explanation-content{padding:13px 14px 24px;font-size:12px}
+}
+@media(max-width:390px){
+ .detail-actions{gap:4px}
+ .detail-explanation-toggle{min-height:32px;padding:5px 6px;font-size:10px;gap:4px}
+ .detail-explanation-toggle span{font-size:12px}
+ .detail-explanation-head h3{font-size:14px}
+ .detail-explanation-head{gap:5px}
+ .detail-guide-section h4{font-size:12px}
+}
