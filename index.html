@@ -658,15 +658,15 @@
 @media(max-width:880px){.dashboard>.policy-panel{order:4;min-height:355px;height:355px;display:flex;flex-direction:column}.dashboard>.policy-panel .chart-container{min-height:140px;flex:1 1 auto}.v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:690px){.v4-grid{grid-template-columns:1fr}.v4-card{min-height:270px}.v4-section-header{flex-wrap:wrap}}
 </style>
-<link rel="stylesheet" href="./theme.css?v=20261121-equal-rows-2" />
+<link rel="stylesheet" href="./theme.css?v=20261121-compact-rows-3" />
 <style id="dashboard-layout-critical">
 /* Critical layout is deliberately AFTER the optional theme stylesheet.
    An existing browser cache of theme.css cannot restore unequal grid rows. */
 @media (min-width:1200px){
- .site .dashboard{grid-template-rows:repeat(2,minmax(545px,1fr))}
+ .site .dashboard{grid-template-rows:repeat(2,300px)}
 }
 @media (min-width:881px) and (max-width:1199px){
- .site .dashboard{grid-template-rows:repeat(2,minmax(535px,1fr)) 180px}
+ .site .dashboard{grid-template-rows:repeat(2,300px) 180px}
 }
 @media (min-width:881px){
  /* Match both cards' padding and flex subtrees even with a previously cached
@@ -684,27 +684,27 @@
  }
  .site .dashboard>.main-panel>.panel-head,
  .site .dashboard>.ratio-panel>.panel-head{
-  box-sizing:border-box;height:72px;min-height:72px;flex:0 0 72px;
+  box-sizing:border-box;height:42px;min-height:42px;flex:0 0 42px;
   margin-bottom:7px;align-items:flex-start;
  }
  .site .dashboard>.main-panel .native-canvas .native-legend,
  .site .dashboard>.ratio-panel .native-canvas .native-legend{
-  box-sizing:border-box;flex:0 0 23px;min-height:23px;max-height:23px;
+  box-sizing:border-box;flex:0 0 20px;min-height:20px;max-height:20px;
   overflow:hidden;align-content:center;
  }
  .site .dashboard>.main-panel .native-canvas .native-note,
  .site .dashboard>.ratio-panel .native-canvas .native-note{
-  box-sizing:border-box;flex:0 0 85px;min-height:85px;max-height:85px;
+  box-sizing:border-box;flex:0 0 42px;min-height:42px;max-height:42px;
   overflow:hidden;align-content:flex-start;
  }
  .site .dashboard>.main-panel .native-canvas .native-series,
  .site .dashboard>.ratio-panel .native-canvas .native-series{
-  flex:1 1 auto;min-height:140px;
+  flex:1 1 auto;min-height:90px;
  }
  .site .dashboard>.curve-panel #curve-graph,
  .site .dashboard>.real-panel #real-graph{
-  box-sizing:border-box;height:175px;min-height:175px;
-  max-height:175px;flex:0 0 175px;
+  box-sizing:border-box;height:90px;min-height:90px;
+  max-height:90px;flex:0 0 90px;
  }
 }
 </style>
@@ -796,7 +796,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.5.1</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.5.2</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
