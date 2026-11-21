@@ -35,7 +35,7 @@ jobs:
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           const legacy=fs.readFileSync('legacy-theme.css','utf8');
           const result={cases:{},errors:[]};
-          const base='https://cgam-coder.github.io/metals-terminal/?version=20261121-v454-filled';
+          const base='https://cgam-coder.github.io/metals-terminal/?version=20261121-v47-native';
           const check=(ok,why)=>{if(!ok)throw Error(why);};
           for(const [name,width,height] of [['user-image',1495,774],['desktop',1440,900],['medium',1200,820],['small-desktop',1024,820],['mobile',390,844]]){
            for(const oldCSS of [false,true]){
@@ -47,7 +47,7 @@ jobs:
             if(oldCSS)await page.route(/\/theme\.css(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'text/css',body:legacy}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
-             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.6'),null,{timeout:28000});
+             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.7'),null,{timeout:28000});
              // Isolated test-only fixtures: prove actual SVG geometry without
              // relying on slow third-party market APIs or altering production data.
              await page.evaluate(()=>{
@@ -74,8 +74,8 @@ jobs:
                };
              });
              result.cases[key]=obj;
-             check(obj.href.includes('?v=20261121-indices-v46'),'stylesheet does not use new asset URL');
-             check(obj.version.includes('V4.6'),'stale HTML');
+             check(obj.href.includes('?v=20261121-indices-v47'),'stylesheet does not use new asset URL');
+             check(obj.version.includes('V4.7'),'stale HTML');
              check(obj.overflow<=width+1,'overflow '+key);
              if(width>880){
               const same=(a,b)=>Math.abs(a.height-b.height)<=2;
