@@ -68,6 +68,8 @@ jobs:
                 const measure=async(key)=>{
                   await page.waitForTimeout(250);
                   const value=await read(page);
+                  result.cases[label]??={};
+                  result.cases[label][key]=value;
                   check(value.metrics.length===4&&value.values.length===4,'four real Treasury values must be visible '+key);
                   check(value.changes.length===3,'three changes missing '+key);
                   check(value.title.bottom<=value.controls.top+2,'header title collides with controls '+key+' '+JSON.stringify(value));
