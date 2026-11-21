@@ -1,0 +1,125 @@
+name: 'Verificar cinco indices y nueva distribucion'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/verify-indices-v46.yml'
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Comprobar sintaxis del controlador
+        run: node --check indices.js
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Revisar cuadricula y proveedor real sin capturar precios protegidos
+        run: |
+          mkdir -p evidence-index-v46
+          cat > check-v46.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const out={errors:[],tests:{},at:new Date().toISOString()};
+          const must=(test,msg)=>{if(!test)throw Error(msg)};
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&check=v46index';
+          const capture=async page=>page.evaluate(()=>{
+           const box=s=>{const el=document.querySelector(s);if(!el)return null;const b=el.getBoundingClientRect();return {x:b.x,y:b.y,right:b.right,bottom:b.bottom,width:b.width,height:b.height,scrollHeight:el.scrollHeight,clientHeight:el.clientHeight}};
+           const frame=el=>el?.querySelectorAll('iframe').length||0;
+           return {
+            theme:document.documentElement.dataset.theme||'night',
+            grid:getComputedStyle(document.querySelector('.dashboard')).gridTemplateAreas,
+            rows:getComputedStyle(document.querySelector('.dashboard')).gridTemplateRows,
+            viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+            curve:box('.curve-panel'),indices:box('.indices-panel'),main:box('.main-panel'),
+            ratio:box('.ratio-panel'),reals:box('.real-panel'),policy:box('.policy-panel'),
+            indexHost:box('#indices-comparison'),indexIframes:frame(document.querySelector('#indices-comparison')),
+            indexScripts:[...document.querySelectorAll('#indices-comparison script')].map(x=>x.src),
+            symbols:window.METALS_INDICES_SYMBOLS||[],
+            windowLabel:document.querySelector('#indices-window')?.textContent,
+            sourceLinks:[...document.querySelectorAll('.indices-panel a')].map(x=>x.href),
+            version:document.querySelector('#version')?.textContent,
+            chartMainSvg:!!document.querySelector('#chart-main svg'),
+            curveSvg:!!document.querySelector('#curve-graph svg')
+           };
+          });
+          try{
+           for(const [name,width,height] of [['wide',1600,900],['desktop',1495,770],['breakpoint',1200,810],['medium',1024,820],['mobile',390,844]]){
+            const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+            const page=await context.newPage();
+            page.on('pageerror',e=>out.errors.push({name,type:'runtime',error:e.stack||e.message}));
+            try{
+             await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+             await page.waitForFunction(()=>window.METALS_INDICES_SYMBOLS?.length===5,null,{timeout:20000});
+             let state=await capture(page);
+             out.tests[name]={start:state};
+             must(state.version.includes('V4.6'),'wrong version '+state.version);
+             must(state.symbols.length===5,'missing index symbols');
+             must(JSON.stringify(state.symbols)===JSON.stringify(['SP:SPX','NASDAQ:IXIC','DJ:DJI','TVC:RUT','TVC:SX5E']),'wrong symbols or proxies');
+             must(state.indexScripts.some(x=>x.includes('tradingview.com/external-embedding/embed-widget-advanced-chart.js')),'official comparison widget not requested');
+             must(state.scrollWidth<=width+1,'horizontal overflow '+name);
+             must(state.windowLabel.includes('1M'),'period not shown '+name);
+             const eq=(a,b,tol=2)=>Math.abs(a-b)<=tol;
+             if(width>=1200){
+              must(state.grid.includes('"curve main real"')&&state.grid.includes('"indices ratio policy"'),'desktop layout wrong '+state.grid);
+              must(eq(state.curve.y,state.main.y)&&eq(state.main.y,state.reals.y),'top row misaligned');
+              must(eq(state.indices.y,state.ratio.y)&&eq(state.ratio.y,state.policy.y),'lower row misaligned');
+              must(eq(state.reals.height,state.policy.height)&&eq(state.reals.height,state.main.height),'right-side height not halved');
+              must(eq(state.indices.width,state.curve.width),'left charts widths differ');
+             }else if(width>880){
+              must(state.grid.includes('"real real"')&&state.grid.includes('"policy policy"'),'mid-size right panels not stacked');
+              must(state.reals.y<state.policy.y,'TIPS not above Fed/BCE in medium viewport');
+              must(eq(state.indices.height,state.main.height),'medium card sizes not aligned');
+             }else{
+              must(state.indices.height>=250,'mobile index chart too small');
+              must(state.indices.width>=width-40,'mobile index chart not full width');
+             }
+             // Actual iframe readiness is useful but can be blocked by external
+             // widget CDNs. The provider must never be replaced by fake prices.
+             try{await page.waitForFunction(()=>document.querySelector('#indices-comparison iframe'),null,{timeout:18000})}catch(e){}
+             state=await capture(page);
+             out.tests[name].loaded=state;
+             await page.locator('[data-inspect="indices"]').click();
+             must(!(await page.locator('#detail-overlay').evaluate(el=>el.hidden)),'index detail did not open');
+             must((await page.locator('#detail-title').textContent()).includes('Nasdaq Composite'),'detail missing name');
+             const widgetInModal=await page.locator('#detail-chart script[src*="embed-widget-advanced-chart"]').count();
+             must(widgetInModal===1,'expanded official widget not mounted');
+             await page.locator('#detail-close').click();
+             must(await page.locator('#detail-overlay').evaluate(el=>el.hidden),'detail does not close');
+             await page.locator('[data-global-period="10y"]').click();
+             await page.waitForFunction(()=>document.querySelector('#indices-window')?.textContent?.includes('10A'),null,{timeout:10000});
+             must((await capture(page)).windowLabel.includes('10A'),'decade did not propagate');
+             await page.locator('#theme-toggle').click();
+             must((await capture(page)).theme==='day','day theme not propagated');
+             await page.screenshot({path:'evidence-index-v46/'+name+'-day.png',fullPage:false});
+             out.tests[name].complete=true;
+            }catch(e){out.errors.push({name,type:'test',error:String(e)})}
+            await context.close();
+           }
+          }finally{
+           await browser.close();
+           fs.writeFileSync('evidence-index-v46/result.json',JSON.stringify(out,null,2));
+           console.log('INDICES_V46_RESULT '+JSON.stringify(out));
+           if(out.errors.length)process.exitCode=1;
+          }
+          EOF
+          node check-v46.mjs
+      - name: Conservar evidencia
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: equity-index-layout
+          path: evidence-index-v46/
+          retention-days: 7
