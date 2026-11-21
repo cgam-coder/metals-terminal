@@ -2234,7 +2234,7 @@ function renderCurve(){
   '<div class="yield-metric"><span>Treasury 2Y</span><strong>'+fmt(now.DGS2)+' %</strong></div>'+
   '<div class="yield-metric"><span>Treasury 10Y</span><strong>'+fmt(now.DGS10)+' %</strong></div>'+
   '<div class="yield-metric"><span>Treasury 30Y</span><strong>'+fmt(now.DGS30)+' %</strong></div>'+
-  '<div class="yield-metric"><span>Diferencial 10Y − 2Y</span><strong class="'+(spread>=0?"yield-spread-positive":"yield-spread-negative")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</strong></div>';
+  '<div class="yield-metric"><span title="Diferencial entre las rentabilidades Treasury 10Y y 2Y">10Y − 2Y</span><strong class="'+(spread>=0?"yield-spread-positive":"yield-spread-negative")+'">'+(spread>=0?"+":"")+fmt(spread)+' pp</strong></div>';
 }
 function renderReals(){
  macroPlotCache.delete("real-graph");
