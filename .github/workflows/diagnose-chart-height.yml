@@ -52,6 +52,23 @@ jobs:
             await page.close();
           }
           await b.close();
+          for(const [name,caseData] of Object.entries(result.cases)){
+            const panels=caseData;
+            if(name.startsWith('mobile'))continue;
+            const close=(a,b,tol=3)=>Math.abs(a-b)<=tol;
+            const futures=panels.futures,ratio=panels.ratio,treasury=panels.treasury,tips=panels.tips;
+            if(!close(futures.panel.height,ratio.panel.height))result.errors.push({name,error:'Centre cards have different heights'});
+            if(!close(treasury.panel.height,tips.panel.height))result.errors.push({name,error:'Side cards have different heights'});
+            if(!close(futures.svg.height,ratio.svg.height))result.errors.push({name,error:'Centre SVG heights differ '+futures.svg.height+' vs '+ratio.svg.height});
+            if(!close(treasury.svg.height,tips.svg.height))result.errors.push({name,error:'Side SVG heights differ '+treasury.svg.height+' vs '+tips.svg.height});
+            for(const key of ['futures','ratio']){
+              const note=panels[key].note,legend=panels[key].legend;
+              if(note.scrollHeight>note.clientHeight+2)result.errors.push({name,error:key+' note clipped '+note.scrollHeight+'/'+note.clientHeight});
+              if(legend.scrollHeight>legend.clientHeight+2)result.errors.push({name,error:key+' legend clipped '+legend.scrollHeight+'/'+legend.clientHeight});
+              if(panels[key].svg.height<175)result.errors.push({name,error:key+' chart is too short'});
+            }
+            if(treasury.svg.height<160||tips.svg.height<160)result.errors.push({name,error:'Sidebar plot area too short'});
+          }
           fs.writeFileSync('evidence-plot-heights/results.json',JSON.stringify(result,null,2));
           console.log('PLOT_HEIGHT_DIAGNOSTIC '+JSON.stringify(result));
           if(result.errors.length)process.exitCode=1;
