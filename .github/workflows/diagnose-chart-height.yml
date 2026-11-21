@@ -24,12 +24,12 @@ jobs:
           import {chromium} from 'playwright';
           import fs from 'node:fs';
           const b=await chromium.launch({headless:true,args:['--no-sandbox']});
-          const result={test:'compact-equal-desktop-plot-v452',cases:{},errors:[]};
+          const result={test:'v454-interior-plot-fill',cases:{},errors:[]};
           for(const [name,width,height,day] of [['desktop-1426',1426,763,false],['desktop-1600',1600,900,true],['desktop-1200',1200,800,false],['tablet-1024',1024,850,true],['mobile-390',390,844,false]]){
             const page=await b.newPage({viewport:{width,height}});
             page.on('pageerror',e=>result.errors.push({name,error:e.stack||e.message}));
             try{
-              await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&measure=compact20261121',{waitUntil:'domcontentloaded',timeout:47000});
+              await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&measure=filled20261121',{waitUntil:'domcontentloaded',timeout:47000});
               await page.waitForFunction(()=>marketChartCache.has('chart-main')&&marketChartCache.has('chart-ratio')&&macroPlotCache.has('curve-graph')&&macroPlotCache.has('real-graph'),null,{timeout:110000});
               await page.waitForTimeout(400);
               if(day)await page.locator('#theme-toggle').click();
@@ -47,6 +47,21 @@ jobs:
                 };
               });
               result.cases[name]=measure;
+              const collapsed=await page.evaluate(()=>({
+                main:document.querySelector('#chart-main .native-note-disclosure')?.open,
+                ratio:document.querySelector('#chart-ratio .native-note-disclosure')?.open,
+                mainVisible:getComputedStyle(document.querySelector('#chart-main .native-note-disclosure')).display,
+                mobileFull:getComputedStyle(document.querySelector('#chart-main .native-note-mobile')).display,
+                mainText:document.querySelector('#chart-main .native-note-popover')?.textContent?.trim()
+              }));
+              result.cases[name].method=collapsed;
+              if(width>880){
+                if(collapsed.mainVisible==='none'||collapsed.mainText.length<45)result.errors.push({name,error:'Desktop disclosure did not preserve methodology'});
+                await page.locator('#chart-main .native-note-disclosure summary').click();
+                const opened=await page.locator('#chart-main .native-note-disclosure').evaluate(el=>el.open);
+                if(!opened)result.errors.push({name,error:'Desktop methodology does not open'});
+                await page.locator('#chart-main .native-note-disclosure summary').click();
+              }else if(collapsed.mobileFull==='none'||collapsed.mainVisible!=='none')result.errors.push({name,error:'Mobile original full note not preserved'});
               await page.locator('.dashboard').screenshot({path:'evidence-plot-heights/'+name+'.png',timeout:25000});
             }catch(e){result.errors.push({name,error:String(e)})}
             await page.close();
@@ -62,14 +77,15 @@ jobs:
             if(!close(treasury.panel.height,tips.panel.height))result.errors.push({name,error:'Side cards have different heights'});
             if(treasury.panel.height>310||treasury.panel.height<295)result.errors.push({name,error:'Side panels not compact: '+treasury.panel.height});
             if(!close(futures.svg.height,ratio.svg.height))result.errors.push({name,error:'Centre SVG heights differ '+futures.svg.height+' vs '+ratio.svg.height});
-            if(!close(treasury.svg.height,tips.svg.height))result.errors.push({name,error:'Side SVG heights differ '+treasury.svg.height+' vs '+tips.svg.height});
+            if(treasury.svg.height<105)result.errors.push({name,error:'Treasury SVG underused '+treasury.svg.height});
+            if(tips.svg.height<145)result.errors.push({name,error:'TIPS SVG underused '+tips.svg.height});
             for(const key of ['futures','ratio']){
               const note=panels[key].note,legend=panels[key].legend;
               if(note.scrollHeight>note.clientHeight+2)result.errors.push({name,error:key+' note clipped '+note.scrollHeight+'/'+note.clientHeight});
               if(legend.scrollHeight>legend.clientHeight+2)result.errors.push({name,error:key+' legend clipped '+legend.scrollHeight+'/'+legend.clientHeight});
-              if(panels[key].svg.height<95)result.errors.push({name,error:key+' chart is too short: '+panels[key].svg.height});
+              if(panels[key].svg.height<143)result.errors.push({name,error:key+' chart still underuses panel: '+panels[key].svg.height});
             }
-            if(treasury.svg.height<80||tips.svg.height<80)result.errors.push({name,error:'Sidebar plot area too short'});
+            if(!panels.futures.panel||!panels.ratio.panel)result.errors.push({name,error:'Main cards missing'});
             for(const key of ['futures','ratio','treasury','tips']){
               const g=panels[key];if(g.panel.scrollHeight>g.panel.clientHeight+2)result.errors.push({name,error:key+' panel content overflow '+g.panel.scrollHeight+'/'+g.panel.clientHeight});
             }
