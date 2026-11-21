@@ -47,7 +47,7 @@ jobs:
             if(oldCSS)await page.route(/\/theme\.css(?:\?.*)?$/,route=>route.fulfill({status:200,contentType:'text/css',body:legacy}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
-             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.5.4'),null,{timeout:28000});
+             await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.6'),null,{timeout:28000});
              // Isolated test-only fixtures: prove actual SVG geometry without
              // relying on slow third-party market APIs or altering production data.
              await page.evaluate(()=>{
@@ -68,20 +68,27 @@ jobs:
                return {
                 version:document.querySelector('#version')?.textContent,href:link?.getAttribute('href'),
                 cssRows:style.gridTemplateRows,width:innerWidth,overflow:document.documentElement.scrollWidth,
-                main,ratio,treasury,tips,
+                main,ratio,treasury,tips,indices:box('.indices-panel'),policy:box('.policy-panel'),
                 futureSvg:box('#chart-main svg'),ratioSvg:box('#chart-ratio svg'),
                 curveSvg:box('#curve-graph'),tipsSvg:box('#real-graph')
                };
              });
              result.cases[key]=obj;
-             check(obj.href.includes('?v=20261121-plot-fill-v454'),'stylesheet does not use new asset URL');
-             check(obj.version.includes('V4.5.4'),'stale HTML');
+             check(obj.href.includes('?v=20261121-indices-v46'),'stylesheet does not use new asset URL');
+             check(obj.version.includes('V4.6'),'stale HTML');
              check(obj.overflow<=width+1,'overflow '+key);
              if(width>880){
               const same=(a,b)=>Math.abs(a.height-b.height)<=2;
               check(same(obj.main,obj.ratio),'main/ratio not equal '+key);
-              check(same(obj.treasury,obj.tips),'Treasury/TIPS not equal '+key);
+              check(same(obj.treasury,obj.indices),'Treasury/indices cards not equal '+key);
+              check(same(obj.tips,obj.policy),'TIPS/policy cards not equal '+key);
               check(same(obj.main,obj.treasury),'upper row not aligned '+key);
+              if(width>=1200){
+                check(Math.abs(obj.tips.top-obj.main.top)<=2,'TIPS not on upper row '+key);
+                check(Math.abs(obj.policy.top-obj.ratio.top)<=2,'policy not on bottom row '+key);
+              }else{
+                check(obj.tips.top<obj.policy.top,'TIPS must precede policy '+key);
+              }
               check(same(obj.futureSvg,obj.ratioSvg),'real futures/ratio SVGs unequal '+key);
               check(obj.curveSvg.height>=100&&obj.tipsSvg.height>=140,'macro plots underused '+key);
               check(obj.futureSvg.height>=140&&obj.ratioSvg.height>=140,'plots too short '+key);
