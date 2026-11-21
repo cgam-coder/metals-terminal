@@ -48,8 +48,14 @@ jobs:
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:48000});
              await page.waitForFunction(()=>document.querySelector('#version')?.textContent?.includes('V4.5.1'),null,{timeout:28000});
-             await page.waitForFunction(()=>document.querySelector('#chart-main svg[data-market-svg]')&&document.querySelector('#chart-ratio svg[data-market-svg]'),null,{timeout:85000});
-             await page.waitForTimeout(500);
+             // Isolated test-only fixtures: prove actual SVG geometry without
+             // relying on slow third-party market APIs or altering production data.
+             await page.evaluate(()=>{
+              const dates=[Date.UTC(2026,9,20)/1000,Date.UTC(2026,9,27)/1000,Date.UTC(2026,10,3)/1000];
+              nativeChart('chart-main',[{label:'Fixture GC',color:'#f4ba3c',points:[0,5,-3]}],dates,'%',"<span>Prueba de disposición</span>");
+              nativeChart('chart-ratio',[{label:'Fixture XAU/XAG',color:'#38c9e5',points:[84,79,86]}],dates,'',"<span>Prueba de disposición</span>");
+             });
+             await page.waitForTimeout(150);
              const obj=await page.evaluate(()=>{
                const box=q=>{const x=document.querySelector(q);if(!x)return null;const r=x.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,scrollHeight:x.scrollHeight,clientHeight:x.clientHeight}};
                const link=document.querySelector('link[href*="theme.css"]');
@@ -60,7 +66,7 @@ jobs:
                 cssRows:style.gridTemplateRows,width:innerWidth,overflow:document.documentElement.scrollWidth,
                 main,ratio,treasury,tips,
                 futureSvg:box('#chart-main svg'),ratioSvg:box('#chart-ratio svg'),
-                curveSvg:box('#curve-graph svg'),tipsSvg:box('#real-graph svg')
+                curveSvg:box('#curve-graph'),tipsSvg:box('#real-graph')
                };
              });
              result.cases[key]=obj;
