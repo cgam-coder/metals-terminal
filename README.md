@@ -2,6 +2,14 @@
 
 Web: https://cgam-coder.github.io/metals-terminal/
 
+## Filas compactas iguales — 21/11/2026
+
+Las dos filas de la cuadrícula de escritorio ocupaban aproximadamente 554 px cada una y el usuario solicitó compactarlas manteniendo la igualdad. V4.5.3 las reduce a **300 px cada una** para pantallas de 881 px de ancho o más; permanecen en paralelo y alineadas Futuros/Treasury y Ratio/TIPS. Se mantienen las columnas 26,5 % / 46,9 % / 26,5 %, mientras Fed/BCE ocupa ambas filas en escritorio ancho. En móvil se preserva el apilado existente.
+
+El diseño compacta de forma proporcionada la cabecera de Futuros/Ratio y los textos y estadísticas de Treasury/TIPS. Se reservan **66 px para las notas de procedencia** para que no se corten los avisos de futuros en 1200 px. Se mantienen completos los textos y los controles «Ampliar». En la vista publicada, el área SVG de Futuros y Ratio mide **108 px por gráfico**; Treasury y TIPS, **88 px por gráfico**. Son dimensiones del dibujo, no de la tarjeta.
+
+Se cambia la URL de estilos a `theme.css?v=20261121-compact-rows-4`, junto a reglas críticas de distribución en el HTML para evitar que un CSS anterior restaurase las filas altas. Verificación [GitHub Actions #44915034288](https://github.com/cgam-coder/metals-terminal/actions/runs/44915034288): **PASS** con hojas de estilos nuevas y antiguas simuladas en 1495, 1440, 1200, 1024 y 390 px. Otra prueba [#44914693683](https://github.com/cgam-coder/metals-terminal/actions/runs/44914693683) comprobó 300px, paridad real de SVG, contenido no recortado y resultados de navegador. No se modificaron datos, cálculos ni ventanas temporales.
+
 ## Corrección resistente a caché: igualdad de filas en producción — 21/11/2026
 
 Se detectó una discrepancia entre las capturas del navegador habitual y las pruebas con un navegador nuevo: un cliente podía conservar una copia antigua de `theme.css` porque el HTML la referenciaba sin versión. Esa copia mantenía la distribución anterior, con una primera fila alta y la segunda corta, a pesar de que el repositorio ya contenía el ajuste.
