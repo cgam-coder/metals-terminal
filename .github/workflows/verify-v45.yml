@@ -1,19 +1,14 @@
 name: 'Verificar V4.5 - horizonte diez años'
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'index.html'
-      - 'quality.js'
-      - 'data/series.json'
-      - 'data/vix-history.json'
-      - 'data/v4-gvz-snapshot.json'
-      - 'data/v4-cot-snapshot.json'
-      - '.github/workflows/verify-v45.yml'
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
 permissions:
   contents: read
 jobs:
   test:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -82,7 +77,7 @@ jobs:
                 await page.waitForTimeout(600);
                 let st=await read(page);
                 out.cases[label]=st;
-                check((st.version.includes('V4.5')||st.version.includes('V4.6')),'version not deployed');
+                check((st.version.includes('V4.5')||st.version.includes('V4.6')||st.version.includes('V4.7')),'version not deployed');
                 check(st.period==='10y'&&st.selectedMain==='10A','10A not activated');
                 check(st.mainButtons.at(-1)==='10A'&&st.modalButtons.at(-1)==='10A','10A missing in expanded controls');
                 check(st.mainButtons.length===11&&st.modalButtons.length===11,'changed previous intervals');

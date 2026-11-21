@@ -121,6 +121,36 @@ jobs:
           console.log('REAL_SOURCE_DIAGNOSTIC '+JSON.stringify(result));
           if(result.some(x=>!x.available))process.exitCode=1;
           EOF
+      - name: Probar curva real de cinco índices en el navegador publicado
+        run: |
+          node --input-type=module - <<'EOF'
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          let pass=false,last='';
+          try{
+           for(let n=1;n<=2&&!pass;n++){
+            const page=await browser.newPage({viewport:{width:1450,height:850}});
+            try{
+             await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&realindex=v47',{waitUntil:'domcontentloaded',timeout:42000});
+             await page.waitForFunction(()=>{
+              const host=document.getElementById('indices-comparison');
+              return host?.dataset.indicesCount==='5'&&host.querySelectorAll('svg path').length===5;
+             },null,{timeout:35000});
+             const result=await page.evaluate(()=>({
+              version:document.getElementById('version')?.textContent,
+              count:document.getElementById('indices-comparison')?.dataset.indicesCount,
+              until:document.getElementById('indices-comparison')?.dataset.indicesLast,
+              dates:document.getElementById('indices-window')?.textContent,
+              paths:document.querySelectorAll('#indices-comparison svg path').length
+             }));
+             console.log('REAL_BROWSER_INDICES '+JSON.stringify(result));
+             if(result.count==='5'&&result.paths===5){pass=true;break;}
+            }catch(e){last=String(e);console.warn('Real browser attempt '+n+': '+last)}
+            finally{await page.close();}
+           }
+          }finally{await browser.close();}
+          if(!pass)throw Error('La curva real de cinco índices no cargó en el navegador: '+last);
+          EOF
       - name: Conservar evidencias
         if: always()
         uses: actions/upload-artifact@v4

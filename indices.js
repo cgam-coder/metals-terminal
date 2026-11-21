@@ -89,6 +89,13 @@
    empty("No hay dos cierres comunes en "+currentLabel()+". Selecciona un periodo mayor.",true);
    foot.textContent=currentLabel()+" · cobertura insuficiente";return;
   }
+  const requestedStart=p==="custom"&&range?range.from:dateString(cutoff);
+  const requestedDays=Math.max(1,(Date.parse(end+"T00:00:00Z")-Date.parse(requestedStart+"T00:00:00Z"))/86400000);
+  const uncoveredDays=Math.max(0,(Date.parse(days[0]+"T00:00:00Z")-Date.parse(requestedStart+"T00:00:00Z"))/86400000);
+  const shortCoverage=uncoveredDays>Math.max(4,requestedDays*.28);
+  const stale=(Date.now()-Date.parse(days.at(-1)+"T00:00:00Z"))/86400000>14;
+  const coverageNotice=(shortCoverage?" Histórico temporal incompleto para "+currentLabel()+".":"")+
+   (stale?" Última observación antigua; comprobar frescura.":"");
   const dateTimes=days.map(d=>Date.parse(d+"T18:00:00Z")/1000);
   const lines=available.map((entry,i)=>{
    const map=maps[i],start=map.get(days[0]).c;
@@ -98,7 +105,7 @@
   const warning=missing.length?" Cobertura parcial, faltan "+missing.map(m=>m.name).join(", ")+".":"";
   const html='<span>Índices de precios · cierre diario · variación acumulada desde '+
    days[0]+' (base 0 %). '+days.length+' sesiones comunes, sin interpolaciones.'+
-   escapeHTML(warning)+' No incluye dividendos ni conversión de divisa. '+
+   escapeHTML(warning+coverageNotice)+' No incluye dividendos ni conversión de divisa. '+
    'Fuente: Yahoo Finance (API pública no oficial vía proxy cors.dev). '+
    '<a href="'+SOURCE+'" target="_blank" rel="noopener noreferrer">Consultar fuente</a>.</span>';
   plot={lines,dates:dateTimes,note:html,count:days.length,first:days[0],last:days.at(-1),missing};
@@ -107,7 +114,7 @@
   host.dataset.indicesCount=String(available.length);
   host.dataset.indicesLast=days.at(-1);
   foot.textContent=currentLabel()+" · "+days.length+" cierres comunes · "+days[0]+" a "+days.at(-1)+
-   " · "+available.length+"/5 índices";
+   " · "+available.length+"/5 índices"+(shortCoverage?" · histórico parcial":"")+(stale?" · revisar frescura":"");
   if(typeof detailKind!=="undefined"&&detailKind==="indices"&&el("detail-overlay")&&!el("detail-overlay").hidden)
    drawMarketDetail();
  }
