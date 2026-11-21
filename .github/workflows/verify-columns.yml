@@ -38,7 +38,7 @@ jobs:
             const info=el=>el?{top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}:null;
             return {
               viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,theme:document.documentElement.dataset.theme||'night',
-              dashboard:box('.dashboard'),curve:box('.curve-panel'),reals:box('.real-panel'),main:box('.main-panel'),ratio:box('.ratio-panel'),policy:box('.policy-panel'),
+              dashboard:box('.dashboard'),curve:box('.curve-panel'),indices:box('.indices-panel'),reals:box('.real-panel'),main:box('.main-panel'),ratio:box('.ratio-panel'),policy:box('.policy-panel'),
               mainChart:box('#chart-main'),ratioChart:box('#chart-ratio'),
               mainTitle:box('.main-panel .panel-title'),ratioTitle:box('.ratio-panel .panel-title'),policyTitle:box('.policy-panel .panel-title'),
               curveTitle:box('.curve-panel .panel-title'),
@@ -68,24 +68,28 @@ jobs:
                 if(width>880){
                   const equal=(a,b)=>Math.abs(a.height-b.height)<=2;
                   check(equal(snapshot.main,snapshot.ratio),'centre panel rows unequal '+name+': '+snapshot.main.height+' vs '+snapshot.ratio.height);
-                  check(equal(snapshot.curve,snapshot.main),'Treasury not aligned with Futures '+name);
-                  check(equal(snapshot.reals,snapshot.ratio),'TIPS not aligned with Ratio '+name);
-                  check(Math.abs(snapshot.curve.top-snapshot.main.top)<=2,'top row vertical misalignment '+name);
-                  check(Math.abs(snapshot.reals.top-snapshot.ratio.top)<=2,'bottom row vertical misalignment '+name);
+                  check(equal(snapshot.curve,snapshot.indices),'left cards misaligned '+name);
+                  check(equal(snapshot.reals,snapshot.policy),'TIPS and Fed/BCE heights unequal '+name);
                   check(snapshot.mainChart.height>=120&&snapshot.ratioChart.height>=120,'centre charts must remain legible '+name);
-                  if(width>=1200)check(Math.abs(snapshot.policy.height-(snapshot.main.height+snapshot.ratio.height+10))<=3,'policy must span both equal rows '+name);
-                }
-                if(width>=1200){
-                  const sum=snapshot.curve.width+snapshot.main.width+snapshot.policy.width;
-                  const fractions=[snapshot.curve.width/sum,snapshot.main.width/sum,snapshot.policy.width/sum];
-                  result.cases[name].fractions=fractions;
-                  check(fractions[0]>.25&&fractions[0]<.28,'Treasury side not widened '+name+JSON.stringify(fractions));
-                  check(fractions[1]>.45&&fractions[1]<.49,'center not reduced '+name+JSON.stringify(fractions));
-                  check(fractions[2]>.25&&fractions[2]<.28,'right side not widened '+name+JSON.stringify(fractions));
-                  check(Math.abs(snapshot.curve.width-snapshot.policy.width)<3,'side widths unbalanced '+name);
-                  check(Math.abs(snapshot.main.x-snapshot.ratio.x)<3&&Math.abs(snapshot.main.width-snapshot.ratio.width)<3,'main/ratio not aligned '+name);
-                  check(snapshot.curve.right<=snapshot.main.left+2&&snapshot.main.right<=snapshot.policy.left+2,'horizontal panel overlap '+name);
-                  check(snapshot.reals.right<=snapshot.ratio.left+2,'lower row overlap '+name);
+                  if(width>=1200){
+                    check(equal(snapshot.curve,snapshot.main)&&equal(snapshot.main,snapshot.reals),'top row heights differ');
+                    check(equal(snapshot.indices,snapshot.ratio)&&equal(snapshot.ratio,snapshot.policy),'bottom row heights differ');
+                    check(Math.abs(snapshot.curve.top-snapshot.main.top)<=2&&Math.abs(snapshot.main.top-snapshot.reals.top)<=2,'top row misalignment '+name);
+                    check(Math.abs(snapshot.indices.top-snapshot.ratio.top)<=2&&Math.abs(snapshot.ratio.top-snapshot.policy.top)<=2,'bottom row misalignment '+name);
+                    const sum=snapshot.curve.width+snapshot.main.width+snapshot.policy.width;
+                    const fractions=[snapshot.curve.width/sum,snapshot.main.width/sum,snapshot.policy.width/sum];
+                    result.cases[name].fractions=fractions;
+                    check(fractions[0]>.25&&fractions[0]<.28,'Treasury side not widened '+name+JSON.stringify(fractions));
+                    check(fractions[1]>.45&&fractions[1]<.49,'center not reduced '+name+JSON.stringify(fractions));
+                    check(fractions[2]>.25&&fractions[2]<.28,'right side not widened '+name+JSON.stringify(fractions));
+                    check(Math.abs(snapshot.curve.width-snapshot.policy.width)<3,'side widths unbalanced '+name);
+                    check(Math.abs(snapshot.main.x-snapshot.ratio.x)<3&&Math.abs(snapshot.main.width-snapshot.ratio.width)<3,'main/ratio not aligned '+name);
+                    check(snapshot.curve.right<=snapshot.main.left+2&&snapshot.main.right<=snapshot.policy.left+2,'horizontal panel overlap '+name);
+                    check(snapshot.indices.right<=snapshot.ratio.left+2&&snapshot.ratio.right<=snapshot.policy.left+2,'lower row overlap '+name);
+                  }else{
+                    check(snapshot.reals.top<snapshot.policy.top,'TIPS not above Fed/BCE in medium view');
+                    check(snapshot.curve.top<snapshot.indices.top,'indices not below Treasury in medium view');
+                  }
                 }
                 if(width>=1200)check(snapshot.curveTitle.bottom<=snapshot.curve.bottom+1,'Treasury header clipped '+name);
                 await page.screenshot({path:'evidence-columns/'+name+'-'+(day?'day':'night')+'.png',fullPage:false});
