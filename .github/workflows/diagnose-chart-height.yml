@@ -1,0 +1,66 @@
+name: 'Diagnosticar altura real de graficos'
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/diagnose-chart-height.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Preparar Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Comprobar el trazado interior y la altura de cada tarjeta
+        run: |
+          mkdir -p evidence-plot-heights
+          cat > heights.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const b=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const result={test:'interior-plot-vs-panel',cases:{},errors:[]};
+          for(const [name,width,height,day] of [['desktop-1426',1426,763,false],['desktop-1600',1600,900,true],['desktop-1200',1200,800,false],['tablet-1024',1024,850,true],['mobile-390',390,844,false]]){
+            const page=await b.newPage({viewport:{width,height}});
+            page.on('pageerror',e=>result.errors.push({name,error:e.stack||e.message}));
+            try{
+              await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&measure=height20261121',{waitUntil:'domcontentloaded',timeout:47000});
+              await page.waitForFunction(()=>marketChartCache.has('chart-main')&&marketChartCache.has('chart-ratio')&&macroPlotCache.has('curve-graph')&&macroPlotCache.has('real-graph'),null,{timeout:110000});
+              await page.waitForTimeout(550);
+              if(day)await page.locator('#theme-toggle').click();
+              const measure=await page.evaluate(()=>{
+                const box=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();const style=getComputedStyle(e);return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,clientHeight:e.clientHeight,scrollHeight:e.scrollHeight,cssHeight:style.height,cssMinHeight:style.minHeight,flex:style.flex,align:style.alignItems,overflow:style.overflow}};
+                const svg=s=>{const e=document.querySelector(s);if(!e)return null;return {...box(s),viewBox:e.getAttribute('viewBox'),preserveAspectRatio:e.getAttribute('preserveAspectRatio')}};
+                return {
+                  zoom:devicePixelRatio,window:innerWidth,outerWindowHeight:innerHeight,scrollHeight:document.documentElement.scrollHeight,
+                  rowStyle:getComputedStyle(document.querySelector('.dashboard')).gridTemplateRows,
+                  futures:{panel:box('.main-panel'),host:box('#chart-main'),canvas:box('#chart-main .native-canvas'),series:box('#chart-main .native-series'),svg:svg('#chart-main svg[data-market-svg]'),legend:box('#chart-main .native-legend'),note:box('#chart-main .native-note')},
+                  ratio:{panel:box('.ratio-panel'),host:box('#chart-ratio'),canvas:box('#chart-ratio .native-canvas'),series:box('#chart-ratio .native-series'),svg:svg('#chart-ratio svg[data-market-svg]'),legend:box('#chart-ratio .native-legend'),note:box('#chart-ratio .native-note')},
+                  treasury:{panel:box('.curve-panel'),host:box('#curve-graph'),svg:svg('#curve-graph svg')},
+                  tips:{panel:box('.real-panel'),host:box('#real-graph'),svg:svg('#real-graph svg')},
+                  policy:{panel:box('.policy-panel'),host:box('#policy-graph'),svg:svg('#policy-graph svg')}
+                };
+              });
+              result.cases[name]=measure;
+              await page.locator('.dashboard').screenshot({path:'evidence-plot-heights/'+name+'.png',timeout:25000});
+            }catch(e){result.errors.push({name,error:String(e)})}
+            await page.close();
+          }
+          await b.close();
+          fs.writeFileSync('evidence-plot-heights/results.json',JSON.stringify(result,null,2));
+          console.log('PLOT_HEIGHT_DIAGNOSTIC '+JSON.stringify(result));
+          if(result.errors.length)process.exitCode=1;
+          EOF
+          node heights.mjs
+      - name: Guardar evidencia de diagnostico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plot-dimensions
+          path: evidence-plot-heights/
+          retention-days: 7
