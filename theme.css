@@ -793,3 +793,14 @@ html[data-theme="day"] .curve-panel .curve-bottom{
  #curve-range-summary .curve-period-move strong{font-size:9.5px}
  .curve-panel .mini-stats .yield-metric strong{font-size:11px}
 }
+
+
+/* Treasury card's previous 300–365px desktop grid row physically clipped the
+   footer despite correct text styling. Let the first desktop row fit the chart
+   and all four verified yield metrics; keep existing grid areas and columns. */
+@media(min-width:1200px){
+ .dashboard{grid-template-rows:minmax(545px,auto) 305px}
+}
+@media(min-width:881px) and (max-width:1199px){
+ .dashboard{grid-template-rows:minmax(535px,auto) 235px 180px}
+}
