@@ -84,7 +84,7 @@ jobs:
               await page.locator('#detail-explanation-toggle').click();
               must(await page.locator('#detail-explanation-pane').isVisible(),'guide '+id);
               const content=await page.locator('#detail-explanation-content').innerText();
-              must(content.includes('Eje X')&&content.includes('eje Y'),'axes '+id);
+              must(/eje x/i.test(content)&&/eje y/i.test(content),'axes '+id);
               await page.keyboard.press('Escape');await page.locator('#detail-close').click();
             }
             await page.locator('#theme-toggle').click();
