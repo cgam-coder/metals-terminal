@@ -27,15 +27,16 @@ jobs:
           };
           for(let i=0;i<urls.length;i+=3){results.push(...await Promise.all(urls.slice(i,i+3).map(run)));await new Promise(r=>setTimeout(r,500));}
           console.log('V51_SOURCES '+JSON.stringify(results));
-          // Validate whether the already-used source provides genuine pre-period observations
-          // for moving-average initialization, without adding another provider.
           const fut=[];
+          const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-11);d.setUTCDate(d.getUTCDate()-30);
           for(const symbol of ['GC=F','SI=F']){
             try{
-              const r=await fetch('https://proxy.cors.dev/https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?range=max&interval=1d',{headers:{Origin:'https://cgam-coder.github.io'},signal:AbortSignal.timeout(25000)});
+              const q=new URLSearchParams({period1:String(Math.floor(d.getTime()/1000)),period2:String(Math.floor(Date.now()/1000)),interval:'1d'});
+              const r=await fetch('https://proxy.cors.dev/https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?'+q,{headers:{Origin:'https://cgam-coder.github.io'},signal:AbortSignal.timeout(25000)});
               const x=(await r.json()).chart?.result?.[0],m=x?.meta;
-              fut.push({symbol,status:r.status,identity:m?.symbol,type:m?.instrumentType,rows:x?.timestamp?.length,first:new Date(x.timestamp[0]*1000).toISOString(),last:new Date(x.timestamp.at(-1)*1000).toISOString()});
+              fut.push({symbol,status:r.status,identity:m?.symbol,type:m?.instrumentType,interval:m?.dataGranularity,rows:x?.timestamp?.length,first:new Date(x.timestamp[0]*1000).toISOString(),last:new Date(x.timestamp.at(-1)*1000).toISOString()});
             }catch(e){fut.push({symbol,error:String(e)})}
+            await new Promise(r=>setTimeout(r,700));
           }
           console.log('V51_FUTURES '+JSON.stringify(fut));
           EOF
