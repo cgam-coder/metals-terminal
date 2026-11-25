@@ -1,12 +1,14 @@
 name: 'Verificar Metals Terminal V4.4 - calidad, periodos y móvil'
 on:
   workflow_dispatch:
-  push:
-    paths: [ 'quality.js', '.github/workflows/verify-v44.yml' ]
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
 permissions:
   contents: read
 jobs:
   smoke:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 11
     steps:
@@ -61,7 +63,7 @@ jobs:
                 await page.waitForFunction(()=>v4State.secHoldings?.gld?.length>10&&typeof window.renderMetalsQuality==='function',{timeout:30000});
                 await page.waitForTimeout(450);
                 let state=await snap(page);
-                must(state.version.includes('V4.4')||state.version.includes('V4.5'),'known deployed version not detected');
+                must(state.version.includes('V4.9'),'known deployed version not detected');
                 must(state.period==='1mo'&&!state.context,'default context is not global 1M');
                 must(state.etfPoints<2&&!state.etfChart,'ETF must not draw a 2y curve for 1M');
                 must(state.etfCaption?.includes('ANTES')&&state.etfCaption.includes('periodo'),'prior SEC report not labelled');
@@ -125,7 +127,7 @@ jobs:
               must(!state.reportOpen,'refresh report pushes dashboard');
               must(state.scrollWidth<=391,'refresh report creates overflow');
               await refresh.locator('.source-refresh-report summary').click();
-              must(await refresh.locator('.source-audit-row').count()>=8,'source provenance table incomplete');
+              must(await refresh.locator('.source-audit-row').count()>=10,'source provenance table incomplete');
               await refresh.screenshot({path:'evidence-v44/refresh-report.png',fullPage:false});
             }catch(e){results.errors.push({name:'refresh',type:'test',error:String(e)});}
             await refresh.close();
