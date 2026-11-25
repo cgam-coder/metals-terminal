@@ -72,3 +72,27 @@ jobs:
       - name: Desplegar
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Certificar archivos realmente publicados
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          base="${SITE_URL%/}"
+          test "$base" = "https://cgam-coder.github.io/metals-terminal"
+          for attempt in 1 2 3 4 5 6; do
+            ok=1
+            for file in index.html fundamentals.js quality.js explanations.js; do
+              if ! curl -fsSL --max-time 15 --retry 1 -H 'Cache-Control: no-cache' "$base/$file?verify=$GITHUB_SHA-$attempt" -o "/tmp/pages-$file" || ! cmp -s "_site/$file" "/tmp/pages-$file"; then
+                echo "Pendiente de propagación: $file (intento $attempt)"
+                ok=0
+              fi
+            done
+            if [ "$ok" = 1 ]; then
+              echo "PASS: HTML y tres controladores V5 publicados, idénticos al artefacto"
+              grep -o 'METALS · V[0-9.]*' /tmp/pages-index.html | tail -1
+              exit 0
+            fi
+            sleep 8
+          done
+          echo "::error::No se ha acreditado la publicación efectiva de todos los archivos"
+          exit 1
