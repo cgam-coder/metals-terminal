@@ -1,12 +1,14 @@
 name: Verificar tema diurno/nocturno
 on:
   workflow_dispatch:
-  push:
-    paths: ['.github/workflows/verify-theme.yml', 'index.html', 'theme.css']
+  workflow_run:
+    workflows: ['Publicar Metals Terminal']
+    types: [completed]
 permissions:
   contents: read
 jobs:
   smoke:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 9
     steps:
@@ -47,6 +49,9 @@ jobs:
               period:document.querySelector('#global-timeframes .active')?.textContent,
               v4Cards:document.querySelectorAll('#posicionamiento-expectativas .v4-card').length,
               v5Cards:document.querySelectorAll('#fundamentos-complementarios .v5-card').length,
+              technicalCards:document.querySelectorAll('#analisis-tecnico .v5-card').length,
+              technicalOrder:document.querySelector('#analisis-tecnico')?.nextElementSibling?.id,
+              technicalAfterDashboard:document.querySelector('#analisis-tecnico')?.previousElementSibling?.matches('main.dashboard'),
               url:location.href
             };
           });
@@ -78,7 +83,8 @@ jobs:
                 check(cssResponse.ok(),'day stylesheet not published '+cssResponse.status());
                 const first=await colors(page);
                 check(first.theme==='night'&&first.button.includes('Noche'),'night must be default');
-                check(first.v4Cards===4&&first.v5Cards===10,'positioning or complementary cards missing');
+                check(first.v4Cards===4&&first.v5Cards===8&&first.technicalCards===2,'positioning, technical or complementary cards missing');
+                check(first.technicalOrder==='posicionamiento-expectativas'&&first.technicalAfterDashboard,'technical section not between dashboard and positioning');
                 const header=await headerLayout(page);
                 result.screens[name]={header};
                 check(header.subtitle==='Oro · Plata · Cobre','obsolete subtitle '+header.subtitle);
