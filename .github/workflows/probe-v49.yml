@@ -1,0 +1,54 @@
+name: V4.9 · Validar fuentes candidatas
+on:
+  push:
+    branches: ['audit/v49-provider-probe']
+    paths: ['.github/workflows/probe-v49.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Contrastar endpoints sin publicar datos
+        run: |
+          node --input-type=module - <<'EOF'
+          const proxy='https://proxy.cors.dev/';
+          const target='https://query1.finance.yahoo.com/v8/finance/chart/';
+          const symbols=['GC=F','SI=F','HG=F','BZ=F'];
+          const results=await Promise.all(symbols.map(async symbol=>{
+            try{
+              const r=await fetch(proxy+target+encodeURIComponent(symbol)+'?range=10y&interval=1d',{signal:AbortSignal.timeout(25000),headers:{Origin:'https://cgam-coder.github.io'}});
+              const j=await r.json(),x=j.chart?.result?.[0],q=x?.indicators?.quote?.[0];
+              return {symbol,http:r.status,meta:x?.meta,rows:x?.timestamp?.length,first:x?.timestamp?.[0],last:x?.timestamp?.at(-1),lastQuotes:q?Object.fromEntries(Object.entries(q).map(([k,v])=>[k,v.slice(-3)])):null,cors:r.headers.get('access-control-allow-origin'),error:j.chart?.error};
+            }catch(e){return {symbol,error:String(e)}}
+          }));
+          console.log('FUTURES_PROBE '+JSON.stringify(results));
+          const urls=[
+            ...['DGS2','DGS10','DGS30','DFII10','DFEDTARU','ECBDFR','GVZCLS','VIXCLS'].map(id=>({id,url:'https://fred.stlouisfed.org/graph/fredgraph.csv?id='+id+'&cosd=2016-10-01'})),
+            {id:'CBOE',url:'https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv'},
+            {id:'SEC_GLD',url:'https://data.sec.gov/submissions/CIK0001222333.json'},
+            {id:'SEC_SLV',url:'https://data.sec.gov/submissions/CIK0001330568.json'},
+            {id:'GLD_FACTS',url:'https://data.sec.gov/api/xbrl/companyfacts/CIK0001222333.json'},
+            {id:'SLV_FACTS',url:'https://data.sec.gov/api/xbrl/companyfacts/CIK0001330568.json'},
+            {id:'ISHARES',url:'https://www.ishares.com/us/products/239855/ishares-silver-trust-slv'}
+          ];
+          const probes=await Promise.all(urls.map(async ({id,url})=>{
+            const modes=id.startsWith('SEC')||id.includes('FACTS')||id==='ISHARES'?['direct']:['direct','proxy'];
+            return await Promise.all(modes.map(async mode=>{
+              try{
+                const r=await fetch((mode==='proxy'?proxy:'')+url,{signal:AbortSignal.timeout(25000),headers:{'User-Agent':'MetalsTerminal research contact https://github.com/cgam-coder/metals-terminal','Origin':'https://cgam-coder.github.io'}});
+                const body=await r.text();
+                let out={id,mode,http:r.status,cors:r.headers.get('access-control-allow-origin'),len:body.length,head:body.slice(0,160)};
+                if(id.startsWith('SEC')&&r.ok){const o=JSON.parse(body),f=o.filings?.recent;out.filings=f?.form.map((form,i)=>({form,date:f.filingDate[i],report:f.reportDate[i],accession:f.accessionNumber[i],doc:f.primaryDocument[i]})).filter(z=>['10-K','10-Q'].includes(z.form)).slice(0,4);}
+                if(id.includes('FACTS')&&r.ok){const o=JSON.parse(body);out.facts=Object.fromEntries(Object.entries(o.facts||{}).map(([ns,facts])=>[ns,Object.keys(facts).filter(k=>/ounce|bullion|gold|silver|metal/i.test(k))]));}
+                if(id==='ISHARES'&&r.ok){const m=body.match(/.{0,100}(?:Tonnes in Trust|Ounces in Trust|Tonnes of Silver|Ounces of Silver).{0,150}/ig);out.matches=m?.slice(0,8);}
+                if(!id.startsWith('SEC')&&!id.includes('FACTS')&&id!=='ISHARES')out.tail=body.trim().split(/\r?\n/).slice(-6);
+                return out;
+              }catch(e){return {id,mode,error:String(e)}}
+            }));
+          }));
+          console.log('OTHER_PROBE '+JSON.stringify(probes.flat()));
+          EOF
