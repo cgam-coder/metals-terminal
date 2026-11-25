@@ -1,0 +1,111 @@
+name: V5.1 · comprobar fuentes, histórico y cálculos
+on:
+  push:
+    branches: ['audit/v51-candidate']
+    paths: ['.github/workflows/audit-v51.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check fundamentals.js
+          node --check explanations.js
+          node --check quality.js
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar candidata con red real y dos aperturas
+        run: |
+          mkdir -p evidence
+          cat > audit.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+          const page=await ctx.newPage();
+          const report={cases:[],checks:[],errors:[]};
+          const ids=['rates','credit','manufacturing','claims','rsi','sma'];
+          const base='https://cgam-coder.github.io/metals-terminal/?period=10y&v51audit=1';
+          const must=(ok,msg)=>{report.checks.push({ok:!!ok,msg});if(!ok)throw Error(msg);};
+          let network=[];
+          page.on('request',r=>{if(/fredgraph.csv|ebp_csv.csv|query1.finance.yahoo.com|publicreporting.cftc.gov/.test(r.url()))network.push(r.url());});
+          page.on('pageerror',e=>report.errors.push(String(e)));
+          await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
+            const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
+            if(rel.includes('..')||!fs.existsSync(rel)||!fs.statSync(rel).isFile())return route.continue();
+            const type=rel.endsWith('.html')?'text/html':rel.endsWith('.js')?'application/javascript':rel.endsWith('.css')?'text/css':'application/json';
+            await route.fulfill({path:rel,contentType:type});
+          });
+          const snap=()=>page.evaluate(()=>{
+           const ids=['rates','credit','manufacturing','claims','rsi','sma'];
+           const p=id=>marketChartCache.get(id),describe=x=>x?{n:x.dates.length,first:new Date(x.dates[0]*1000).toISOString().slice(0,10),last:new Date(x.dates.at(-1)*1000).toISOString().slice(0,10),lines:x.lines.map(s=>({label:s.label,first:s.points[0],last:s.points.at(-1),min:Math.min(...s.points),max:Math.max(...s.points)})),options:x.options}:null;
+           const cards=Object.fromEntries(ids.map(id=>{const card=document.getElementById('v5-'+id),r=card.getBoundingClientRect();return [id,{chart:describe(p('v5-'+id+'-chart')),width:r.width,height:r.height,overflow:card.scrollHeight-card.clientHeight,badge:card.querySelector('.source-quality')?.textContent,svg:card.querySelectorAll('svg[data-market-svg]').length,state:document.getElementById('v5-'+id+'-state').textContent}]}));
+           const f=Object.fromEntries(['gold','silver','copper','brent'].map(k=>[k,{n:futuresCache[k]?.length,first:futuresCache[k]?.[0]?.date,last:futuresCache[k]?.at(-1)?.date}]));
+           const sma=p('v5-sma-chart'),rsi=p('v5-rsi-chart');
+           const last=futuresCache.gold.length-1,avg=n=>futuresCache.gold.slice(-n).reduce((a,b)=>a+b.c,0)/n;
+           const maError=sma?Math.max(Math.abs(sma.lines[1].points.at(-1)-avg(50)),Math.abs(sma.lines[2].points.at(-1)-avg(200))):null;
+           return {version:document.getElementById('version').textContent,period:nativePeriod,keys:window.METALS_EXPLANATION_KEYS,ready:[...window.metalsQualityDone],audit:window.metalsV5Audit,cards,futures:f,futuresCheck:futuresCheckState,cot:describe(p('v4-cot-chart')),cotDate:v4State.cot?.gold?.[0]?.date,maError,overflow:document.documentElement.scrollWidth-innerWidth,existing:document.querySelectorAll('#posicionamiento-expectativas .v4-card').length};
+          });
+          async function settle(){await page.waitForFunction(()=>['v5','futures','v4','macro'].every(k=>window.metalsQualityDone?.has(k)),null,{timeout:120000});await page.waitForTimeout(500);}
+          try{
+            await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});await settle();
+            let d=await snap();report.cases.push({name:'10A',data:d,requests:network});
+            must(d.version.includes('V5.1')&&d.keys.length===27,'correct version and 27 guides');
+            must(ids.every(id=>d.audit['v5-'+id]?.ready&&!d.audit['v5-'+id].blocked&&!d.audit['v5-'+id].pending&&d.audit['v5-'+id].mode.startsWith('Consulta')),'six charts on real source, no fallback');
+            must(ids.every(id=>d.cards[id].svg===1&&d.cards[id].chart.n>=115),'six charts contain real observations');
+            const limit=new Date();limit.setUTCFullYear(limit.getUTCFullYear()-10);limit.setUTCDate(limit.getUTCDate()+40);
+            must(ids.every(id=>d.cards[id].chart.first<=limit.toISOString().slice(0,10)),'all six cover ten years (publication calendars respected)');
+            must(d.cards.rates.chart.n>2200&&d.cards.claims.chart.n>=500&&d.cards.manufacturing.chart.n>=115&&d.cards.credit.chart.n>=115,'historical source cadence');
+            must(d.cards.rsi.chart.lines.every(l=>l.min>=0&&l.max<=100)&&d.cards.rsi.chart.options.fixedRange[1]===100,'RSI bounded and scale fixed');
+            must(d.maError!==null&&d.maError<1e-6,'SMA independently recomputed from closures');
+            must(d.futures.gold.n>=2700&&d.futures.silver.n>=2700,'warmup daily historical GC and SI');
+            must(d.overflow<=1&&ids.every(id=>Math.abs(d.cards[id].height-300)<2&&d.cards[id].overflow<4),'desktop layout no clipping');
+            must(ids.every(id=>d.cards[id].badge&&d.cards[id].badge!=='Cobertura parcial'),'sources quality badges');
+            await page.locator('[data-cot-view="percentile"]').click();
+            d=await snap();report.cases.push({name:'COT percentile',data:d});
+            must(d.cot?.n>=490&&d.cot.lines.every(l=>l.min>=0&&l.max<=100)&&d.cot.first<=limit.toISOString().slice(0,10),'COT rolling percentiles 10Y');
+            await page.locator('[data-inspect="v4-cot"]').click();
+            must(await page.locator('#detail-chart svg[data-market-svg]').count()===1,'COT percentile enlarged');
+            await page.locator('#detail-close').click();
+            await page.locator('[data-cot-view="net"]').click();
+            await page.locator('[data-v5-ma-metal="silver"]').click();
+            must((await snap()).cards.sma.state.includes('Plata SI'),'moving average metal selector');
+            await page.locator('[data-v5-ma-metal="gold"]').click();
+            for(const id of ids){
+              await page.locator('[data-inspect="v5-'+id+'"]').click();
+              must(await page.locator('#detail-chart svg[data-market-svg]').count()===1,'enlarged '+id);
+              await page.locator('#detail-explanation-toggle').click();
+              must(await page.locator('#detail-explanation-pane').isVisible(),'guide '+id);
+              const content=await page.locator('#detail-explanation-content').innerText();
+              must(content.includes('Eje X')&&content.includes('eje Y'),'axes '+id);
+              await page.keyboard.press('Escape');await page.locator('#detail-close').click();
+            }
+            await page.locator('#theme-toggle').click();
+            await page.locator('#v5-rsi').screenshot({path:'evidence/rsi-day.png'});
+            await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);
+            d=await snap();report.cases.push({name:'mobile',data:d});
+            must(d.overflow<=1&&ids.every(id=>d.cards[id].width<=390&&d.cards[id].overflow<4),'mobile layout no clipping');
+            await page.locator('#v5-sma').screenshot({path:'evidence/sma-mobile.png'});
+            await page.locator('[data-global-period="1d"]').click();await page.waitForTimeout(300);
+            const svgCount=await page.evaluate(()=>['rates','credit','manufacturing','claims','rsi','sma'].filter(id=>document.querySelector('#v5-'+id+'-chart svg')).length);
+            must(svgCount===0,'1D shows no synthetic curves');
+            await page.locator('[data-global-period="10y"]').click();await page.waitForTimeout(350);
+            network=[];await page.reload({waitUntil:'domcontentloaded',timeout:45000});await settle();
+            d=await snap();report.cases.push({name:'reload',data:d,requests:network});
+            must(ids.every(id=>d.audit['v5-'+id]?.ready&&!d.audit['v5-'+id].blocked),'reload all sources');
+            must(['THREEFF1','THREEFFTP1','DFF','BSCICP02USM460S','CHNBSCICP02STSAM','ICSA','IC4WSA','ebp_csv.csv'].every(k=>network.some(s=>s.includes(k)))&&network.some(s=>s.includes('period1=')),'external sources rechecked');
+          }catch(e){report.errors.push(String(e));}
+          finally{await browser.close();fs.writeFileSync('evidence/report.json',JSON.stringify(report,null,2));console.log('V51_EVIDENCE '+JSON.stringify(report));if(report.errors.length)process.exitCode=1;}
+          EOF
+          node audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v51-source-coverage
+          path: evidence/
+          retention-days: 7
