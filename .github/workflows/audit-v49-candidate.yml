@@ -1,0 +1,120 @@
+name: Candidata V4.9 - fuentes reales y recarga
+on:
+  push:
+    branches: ['audit/v49-candidate']
+    paths: ['.github/workflows/audit-v49-candidate.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar candidata local bajo el origen público; fuentes reales sin simular
+        run: |
+          mkdir -p evidence
+          cat > audit.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const context=await browser.newContext({viewport:{width:1450,height:900}});
+          const page=await context.newPage();
+          // Only the application's own files are fulfilled from the exact checked-out candidate.
+          // All external source requests traverse the live network.
+          const root=process.cwd();
+          await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
+            const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
+            if(rel.includes('..')||!fs.existsSync(root+'/'+rel)||!fs.statSync(root+'/'+rel).isFile())return route.continue();
+            const contentType=rel.endsWith('.html')?'text/html':rel.endsWith('.js')?'application/javascript':rel.endsWith('.css')?'text/css':rel.endsWith('.json')?'application/json':'application/octet-stream';
+            await route.fulfill({path:root+'/'+rel,contentType});
+          });
+          const report={at:new Date().toISOString(),visits:[],errors:[]};
+          const target='https://cgam-coder.github.io/metals-terminal/?period=1mo&audit=20261125';
+          let network=[],warnings=[],requests=[];
+          function classify(url){
+           if(url.includes('aethereal'))return 'Aethereal';
+           if(url.includes('trading-commodity.com'))return 'Futuros alternativo';
+           if(url.includes('xaus.com'))return 'XAUS';
+           if(url.includes('proxy.cors.dev')&&url.includes('finance.yahoo.com'))return 'Yahoo';
+           if(url.includes('fred.stlouisfed.org'))return 'FRED';
+           if(url.includes('publicreporting.cftc.gov'))return 'CFTC';
+           if(url.includes('cdn.cboe.com'))return 'Cboe';
+           if(url.includes('/metals-terminal/data/'))return 'Archivo local';
+           return null;
+          }
+          const short=url=>url.length>350?url.slice(0,350):url;
+          page.on('request',r=>{const group=classify(r.url());if(group)requests.push({group,url:short(r.url()),method:r.method()});});
+          page.on('response',r=>{const group=classify(r.url());if(group)network.push({group,url:short(r.url()),status:r.status(),serviceWorker:r.fromServiceWorker()});});
+          page.on('requestfailed',r=>{const group=classify(r.url());if(group)network.push({group,url:short(r.url()),failure:r.failure()?.errorText});});
+          page.on('pageerror',e=>report.errors.push(String(e)));
+          page.on('console',m=>{if(['warning','error'].includes(m.type()))warnings.push(m.text().slice(0,500));});
+          const collect=()=>page.evaluate(()=>{
+           const last=arr=>arr?.at?.(-1)||null;
+           const dates=arr=>({n:arr?.length||0,first:arr?.[0]?.date||null,last:last(arr)?.date||null,value:last(arr)?.c??last(arr)?.value??null});
+           const xausDates=k=>{const x=nativeData[k],z=x?.points?.at(-1);return {n:x?.points?.length||0,last:z?new Date(z.t*1000).toISOString():null,asOf:x?.asOf||null,state:x?.state||null}};
+           const host=document.getElementById('indices-comparison');
+           const sec=v4State.secHoldings?v4ETFPairs(v4Window().end):[];
+           const svg=id=>document.querySelectorAll('#'+id+' svg').length;
+           return {
+            version:document.getElementById('version')?.textContent,period:nativePeriod,force:FORCE_MARKET_RECHECK,
+            ready:[...window.metalsQualityDone],futuresSource:longFuturesProvenance,futuresCheck:futuresCheckState,futuresError:futuresCheckError,
+            futures:Object.fromEntries(FUTURE_KEYS.map(k=>[k,{...dates(futuresCache[k]),mode:futuresFreshness[k]}])),
+            xaus:Object.fromEntries(['gold','silver','dxy','eur'].map(k=>[k,xausDates(k)])),
+            vix:{...dates(cboeHistory),source:cboeHistorySource},
+            macro:{direct:[...macroOfficialKeys],routes:Object.fromEntries(macroFetchRoutes),errors:Object.fromEntries(macroLastError),series:Object.fromEntries(MACRO_SERIES.map(k=>[k,dates(macro?.series?.[k])]))},
+            cot:{source:v4State.cotSource,gold:dates(v4State.cot?.gold),silver:dates(v4State.cot?.silver)},
+            gvz:{source:v4State.gvzSource,...dates(v4State.gvz)},
+            sec:{pairs:sec.length,last:sec.at(-1)||null,keys:Object.keys(v4State.secHoldings||{})},
+            wgc:v4State.flows,
+            indices:{state:host?.dataset.indicesState,stockCount:host?.dataset.indicesCount,bitcoin:host?.dataset.bitcoinState,last:host?.dataset.indicesLast,series:host?.dataset.comparisonSeriesCount,paths:host?.querySelectorAll('svg path').length,label:document.getElementById('indices-window')?.textContent},
+            plots:Object.fromEntries(['chart-main','chart-ratio','curve-graph','real-graph','policy-graph','v4-cot-chart','v4-oi-chart','v4-volatility-chart','v4-flows-chart'].map(id=>[id,svg(id)])),
+            badges:[...document.querySelectorAll('[data-quality-for]')].map(x=>({id:x.dataset.qualityFor,text:x.textContent,title:x.title})),
+            qualityTable:document.getElementById('source-audit-content')?.innerText
+           };
+          });
+          async function visit(name,url,reload=false){
+           network=[];requests=[];warnings=[];
+           const started=Date.now();
+           try{
+            if(reload)await page.reload({waitUntil:'domcontentloaded',timeout:45000});
+            else await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+            await page.waitForFunction(()=>['futures','xaus','vix','macro','v4','indices'].every(k=>window.metalsQualityDone?.has(k)),null,{timeout:120000}).catch(e=>warnings.push('TIMEOUT readiness '+String(e)));
+            await page.waitForFunction(()=>document.getElementById('indices-comparison')?.dataset.indicesState,null,{timeout:30000}).catch(e=>warnings.push('TIMEOUT indices '+String(e)));
+            await page.waitForTimeout(500);
+            const data=await collect();
+            report.visits.push({name,elapsedMs:Date.now()-started,data,requests:[...requests],responses:[...network],warnings:[...warnings]});
+            await page.screenshot({path:'evidence/'+name+'.png',fullPage:true}).catch(e=>report.errors.push('screenshot: '+String(e)));
+           }catch(e){report.visits.push({name,error:String(e),requests:[...requests],responses:[...network],warnings:[...warnings]})}
+          }
+          try{
+           await visit('entrada-nueva',target);
+           await page.waitForTimeout(3000);
+           await visit('recarga-cache',target,true);
+          }finally{
+           await browser.close();
+           fs.writeFileSync('evidence/report.json',JSON.stringify(report,null,2));
+           console.log('SOURCE_FRESHNESS_AUDIT '+JSON.stringify(report));
+          }
+          const checks=[];
+          for(const v of report.visits){
+           const d=v.data;
+           const names=['gold','silver','copper','brent'];
+           const yahooRequests=(v.requests||[]).filter(q=>q.group==='Yahoo'&&names.some(k=>{const t={gold:'GC=F',silver:'SI=F',copper:'HG=F',brent:'BZ=F'}[k];return decodeURIComponent(q.url).includes('/chart/'+t+'?');}));
+           checks.push({name:v.name,version:d?.version?.includes('V4.9'),futures:d?.futuresSource==='yahoo'&&d.futuresCheck==='live'&&names.every(k=>d.futures[k]?.n>=2200&&d.futures[k]?.last>='2026-11-23'),rechecked:yahooRequests.length>=4,macro:d?.macro?.direct?.length===6&&Object.values(d.macro.series).every(x=>x.n>=2200&&x.last>='2026-11-23'),vix:d?.vix?.last>='2026-11-23'&&d.vix.source.includes('Cboe oficial'),gvz:d?.gvz?.last>='2026-11-23'&&d.gvz.source.includes('Consulta'),cot:d?.cot?.source==='CFTC consulta directa',xaus:d&&Object.values(d.xaus).every(x=>x.n>1),indices:d?.indices?.state==='complete'&&d.indices.series==='6'&&d.indices.last>='2026-11-23',sec:d?.sec?.last?.date==='2026-09-30',slv:d?.wgc?.silver?.observation_date==='2026-11-24',quality:d?.badges?.some(b=>b.id==='indices'),plots:d&&Object.entries(d.plots).filter(([k])=>k!=='v4-flows-chart').every(([,n])=>n>0)});
+          }
+          console.log('V49_CHECKS '+JSON.stringify(checks));
+          if(checks.length!==2||checks.some(c=>Object.entries(c).some(([k,v])=>k!=='name'&&!v))||report.errors.length)process.exitCode=1;
+          EOF
+          node audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-freshness-audit
+          path: evidence/
+          retention-days: 7
