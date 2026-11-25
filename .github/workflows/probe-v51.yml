@@ -1,0 +1,41 @@
+name: V5.1 · validar fuentes gratuitas decenales
+on:
+  push:
+    branches: ['audit/v51-sources']
+    paths: ['.github/workflows/probe-v51.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --input-type=module - <<'EOF'
+          const results=[];
+          const ids=['ICSA','CCSA','IC4WSA','BSCICP02USM460S','CHNBSCICP02STSAM','THREEFYTP1','THREEFY1','THREEFF1','THREEFFTP1','DFF','BAMLH0A0HYM2','IPMAN','PRMNTO01CNM661N'];
+          const urls=ids.map(id=>[id,'https://fred.stlouisfed.org/graph/fredgraph.csv?id='+id+'&cosd=2015-10-01']);
+          urls.push(['EBP','https://www.federalreserve.gov/econres/notes/feds-notes/ebp_csv.csv']);
+          const run=async([id,url])=>{
+            try{
+              const r=await fetch('https://proxy.cors.dev/'+url,{headers:{Origin:'https://cgam-coder.github.io'},signal:AbortSignal.timeout(20000)});
+              const body=await r.text(),ls=body.trim().split(/\r?\n/),valid=ls.slice(1).filter(l=>!l.endsWith(',')&&!l.endsWith(',.'));
+              return {id,status:r.status,cors:r.headers.get('access-control-allow-origin'),head:ls.slice(0,3),last:valid.slice(-3),n:valid.length,bytes:body.length};
+            }catch(e){return {id,error:String(e)}}
+          };
+          for(let i=0;i<urls.length;i+=3){results.push(...await Promise.all(urls.slice(i,i+3).map(run)));await new Promise(r=>setTimeout(r,500));}
+          console.log('V51_SOURCES '+JSON.stringify(results));
+          // Validate whether the already-used source provides genuine pre-period observations
+          // for moving-average initialization, without adding another provider.
+          const fut=[];
+          for(const symbol of ['GC=F','SI=F']){
+            try{
+              const r=await fetch('https://proxy.cors.dev/https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(symbol)+'?range=max&interval=1d',{headers:{Origin:'https://cgam-coder.github.io'},signal:AbortSignal.timeout(25000)});
+              const x=(await r.json()).chart?.result?.[0],m=x?.meta;
+              fut.push({symbol,status:r.status,identity:m?.symbol,type:m?.instrumentType,rows:x?.timestamp?.length,first:new Date(x.timestamp[0]*1000).toISOString(),last:new Date(x.timestamp.at(-1)*1000).toISOString()});
+            }catch(e){fut.push({symbol,error:String(e)})}
+          }
+          console.log('V51_FUTURES '+JSON.stringify(fut));
+          EOF
