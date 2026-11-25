@@ -1,0 +1,31 @@
+name: V5.0 - cualificación de fuentes complementarias
+on:
+  push:
+    branches: ['audit/v50-source-admission']
+    paths: ['.github/workflows/probe-v50.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --input-type=module - <<'EOF'
+          const fred=['NFCI','ANFCI','CPIAUCSL','CPILFESL','PCEPILFE','VIXCLS','VXVCLS','VIX9DCLS'];
+          const source=fred.map(id=>({id,url:'https://fred.stlouisfed.org/graph/fredgraph.csv?id='+id+'&cosd=2015-10-01'}));
+          source.push({id:'VIX9D',url:'https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX9D_History.csv'},{id:'VIX3M',url:'https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv'},{id:'COMEX',url:'https://metalcharts.org/data/comex-gold-silver-registered-eligible-weekly.csv'});
+          const results=[];
+          for(const {id,url} of source){
+            for(const mode of ['direct','relay']){
+              try{
+                const response=await fetch((mode==='relay'?'https://proxy.cors.dev/':'')+url,{headers:{Origin:'https://cgam-coder.github.io'},signal:AbortSignal.timeout(18000)});
+                const body=await response.text(),lines=body.trim().split(/\r?\n/);
+                results.push({id,mode,status:response.status,cors:response.headers.get('access-control-allow-origin'),type:response.headers.get('content-type'),bytes:body.length,rows:lines.length,first:lines.slice(0,3),last:lines.slice(-3)});
+              }catch(e){results.push({id,mode,error:String(e)})}
+            }
+          }
+          console.log('V50_PROBE '+JSON.stringify(results));
+          EOF
