@@ -721,6 +721,26 @@
  }
 }
 </style>
+<style id="v5-complementary-layout">
+.v5-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap);align-items:stretch}
+.v5-section .v5-secondary{margin-top:13px}
+.v5-card{height:300px;min-height:300px;overflow:visible;box-sizing:border-box;gap:5px}
+.v5-card .v4-card-head{flex-wrap:wrap;align-items:center}
+.v5-card .v4-card-head h3{margin:0;font-size:15px;line-height:1.2}
+.v5-status{min-height:24px;flex:0 0 auto;font-size:11px;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
+.v5-graph{flex:1 1 145px;min-height:130px;height:auto;display:flex;flex-direction:column}
+.v5-graph .native-canvas{flex:1;min-height:0;height:100%;padding:1px}
+.v5-graph .native-series{min-height:112px}
+.v5-graph .native-legend{gap:4px 12px;flex-wrap:wrap;font-size:10px}
+.v5-graph .native-legend span{gap:4px;white-space:nowrap}
+.v5-graph .native-note{font-size:9px;line-height:1.25;gap:4px}
+.v5-switch{display:flex;gap:3px;flex-wrap:wrap}
+.v5-switch button{font:inherit;font-size:10px;padding:3px 8px;border:1px solid var(--stroke);background:var(--panel2);color:var(--text);border-radius:5px;cursor:pointer}
+.v5-switch button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.v5-card .v4-foot{flex:0 0 auto;min-width:0;gap:6px}
+.v5-card .v4-foot span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:780px){.v5-grid{grid-template-columns:1fr}.v5-card{height:320px;min-height:320px}.v5-graph .native-series{min-height:130px}}
+</style>
 </head>
 <body>
 <div class="site">
@@ -748,7 +768,7 @@
     <div class="panel-head"><h2 class="panel-title">Curva de rendimientos (EE. UU.)</h2><div class="macro-controls"><button class="link-small" id="curve-mode" title="Alternar histórico de rentabilidades y curva por vencimientos">Ver curva ↔</button><button type="button" class="macro-expand" data-expand-macro="curve" title="Ampliar los rendimientos">⤢ Ampliar</button></div></div>
     <div class="panel-caption" id="curve-caption">Histórico Treasury · % anual</div><div id="curve-range-summary" class="macro-period-bar" aria-live="polite">Cargando variación del periodo…</div>
     <div class="chart-container" id="curve-graph" aria-label="Curva de rendimientos del Tesoro estadounidense"></div>
-    <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span><span id="legend-third"><i class="swatch silver"></i>Treasury 30Y</span></div>
+    <div class="legend"><span><i class="swatch cyan"></i><span id="legend-today">Último dato</span></span><span><i class="swatch"></i><span id="legend-before">Anterior</span></span><span id="legend-third"><i class="swatch silver"></i>Treasury 30Y</span><span id="legend-spread"><i class="swatch" style="background:#b88aff"></i>10Y−2Y</span></div>
     <div class="curve-bottom"><h3 class="curve-bottom-title">Últimos rendimientos</h3><div class="mini-stats" id="yield-stats"><div class="yield-metric"><span>Treasury 2Y</span><strong>—</strong></div><div class="yield-metric"><span>Treasury 10Y</span><strong>—</strong></div><div class="yield-metric"><span>Treasury 30Y</span><strong>—</strong></div><div class="yield-metric"><span>Diferencial 10Y − 2Y</span><strong>—</strong></div></div></div>
     <div class="yield-note" id="yield-stamp">Fuente: U.S. Treasury · Datos de cierre</div>
   </section>
@@ -822,7 +842,41 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.9</span></footer>
+<section class="v4-section v5-section" id="fundamentos-complementarios" aria-labelledby="v5-risk-heading">
+ <div class="v4-section-header"><h2 id="v5-risk-heading">Riesgo y condiciones financieras</h2><small>Datos reales · actualización al abrir</small></div>
+ <div class="v5-grid"><article class="panel v4-card v5-card" id="v5-vixterm">
+ <div class="v4-card-head"><h3>VIX · Estructura temporal</h3><button type="button" class="market-inspect" data-inspect="v5-vixterm">Ampliar ↗</button></div>
+ <div class="v4-muted">Volatilidad implícita S&P 500 · 30 días / 3 meses</div>
+ 
+ <div class="v4-status v5-status" id="v5-vixterm-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-vixterm-chart"></div>
+ <div class="v4-foot"><span id="v5-vixterm-dates">Esperando datos validados</span><a href="https://fred.stlouisfed.org/series/VXVCLS" target="_blank" rel="noopener noreferrer">Cboe / FRED ↗</a></div>
+ </article><article class="panel v4-card v5-card" id="v5-nfci">
+ <div class="v4-card-head"><h3>Condiciones financieras</h3><button type="button" class="market-inspect" data-inspect="v5-nfci">Ampliar ↗</button></div>
+ <div class="v4-muted">NFCI / ANFCI · semanal · 0 = media histórica</div>
+ 
+ <div class="v4-status v5-status" id="v5-nfci-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-nfci-chart"></div>
+ <div class="v4-foot"><span id="v5-nfci-dates">Esperando datos validados</span><a href="https://fred.stlouisfed.org/series/NFCI" target="_blank" rel="noopener noreferrer">Fed Chicago / FRED ↗</a></div>
+ </article></div>
+ <div class="v4-section-header v5-secondary"><h2>Economía real y mercado físico</h2><small>Frecuencia propia · fechas efectivas</small></div>
+ <div class="v5-grid"><article class="panel v4-card v5-card" id="v5-inflation">
+ <div class="v4-card-head"><h3>Inflación EE. UU.</h3><button type="button" class="market-inspect" data-inspect="v5-inflation">Ampliar ↗</button></div>
+ <div class="v4-muted">IPC general · IPC subyacente · PCE subyacente · interanual</div>
+ 
+ <div class="v4-status v5-status" id="v5-inflation-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-inflation-chart"></div>
+ <div class="v4-foot"><span id="v5-inflation-dates">Esperando datos validados</span><a href="https://fred.stlouisfed.org/series/PCEPILFE" target="_blank" rel="noopener noreferrer">BLS / BEA / FRED ↗</a></div>
+ </article><article class="panel v4-card v5-card" id="v5-comex">
+ <div class="v4-card-head"><h3>Inventarios físicos · COMEX</h3><button type="button" class="market-inspect" data-inspect="v5-comex">Ampliar ↗</button></div>
+ <div class="v4-muted">Oro y plata · último informe de cada semana</div>
+ <div class="v5-switch" role="group" aria-label="Categoría de inventario"><button type="button" data-v5-stock="registered" aria-pressed="true">Registrado</button><button type="button" data-v5-stock="eligible" aria-pressed="false">Elegible</button><button type="button" data-v5-stock="total" aria-pressed="false">Total</button></div>
+ <div class="v4-status v5-status" id="v5-comex-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-comex-chart"></div>
+ <div class="v4-foot"><span id="v5-comex-dates">Esperando datos validados</span><a href="https://metalcharts.org/data#comex-gold-silver-registered-eligible-weekly" target="_blank" rel="noopener noreferrer">MetalCharts.org · CME ↗</a></div>
+ </article></div>
+</section>
+<footer class="footnote"><span></span><span id="version">METALS · V5.0</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1022,7 +1076,7 @@ function marketAxisLabel(epoch,spanSeconds,period){
  if(spanSeconds>=86400*110)return MACRO_SHORT_MONTHS[m]+" "+String(yyyy).slice(-2);
  return day+" "+MACRO_SHORT_MONTHS[m];
 }
-function nativeChart(id,lines,dates,unit,sub){
+function nativeChart(id,lines,dates,unit,sub,options={}){
  const host=document.getElementById(id);
  if(!host)return;
  if(!Array.isArray(dates)||dates.length<2||lines.some(line=>line.points.length!==dates.length)||dates.some(t=>!Number.isFinite(t))){
@@ -1064,6 +1118,7 @@ function nativeChart(id,lines,dates,unit,sub){
  const pw=Math.max(40,W-L-R),ph=Math.max(40,H-T-B);
  const all=plotLines.flatMap(line=>line.points.filter(Number.isFinite));
  if(!all.length){frame.innerHTML='<div class="native-error">Sin precios válidos para el periodo.</div>';return;}
+ if(Number.isFinite(options.baseline))all.push(options.baseline);
  let mn=Math.min(...all),mx=Math.max(...all),span=Math.max(.000001,mx-mn);
  mn-=span*.14;mx+=span*.14;
  const Y=z=>T+(mx-z)/(mx-mn)*ph;
@@ -1075,6 +1130,7 @@ function nativeChart(id,lines,dates,unit,sub){
    svg+='<line class="native-grid" x1="'+L+'" y1="'+cy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+cy.toFixed(1)+'"/>';
    svg+='<text class="native-axis" x="'+(L-8)+'" y="'+(cy+4).toFixed(1)+'" text-anchor="end">'+fmt(value,unit==="%"?1:2)+unit+'</text>';
  }
+ if(Number.isFinite(options.baseline))svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(options.baseline).toFixed(1)+'" y2="'+Y(options.baseline).toFixed(1)+'" stroke="#8395a6" stroke-dasharray="5 4" stroke-width="1"/>';
  const ticks=W<310?3:W<570?4:6;
  for(let j=0;j<ticks;j++){
    const fraction=j/(ticks-1),t=firstT+timeRange*fraction,cx=X(t);
@@ -1095,7 +1151,7 @@ function nativeChart(id,lines,dates,unit,sub){
  svg+='<line class="market-crosshair" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/></svg>';
  frame.insertAdjacentHTML("afterbegin",svg);
  const shape=frame.querySelector("svg[data-market-svg]"),cross=frame.querySelector(".market-crosshair");
- marketChartCache.set(id,{lines,dates,unit,sub,displayCount:indexes.length});
+ marketChartCache.set(id,{lines,dates,unit,sub,options,displayCount:indexes.length});
  const clearInspection=()=>{tip.classList.remove("visible");tip.style.display="none";cross.style.opacity="0";};
  const inspect=(event)=>{
    const rect=shape.getBoundingClientRect();
@@ -2260,6 +2316,7 @@ function syncMacroToMaster(period){
  syncCustomDateForms();
  if(macro?.series)renderMacro();
  if(document.getElementById('v4-cot'))renderV4();
+ window.renderMetalsV5?.();
 }
 function macroWindowRows(rows,what){
  if(!rows.length)return [];
@@ -2333,6 +2390,7 @@ function renderCurve(){
  $("#legend-today").textContent=curveHistorical?"Treasury 10Y":"Último · "+prettyDate(now.date);
  $("#legend-before").textContent=curveHistorical?"Treasury 2Y":"Inicio · "+prettyDate(then.date);
  document.getElementById("legend-third").style.display=curveHistorical?"flex":"none";
+ document.getElementById("legend-spread").style.display=curveHistorical?"flex":"none";
  $("#curve-caption").textContent=(curveHistorical?"Histórico real 2Y/10Y/30Y":"Curva 2Y/10Y/30Y, inicio y último")+" · "+period+" · "+macroCoverageNotice(rows,"curve");
  if(curveHistorical){
    if(rows.length<2){
@@ -2342,10 +2400,11 @@ function renderCurve(){
      const series=[
        {name:"Treasury 10Y",values:plotted.map(r=>r.DGS10),color:"#38c9e5"},
        {name:"Treasury 2Y",values:plotted.map(r=>r.DGS2),color:"#f4ba3c"},
-       {name:"Treasury 30Y",values:plotted.map(r=>r.DGS30),color:"#d7e3ef"}
+       {name:"Treasury 30Y",values:plotted.map(r=>r.DGS30),color:"#d7e3ef"},
+       {name:"10Y−2Y (pp)",values:plotted.map(r=>r.DGS10-r.DGS2),color:"#b88aff"}
      ];
      $("#curve-graph").innerHTML=svgPlot({
-       series,xLabels:macroLabels(plotted,"curve"),palette:["stroke-cyan","stroke-gold","stroke-silver"],
+       series,xLabels:macroLabels(plotted,"curve"),palette:["stroke-cyan","stroke-gold","stroke-silver","stroke-purple"],
        width:390,height:222,dates:plotted.map(r=>r.date),targetId:"curve-graph"
      });
      attachMacroInspector("curve-graph");
@@ -2590,7 +2649,7 @@ function openMarketDetail(kind){
  if(backgroundWidget)backgroundWidget.style.visibility="hidden"; // Fully suspend focusable external iframe behind modal.
  document.getElementById("detail-method").open=!window.matchMedia("(max-width: 780px)").matches;
  const names={indices:"S&P 500 · Nasdaq Composite · Dow Jones · Russell 2000 · EURO STOXX 50 · Bitcoin BTC/USD",vix:"VIX · Cboe · cierre diario",ratio:"Ratio oro/plata · XAU/XAG",futures:"Futuros · GC / SI / HG",gold:"Oro GC · futuro",silver:"Plata SI · futuro",copper:"Cobre HG · futuro",brent:"Brent BZ · futuro",dxy:"DXY · índice dólar",eur:"EUR/USD · referencia","macro-curve":"Treasury · histórico oficial 2Y/10Y/30Y","macro-reals":"TIPS real 10Y e inflación implícita","macro-policy":"Fed y BCE · tipos oficiales"};
- title.textContent=V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
+ title.textContent=window.metalsV5Titles?.[kind]||V4_TITLES[kind]||(kind==="macro-curve"&&!curveHistorical?"Treasury · curva por vencimientos":(names[kind]||"Gráfico de mercado"));
  document.querySelectorAll("#detail-timeframes button").forEach(button=>{
   const active=button.dataset.detailPeriod===nativePeriod;
   button.classList.toggle("active",active);
@@ -2611,6 +2670,7 @@ function closeMarketDetail(){
 }
 function drawMarketDetail(){
  const host=document.getElementById('detail-chart'),foot=document.getElementById('detail-foot');
+ if(detailKind?.startsWith("v5-")){window.drawMetalsV5Detail?.(detailKind,host,foot);return;}
  if(detailKind==="indices"){window.drawIndicesDetail?.(host,foot);return;}
  if(detailKind?.startsWith('v4-')){drawV4Detail(detailKind,host,foot);return;}
  if(detailKind&&detailKind.startsWith("macro-")){
@@ -3002,6 +3062,7 @@ window.addEventListener('resize',()=>{
  if(Object.keys(nativeData).length)renderNative();
  else {renderFuturesCards();renderVixCard();renderFuturesComparison();}
  window.renderIndicesPanel?.(true);
+ window.renderMetalsV5?.();
  if(detailKind)drawMarketDetail();
 });
 $('#global-timeframes').addEventListener('click',event=>{
@@ -3071,11 +3132,14 @@ init();
     try{localStorage.setItem("metals-terminal-theme",day?"day":"night");}catch(e){/* Keep in-memory theme */}
     syncTheme();
     window.renderIndicesPanel?.(true);
+    window.renderMetalsV5?.();
+    if(detailKind?.startsWith("v5-"))drawMarketDetail();
   });
   syncTheme();
 })();
 </script>
-<script defer src="./quality.js?v=20261125-v49"></script>
-<script defer src="./explanations.js?v=20261125-v49"></script>
+<script defer src="./quality.js?v=20261125-v50"></script>
+<script defer src="./explanations.js?v=20261125-v50"></script>
 <script defer src="./indices.js?v=20261125-v49"></script>
+<script defer src="./fundamentals.js?v=20261125-v50"></script>
 </body></html>

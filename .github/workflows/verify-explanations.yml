@@ -42,7 +42,11 @@ jobs:
            {kind:'v4-cot',selector:'[data-inspect="v4-cot"]',heading:'COT',tokens:['P95','Managed Money']},
            {kind:'v4-oi',selector:'[data-inspect="v4-oi"]',heading:'Interés abierto semanal',tokens:['Precio','OI','contratos']},
            {kind:'v4-volatility',selector:'[data-inspect="v4-volatility"]',heading:'Volatilidad implícita GVZ',tokens:['VXSLV','30 días']},
-           {kind:'v4-flows',selector:'[data-inspect="v4-flows"]',heading:'ETF físicos GLD',tokens:['2021','trimestrales','flujos']}
+           {kind:'v4-flows',selector:'[data-inspect="v4-flows"]',heading:'ETF físicos GLD',tokens:['2021','trimestrales','flujos']},
+           {kind:'v5-vixterm',selector:'[data-inspect="v5-vixterm"]',heading:'Estructura temporal VIX',tokens:['30 días','3 meses','Cboe']},
+           {kind:'v5-nfci',selector:'[data-inspect="v5-nfci"]',heading:'Condiciones financieras',tokens:['NFCI','ANFCI','semanal']},
+           {kind:'v5-inflation',selector:'[data-inspect="v5-inflation"]',heading:'Inflación estadounidense',tokens:['IPC','PCE','mensual']},
+           {kind:'v5-comex',selector:'[data-inspect="v5-comex"]',heading:'Inventarios físicos COMEX',tokens:['MetalCharts','elegible','registrado']}
           ];
           const expected=cases.map(c=>c.kind);
           const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&guideTest=20261121';
@@ -70,9 +74,9 @@ jobs:
             page.on('pageerror',e=>report.errors.push({name,type:'pageerror',error:e.stack||e.message}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:50000});
-             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===9,null,{timeout:15000});
+             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===13,null,{timeout:15000});
              const actual=await page.evaluate(()=>window.METALS_EXPLANATION_KEYS);
-             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not nine specific panels');
+             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not thirteen specific panels');
              if(day){await page.locator('#theme-toggle').click();}
              const casesOut={};
              for(const c of cases){

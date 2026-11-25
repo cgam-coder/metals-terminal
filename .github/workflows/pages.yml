@@ -9,6 +9,7 @@ on:
       - 'quality.js'
       - 'explanations.js'
       - 'indices.js'
+      - 'fundamentals.js'
       - 'data/**'
       - 'preview/intradia/**'
       - 'preview/v4/**'
@@ -44,6 +45,7 @@ jobs:
           cp quality.js _site/quality.js
           cp explanations.js _site/explanations.js
           cp indices.js _site/indices.js
+          cp fundamentals.js _site/fundamentals.js
           cp data/series.json _site/data/series.json
           cp data/vix-history.json _site/data/vix-history.json
           cp data/v4-cot-snapshot.json _site/data/v4-cot-snapshot.json

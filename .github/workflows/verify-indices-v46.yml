@@ -77,7 +77,7 @@ jobs:
                panel:{width:rect.width,height:rect.height},
                pageWidth:document.documentElement.scrollWidth};
              });
-             assert(state.version.includes('V4.9'),'wrong version');
+             assert(state.version.includes('V5.0'),'wrong version');
              assert(JSON.stringify(state.symbols)===JSON.stringify(['^GSPC','^IXIC','^DJI','^RUT','^STOXX50E','BTC-USD']),'symbols');
              assert(state.lines===6&&state.count==='5'&&state.btc==='available'&&state.series==='6',
               'five indices plus Bitcoin six SVG lines absent');

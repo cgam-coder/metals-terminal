@@ -84,6 +84,9 @@
      (g.id==="gvz"&&!/Consulta/.test(g.mode))||(g.id==="cot"&&!/consulta directa/i.test(g.mode)));
     g.partial=(g.id==="indices"&&!!indexAudit.partial)||(extended&&g.ready&&!g.singleFact&&(!g.from||Date.parse(g.from+"T00:00:00Z")>deadline));
    }
+   for(const r of Object.values(window.metalsV5Audit||{})){
+     groups.push({id:r.id,label:r.label,date:r.date||null,from:r.from||null,mode:r.mode||"Consultando",frequency:r.frequency,note:r.note||"",ready:!!r.ready,pending:!!r.pending,stale:stale(r.date,r.frequency),partial:!!r.partial,blocked:!!r.blocked,manual:false,singleFact:false});
+   }
    return groups;
 
  }
@@ -105,7 +108,7 @@
   const el=document.createElement("span");
   el.className="source-quality "+(!r.ready?"missing":r.partial||r.stale||r.blocked?"delayed":r.pending?"pending":"available");
   el.textContent=badgeText(r);
-  el.title=r.label+" · "+r.mode+" · cobertura "+(r.from?dateText(r.from)+" a ":"")+dateText(r.date)+" · "+r.note+(r.partial?" · no alcanza el inicio del intervalo":"")+(r.pending?" · consulta todavía en curso":"");
+  el.title=r.label+" · "+r.mode+" · cobertura "+(r.from?dateText(r.from)+" a ":"")+dateText(r.date)+" · "+r.note+(r.partial?" · cobertura o conjunto incompleto":"")+(r.pending?" · consulta todavía en curso":"");
   el.setAttribute("aria-label",el.title);
   el.dataset.qualityFor=r.id;
   return el;
@@ -149,6 +152,7 @@
   putBadge(document.querySelector("#comparativa .main-title-extra"),byId.futures);
   putBadge(document.querySelector(".ratio-panel .main-title-extra"),byId.xaus);
   putBadge(document.querySelector(".indices-panel .indices-subtitle"),byId.indices);
+  for(const id of ["vixterm","nfci","inflation","comex"]){if(byId["v5-"+id])putBadge(document.getElementById("v5-"+id+"-dates"),byId["v5-"+id]);}
   putBadge(document.getElementById("curve-caption"),byId.macro);
   putBadge(document.getElementById("real-dates"),byId.macro);
   putBadge(document.getElementById("policy-dates"),byId.macro);
