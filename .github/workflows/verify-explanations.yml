@@ -29,7 +29,7 @@ jobs:
           const html=fs.readFileSync('index.html','utf8');
           const keys=[...new Set([...html.matchAll(/data-inspect="([^"]+)"/g)].map(m=>m[1]).concat([...html.matchAll(/data-expand-macro="([^"]+)"/g)].map(m=>'macro-'+m[1])))];
           const baseline={futures:[1803,298],indices:[2387,386],ratio:[1499,256],'macro-curve':[1692,293],'macro-reals':[1650,269],'v4-cot':[1750,283],'v4-oi':[1659,274],'v4-volatility':[1425,230],'v4-flows':[1787,296],'v5-vixterm':[568,94],'v5-nfci':[555,77],'v5-inflation':[665,102],'v5-comex':[880,134]};
-          if(Object.keys(guides).length!==21||keys.length!==21||keys.some(k=>!guides[k]))throw Error('Incomplete guide coverage');
+          if(Object.keys(guides).length!==27||keys.length!==27||keys.some(k=>!guides[k]))throw Error('Incomplete guide coverage');
           for(const [k,g] of Object.entries(guides)){
             const t=[g.title,g.intro,...g.blocks.flat(),...g.sources.map(s=>s[0])].join(' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
             const n=[t.length,t.split(/\s+/).length];
@@ -42,7 +42,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.58.2
           npx playwright install chromium
-      - name: Verificar las 21 guías en la página pública
+      - name: Verificar las 27 guías en la página pública
         run: |
           mkdir -p evidence-explanations
           cat > verify-explanations.mjs <<'EOF'
@@ -72,7 +72,13 @@ jobs:
            {kind:'dxy',selector:'[data-inspect="dxy"]',heading:'DXY · índice dólar',tokens:['cesta','XAUS','TIPS']},
            {kind:'eur',selector:'[data-inspect="eur"]',heading:'EUR/USD · euro',tokens:['1,10','divisa','XAUS']},
            {kind:'vix',selector:'[data-inspect="vix"]',heading:'VIX · volatilidad',tokens:['30 días','anualizada','Cboe']},
-           {kind:'macro-policy',selector:'[data-expand-macro="policy"]',heading:'Tipos oficiales de interés',tokens:['límite superior','depósito','puntos básicos']}
+           {kind:'macro-policy',selector:'[data-expand-macro="policy"]',heading:'Tipos oficiales de interés',tokens:['límite superior','depósito','puntos básicos']},
+           {kind:'v5-rates',selector:'[data-inspect="v5-rates"]',heading:"Expectativas de tipos a un año",tokens:['Eje X','Eje Y']},
+           {kind:'v5-credit',selector:'[data-inspect="v5-credit"]',heading:"Riesgo crediticio",tokens:['Eje X','Eje Y']},
+           {kind:'v5-manufacturing',selector:'[data-inspect="v5-manufacturing"]',heading:"Confianza manufacturera",tokens:['Eje X','Eje Y']},
+           {kind:'v5-claims',selector:'[data-inspect="v5-claims"]',heading:"Solicitudes iniciales de desempleo",tokens:['Eje X','Eje Y']},
+           {kind:'v5-rsi',selector:'[data-inspect="v5-rsi"]',heading:"RSI 14",tokens:['Eje X','Eje Y']},
+           {kind:'v5-sma',selector:'[data-inspect="v5-sma"]',heading:"Medias móviles",tokens:['Eje X','Eje Y']}
           ];
           const expected=cases.map(c=>c.kind);
           const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&guideTest=20261125-guides2';
@@ -100,9 +106,9 @@ jobs:
             page.on('pageerror',e=>report.errors.push({name,type:'pageerror',error:e.stack||e.message}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:50000});
-             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===21,null,{timeout:15000});
+             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===27,null,{timeout:15000});
              const actual=await page.evaluate(()=>window.METALS_EXPLANATION_KEYS);
-             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not twenty-one specific panels');
+             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not twenty-seven specific panels');
              if(day){await page.locator('#theme-toggle').click();}
              const casesOut={};
              for(const c of cases){

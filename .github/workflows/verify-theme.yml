@@ -78,7 +78,7 @@ jobs:
                 check(cssResponse.ok(),'day stylesheet not published '+cssResponse.status());
                 const first=await colors(page);
                 check(first.theme==='night'&&first.button.includes('Noche'),'night must be default');
-                check(first.v4Cards===4&&first.v5Cards===4,'positioning or complementary cards missing');
+                check(first.v4Cards===4&&first.v5Cards===10,'positioning or complementary cards missing');
                 const header=await headerLayout(page);
                 result.screens[name]={header};
                 check(header.subtitle==='Oro · Plata · Cobre','obsolete subtitle '+header.subtitle);

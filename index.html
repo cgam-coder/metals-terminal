@@ -813,7 +813,7 @@
   <article class="panel v4-card" id="v4-cot">
    <div class="v4-card-head"><h3>COT · Managed Money</h3><button class="market-inspect" data-inspect="v4-cot" title="Ampliar posicionamiento COT">Ampliar ↗</button></div>
    <div class="v4-muted">GC / SI · CFTC · desagregado · solo futuros · semanal</div>
-   <div class="v4-compare-note">Dos series simultáneas · neto especulativo / interés abierto (%)</div>
+   <div class="v4-compare-note" id="v4-cot-mode-note">Dos series simultáneas · neto especulativo / interés abierto (%)</div><div class="v5-switch" role="group" aria-label="Modo de posicionamiento"><button type="button" data-cot-view="net" aria-pressed="true">Neto/OI</button><button type="button" data-cot-view="percentile" aria-pressed="false">Percentil 52 informes</button></div>
    <div id="v4-cot-state" class="v4-status" role="status">Cargando informe oficial CFTC…</div>
    <div id="v4-cot-chart" class="v4-graph"></div>
    <div class="v4-foot"><span id="v4-cot-dates">Fecha del informe y cobertura</span><a href="https://publicreporting.cftc.gov/Commitments-of-Traders/Disaggregated-Futures-Only/72hh-3qpy" target="_blank" rel="noopener noreferrer">CFTC ↗</a></div>
@@ -875,8 +875,53 @@
  <div class="v4-graph v5-graph" id="v5-comex-chart"></div>
  <div class="v4-foot"><span id="v5-comex-dates">Esperando datos validados</span><a href="https://metalcharts.org/data#comex-gold-silver-registered-eligible-weekly" target="_blank" rel="noopener noreferrer">MetalCharts.org · CME ↗</a></div>
  </article></div>
+<div class="v4-section-header v5-secondary"><h2>Expectativas monetarias y crédito</h2><small>Datos reales · 10 años · consulta al abrir</small></div><div class="v5-grid"><article class="panel v4-card v5-card" id="v5-rates">
+ <div class="v4-card-head"><h3>Tipos a 1 año · expectativas estimadas</h3><button type="button" class="market-inspect" data-inspect="v5-rates">Ampliar ↗</button></div>
+ <div class="v4-muted">Kim–Wright · tipo corto esperado / Fed efectivo / forward</div>
+ 
+ <div class="v4-status v5-status" id="v5-rates-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-rates-chart"></div>
+ <div class="v4-foot"><span id="v5-rates-dates">Esperando datos validados</span><a href="https://fred.stlouisfed.org/series/THREEFF1" target="_blank" rel="noopener noreferrer">Fed Board / FRED ↗</a></div>
+ </article><article class="panel v4-card v5-card" id="v5-credit">
+ <div class="v4-card-head"><h3>Riesgo crediticio · GZ / EBP</h3><button type="button" class="market-inspect" data-inspect="v5-credit">Ampliar ↗</button></div>
+ <div class="v4-muted">Diferencial corporativo y prima de riesgo excesiva · mensual</div>
+ 
+ <div class="v4-status v5-status" id="v5-credit-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-credit-chart"></div>
+ <div class="v4-foot"><span id="v5-credit-dates">Esperando datos validados</span><a href="https://www.federalreserve.gov/econres/notes/feds-notes/updating-the-recession-risk-and-the-excess-bond-premium-20161006.html" target="_blank" rel="noopener noreferrer">Fed Board ↗</a></div>
+ </article></div>
+<div class="v4-section-header v5-secondary"><h2>Actividad y empleo</h2><small>Datos reales · 10 años · consulta al abrir</small></div><div class="v5-grid"><article class="panel v4-card v5-card" id="v5-manufacturing">
+ <div class="v4-card-head"><h3>Confianza manufacturera · EE. UU. / China</h3><button type="button" class="market-inspect" data-inspect="v5-manufacturing">Ampliar ↗</button></div>
+ <div class="v4-muted">OCDE · balances nacionales mensuales · no PMI</div>
+ 
+ <div class="v4-status v5-status" id="v5-manufacturing-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-manufacturing-chart"></div>
+ <div class="v4-foot"><span id="v5-manufacturing-dates">Esperando datos validados</span><a href="https://data-explorer.oecd.org/" target="_blank" rel="noopener noreferrer">OCDE / FRED ↗</a></div>
+ </article><article class="panel v4-card v5-card" id="v5-claims">
+ <div class="v4-card-head"><h3>Solicitudes de desempleo · EE. UU.</h3><button type="button" class="market-inspect" data-inspect="v5-claims">Ampliar ↗</button></div>
+ <div class="v4-muted">Iniciales y media de 4 semanas · miles · semanal</div>
+ 
+ <div class="v4-status v5-status" id="v5-claims-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-claims-chart"></div>
+ <div class="v4-foot"><span id="v5-claims-dates">Esperando datos validados</span><a href="https://fred.stlouisfed.org/series/ICSA" target="_blank" rel="noopener noreferrer">DOL / FRED ↗</a></div>
+ </article></div>
+<div class="v4-section-header v5-secondary"><h2>Análisis técnico · cierres diarios</h2><small>Datos reales · 10 años · consulta al abrir</small></div><div class="v5-grid"><article class="panel v4-card v5-card" id="v5-rsi">
+ <div class="v4-card-head"><h3>RSI 14 · oro y plata</h3><button type="button" class="market-inspect" data-inspect="v5-rsi">Ampliar ↗</button></div>
+ <div class="v4-muted">Wilder · 14 cierres · escala 0–100</div>
+ 
+ <div class="v4-status v5-status" id="v5-rsi-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-rsi-chart"></div>
+ <div class="v4-foot"><span id="v5-rsi-dates">Esperando datos validados</span><a href="https://finance.yahoo.com/quote/GC%3DF/history/" target="_blank" rel="noopener noreferrer">Fuente de futuros ↗</a></div>
+ </article><article class="panel v4-card v5-card" id="v5-sma">
+ <div class="v4-card-head"><h3>Medias móviles · oro / plata</h3><button type="button" class="market-inspect" data-inspect="v5-sma">Ampliar ↗</button></div>
+ <div class="v4-muted">Precio y SMA 50 / 200 cierres · USD/oz</div>
+ <div class="v5-switch" role="group" aria-label="Metal de las medias"><button type="button" data-v5-ma-metal="gold" aria-pressed="true">Oro</button><button type="button" data-v5-ma-metal="silver" aria-pressed="false">Plata</button></div>
+ <div class="v4-status v5-status" id="v5-sma-state" role="status">Consultando fuente…</div>
+ <div class="v4-graph v5-graph" id="v5-sma-chart"></div>
+ <div class="v4-foot"><span id="v5-sma-dates">Esperando datos validados</span><a href="https://finance.yahoo.com/quote/SI%3DF/history/" target="_blank" rel="noopener noreferrer">Fuente de futuros ↗</a></div>
+ </article></div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V5.0</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V5.1</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -1121,6 +1166,7 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
  if(Number.isFinite(options.baseline))all.push(options.baseline);
  let mn=Math.min(...all),mx=Math.max(...all),span=Math.max(.000001,mx-mn);
  mn-=span*.14;mx+=span*.14;
+ if(Array.isArray(options.fixedRange)&&options.fixedRange.length===2){[mn,mx]=options.fixedRange;}
  const Y=z=>T+(mx-z)/(mx-mn)*ph;
  const firstT=plotDates[0],lastT=plotDates.at(-1),timeRange=Math.max(1,lastT-firstT);
  const X=t=>L+(t-firstT)/timeRange*pw;
@@ -1131,6 +1177,7 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
    svg+='<text class="native-axis" x="'+(L-8)+'" y="'+(cy+4).toFixed(1)+'" text-anchor="end">'+fmt(value,unit==="%"?1:2)+unit+'</text>';
  }
  if(Number.isFinite(options.baseline))svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(options.baseline).toFixed(1)+'" y2="'+Y(options.baseline).toFixed(1)+'" stroke="#8395a6" stroke-dasharray="5 4" stroke-width="1"/>';
+ for(const level of options.referenceLines||[]){if(Number.isFinite(level)&&level>=mn&&level<=mx)svg+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(level).toFixed(1)+'" y2="'+Y(level).toFixed(1)+'" stroke="#8395a6" stroke-dasharray="3 4" stroke-width="1"/><text class="native-axis" x="'+(W-R-3)+'" y="'+(Y(level)-4).toFixed(1)+'" text-anchor="end">'+level+'</text>';}
  const ticks=W<310?3:W<570?4:6;
  for(let j=0;j<ticks;j++){
    const fraction=j/(ticks-1),t=firstT+timeRange*fraction,cx=X(t);
@@ -1609,7 +1656,7 @@ function sessionDay(timestamp,zone="America/New_York"){
 }
 let yahooQueue=Promise.resolve(),yahooLastRequest=0;
 async function yahooChartRequest(symbol,range){
- const url=METALS_CORS_RELAY+"https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+new URLSearchParams({range,interval:"1d"});
+ const url=METALS_CORS_RELAY+"https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+new URLSearchParams(typeof range==="object"?{...range,interval:"1d"}:{range,interval:"1d"});
  const work=async()=>{
   for(let attempt=0;attempt<2;attempt++){
    const pause=650-(Date.now()-yahooLastRequest);if(pause>0)await waitSource(pause);
@@ -1655,7 +1702,7 @@ async function fetchPublicOfficialCSV(url){
 let futuresCheckState="pending",futuresCheckError="",futuresCheckedAt=null;
 function validateYahooFuture(raw,key){
  const cfg=FUTURES_YAHOO[key],record=raw?.chart?.result?.[0],meta=record?.meta;
- if(!meta||meta.symbol!==cfg.symbol||meta.instrumentType!=="FUTURE"||meta.currency!=="USD"||
+ if(!meta||meta.symbol!==cfg.symbol||meta.instrumentType!=="FUTURE"||meta.dataGranularity!=="1d"||meta.currency!=="USD"||
     meta.exchangeName!==cfg.exchange||meta.exchangeTimezoneName!=="America/New_York")
   throw Error(key+": identidad, mercado, divisa o zona de futuro incorrectos");
  const timestamps=record.timestamp,quotes=record.indicators?.quote?.[0],closes=quotes?.close;
@@ -1694,11 +1741,20 @@ function updateFuturesLinks(){
 function applyFuturesSet(series,provider,source){
  for(const key of FUTURE_KEYS){futuresCache[key]=series[key];futuresFreshness[key]=sourceCoverageLabel(series[key],source);}
  longFuturesProvenance=provider;
- updateFuturesLinks();renderFuturesCards();renderFuturesComparison();
+ updateFuturesLinks();renderFuturesCards();renderFuturesComparison();window.renderMetalsV5?.();
  if(typeof detailKind!=="undefined"&&["gold","silver","copper","brent","futures"].includes(detailKind))drawMarketDetail();
 }
 async function loadYahooFutures(previous){
- const result=await Promise.allSettled(FUTURE_KEYS.map(async key=>[key,validateYahooFuture(await yahooChartRequest(FUTURES_YAHOO[key].symbol,"10y"),key)]));
+ const warmup=new Date();warmup.setUTCFullYear(warmup.getUTCFullYear()-11);warmup.setUTCDate(warmup.getUTCDate()-30);
+ const query={period1:String(Math.floor(warmup.getTime()/1000)),period2:String(Math.floor(Date.now()/1000))};
+ const result=await Promise.allSettled(FUTURE_KEYS.map(async key=>{
+  const symbol=FUTURES_YAHOO[key].symbol;
+  let rows;
+  if(key==="gold"||key==="silver"){
+   try{rows=validateYahooFuture(await yahooChartRequest(symbol,query),key);}catch(error){console.warn("Histórico técnico ampliado no disponible; se prueba histórico de 10 años",error);}
+  }
+  return [key,rows||validateYahooFuture(await yahooChartRequest(symbol,"10y"),key)];
+ }));
  const failed=result.map((item,i)=>item.status==="rejected"?FUTURE_KEYS[i]+": "+String(item.reason?.message||item.reason):null).filter(Boolean);
  if(failed.length)throw Error("Conjunto incompleto: "+failed.join("; "));
  const series=Object.fromEntries(result.map(item=>item.value));
@@ -1825,6 +1881,8 @@ async function loadFuturesCards(){
   }
  }finally{
   futuresCheckedAt=new Date().toISOString();
+  window.renderMetalsV5?.();
+  if(detailKind?.startsWith("v5-"))drawMarketDetail();
   window.renderMetalsQuality?.();
  }
 }
@@ -2818,6 +2876,10 @@ function v4AlignedCotRows(goldRows,silverRows){
  const silver=new Map(silverRows.map(r=>[r.date,r]));
  return goldRows.filter(r=>silver.has(r.date)).map(g=>({date:g.date,t:g.t,gold:g,silver:silver.get(g.date)}));
 }
+let cotView="net";
+function v4RollingPercentiles(rows){
+ const out=new Map();for(let i=51;i<rows.length;i++){const sample=rows.slice(i-51,i+1),v=rows[i].pct;out.set(rows[i].date,100*sample.filter(x=>x.pct<=v).length/52);}return out;
+}
 function v4RenderCotPanel(kind){
  const id=kind==="cot"?"v4-cot":"v4-oi",host=document.getElementById(id+"-chart"),state=document.getElementById(id+"-state"),dates=document.getElementById(id+"-dates");
  if(!host||!state)return;
@@ -2828,6 +2890,9 @@ function v4RenderCotPanel(kind){
   dates.textContent="CFTC · fuentes pendientes";return;
  }
  const aligned=v4AlignedCotRows(v4Slice(allGold),v4Slice(allSilver));
+ const percentileMode=kind==="cot"&&cotView==="percentile",pg=percentileMode?v4RollingPercentiles(allGold):null,ps=percentileMode?v4RollingPercentiles(allSilver):null;
+ const plotted=percentileMode?aligned.filter(p=>pg.has(p.gold.date)&&ps.has(p.silver.date)):aligned;
+ if(kind==="cot"){const note=document.getElementById("v4-cot-mode-note");if(note)note.textContent=percentileMode?"Percentil móvil de neto/OI · últimos 52 informes de cada metal":"Dos series simultáneas · neto especulativo / interés abierto (%)";}
  const end=v4Window().end;
  const goldLast=aligned.at(-1)?.gold||v4Current(allGold),silverLast=aligned.at(-1)?.silver||v4Current(allSilver);
  if(!goldLast||!silverLast){
@@ -2846,15 +2911,20 @@ function v4RenderCotPanel(kind){
   (cot?"":" Volumen diario CME no disponible.")+'</div>';
  const matching=goldLast.date===silverLast.date;
  dates.textContent=(matching?"Informe común "+goldLast.date:"Oro "+goldLast.date+" / plata "+silverLast.date)+" · "+aligned.length+" fechas compartidas en rango · CFTC posiciones martes, publicación exacta no informada";
- if(aligned.length>=2){
-  const lines=cot?[
+ if(plotted.length>=2){
+  const lines=percentileMode?[
+   {label:"Oro GC · percentil",color:"#f4ba3c",points:plotted.map(p=>pg.get(p.gold.date))},
+   {label:"Plata SI · percentil",color:"#d7e3ef",points:plotted.map(p=>ps.get(p.silver.date))}
+  ]:cot?[
    {label:"Oro GC · neto/OI",color:"#f4ba3c",points:aligned.map(p=>p.gold.pct)},
    {label:"Plata SI · neto/OI",color:"#d7e3ef",points:aligned.map(p=>p.silver.pct)}
   ]:[
    {label:"Oro GC · ΔOI base 0",color:"#f4ba3c",points:aligned.map(p=>(p.gold.oi/aligned[0].gold.oi-1)*100)},
    {label:"Plata SI · ΔOI base 0",color:"#d7e3ef",points:aligned.map(p=>(p.silver.oi/aligned[0].silver.oi-1)*100)}
   ];
-  nativeChart(id+"-chart",lines,aligned.map(p=>p.t),"%",'<span>CFTC Futures Only · fechas comunes de los informes · '+(cot?"neto Managed Money / OI":"OI normalizado a "+aligned[0].date)+'. Los valores absolutos figuran arriba.</span>');
+  const partial=percentileMode&&plotted[0].gold.date>v4Window().start&&Date.parse(plotted[0].gold.date)-Date.parse(v4Window().start)>14*86400000;
+  if(partial)dates.textContent+=" · percentil con cobertura parcial desde "+plotted[0].gold.date;
+  nativeChart(id+"-chart",lines,plotted.map(p=>p.t),percentileMode?"":"%",'<span>CFTC Futures Only · fechas comunes de los informes · '+(percentileMode?"Percentil móvil: 52 informes hasta cada fecha; no probabilidad de giro. Las cifras superiores conservan el neto/OI y percentil histórico.":cot?"neto Managed Money / OI":"OI normalizado a "+aligned[0].date)+'. Los valores absolutos figuran arriba.</span>',percentileMode?{baseline:50,referenceLines:[10,90],fixedRange:[0,100]}:{});
  }else host.innerHTML='<div class="v4-placeholder">'+(aligned.length===1?"Solo existe una fecha común dentro del intervalo: se muestran las cifras, no una curva.":"No hay informes de ambos metales en las mismas fechas dentro del rango seleccionado.")+'</div>';
 }
 function v4ParseGvz(csv){
@@ -3006,7 +3076,8 @@ async function bootV4(){
  // Query the primary public government source at opening. A rejected CORS
  // request never erases a validated same-origin snapshot.
  try{
-  const filter="cftc_contract_market_code in('088691','084691') and report_date_as_yyyy_mm_dd >= '2016-10-01'";
+  const cotStart=new Date();cotStart.setUTCFullYear(cotStart.getUTCFullYear()-11);cotStart.setUTCMonth(cotStart.getUTCMonth()-2);
+  const filter="cftc_contract_market_code in('088691','084691') and report_date_as_yyyy_mm_dd >= '"+cotStart.toISOString().slice(0,10)+"'";
   const params=new URLSearchParams({"$select":"report_date_as_yyyy_mm_dd,cftc_contract_market_code,cftc_market_code,market_and_exchange_names,open_interest_all,m_money_positions_long_all,m_money_positions_short_all","$where":filter,"$order":"report_date_as_yyyy_mm_dd DESC","$limit":"1500"});
   const response=await fetch(V4_SOURCE_COT+"?"+params,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(18000)});
   if(!response.ok)throw Error("CFTC HTTP "+response.status);
@@ -3039,7 +3110,7 @@ function drawV4Detail(kind,host,foot){
  const chart=chartName?marketChartCache.get(chartName):null;
  if(chart?.lines?.length&&chart.dates?.length>=2){
   host.innerHTML='<div class="v4-graph" id="v4-detail-graph"></div>';
-  nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub);
+  nativeChart("v4-detail-graph",chart.lines,chart.dates,chart.unit,chart.sub,chart.options||{});
   if(name==="flows"){
    host.insertAdjacentHTML("beforeend",'<details class="v4-extra-method" '+(window.matchMedia("(max-width:780px)").matches?"":"open")+'><summary>Contexto WGC e iShares SLV</summary>'+v4ETFExtra()+'</details>');
    foot.textContent=title+" · "+(v4ETFSelection().context?"contexto opcional de 2A fuera del periodo global":"periodo global "+activePeriodLabel())+" · comparación trimestral SEC en %. El dato WGC se muestra aparte.";
@@ -3053,7 +3124,7 @@ function drawV4Detail(kind,host,foot){
  return true;
 }
 
-function init(){document.getElementById('v4-etf-context-toggle').addEventListener('click',toggleETFContext);document.getElementById('detail-context-toggle').addEventListener('click',toggleETFContext);bootMarket();bootMacro().finally(()=>window.metalsQualitySignal?.('macro'));bootV4().finally(()=>window.metalsQualitySignal?.('v4'));$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
+function init(){document.querySelectorAll("[data-cot-view]").forEach(b=>b.addEventListener("click",()=>{cotView=b.dataset.cotView;document.querySelectorAll("[data-cot-view]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));v4RenderCotPanel("cot");window.renderMetalsQuality?.();if(detailKind==="v4-cot")drawMarketDetail();}));document.getElementById('v4-etf-context-toggle').addEventListener('click',toggleETFContext);document.getElementById('detail-context-toggle').addEventListener('click',toggleETFContext);bootMarket();bootMacro().finally(()=>window.metalsQualitySignal?.('macro'));bootV4().finally(()=>window.metalsQualitySignal?.('v4'));$('#futures-csv-upload').addEventListener('change',event=>importFuturesCsvFiles(event.target.files));document.querySelectorAll('[data-inspect]').forEach(b=>b.addEventListener('click',()=>openMarketDetail(b.dataset.inspect)));document.querySelectorAll('[data-expand-macro]').forEach(b=>b.addEventListener('click',()=>openMarketDetail('macro-'+b.dataset.expandMacro)));$('#detail-close').addEventListener('click',closeMarketDetail);$('#detail-overlay').addEventListener('click',e=>{if(e.target.id==='detail-overlay')closeMarketDetail();});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#detail-overlay').hidden)closeMarketDetail();});$('#ratio-view-toggle').addEventListener('click',()=>{ratioDisplay=ratioDisplay==="absolute"?"percent":"absolute";$('#ratio-view-toggle').textContent=ratioDisplay==="absolute"?"Vista: ratio":"Vista: cambio %";renderNative();});let lastMacroWidth=window.innerWidth;
 window.addEventListener('resize',()=>{
  const nextWidth=window.innerWidth;
  if(Math.abs(nextWidth-lastMacroWidth)<9)return;
@@ -3138,8 +3209,8 @@ init();
   syncTheme();
 })();
 </script>
-<script defer src="./quality.js?v=20261125-v50"></script>
-<script defer src="./explanations.js?v=20261125-v50-guides2"></script>
+<script defer src="./quality.js?v=20261125-v51"></script>
+<script defer src="./explanations.js?v=20261125-v51"></script>
 <script defer src="./indices.js?v=20261125-v49"></script>
-<script defer src="./fundamentals.js?v=20261125-v50"></script>
+<script defer src="./fundamentals.js?v=20261125-v51"></script>
 </body></html>

@@ -1,3 +1,9 @@
+# Metals Terminal V5.1 — expectativas, crédito, actividad y técnica
+
+## V5.1 · 25/11/2026
+
+Se añaden seis tarjetas nativas en tres filas de dos columnas: expectativa de tipos cortos a un año (Kim–Wright, THREEFF1 − THREEFFTP1, frente a DFF y forward), diferencial GZ y EBP (Fed Board), confianza manufacturera EE. UU./China (OCDE, no PMI), solicitudes iniciales y media oficial de cuatro semanas (DOL/FRED), RSI 14 Wilder GC/SI y SMA 50/200 con selector de metal. Se añade al COT un modo percentil móvil de 52 informes; las cifras absolutas originales se conservan. Datos publicados, fecha efectiva, sin interpolación, consulta por apertura/recarga; cálculos locales, sin servicios ni suscripciones nuevos. Histórico objetivo de 10 años con precalentamiento previo cuando se verifica; el respaldo incompleto se etiqueta. Modelos Fed y balances OCDE son alternativas explícitas, no FedWatch, PMI ni AAII. No se integran contratos individuales de futuros, lease rates, VIX9D, VXSLV, LBMA, volumen CME, compras de bancos centrales o High Yield ICE sin acreditar 10 años, acceso renovable y derechos. Fuentes gratuitas sin SLA. 27 guías; límites de extensión previos mantenidos.
+
 # Metals Terminal V5.0 — fundamentos complementarios
 
 ## V5.0 · revisión de guías (25/11/2026)

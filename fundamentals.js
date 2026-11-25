@@ -10,9 +10,18 @@ const META={
  vixterm:{label:"Estructura temporal VIX",frequency:"diario",ids:["VIXCLS","VXVCLS"],names:["VIX 30D","VIX 3M"],colors:["#fb6571","#38c9e5"],unit:"%",note:"Cboe vía FRED · cierres diarios comunes · no futuros VIX."},
  nfci:{label:"Condiciones financieras NFCI / ANFCI",frequency:"semanal",ids:["NFCI","ANFCI"],names:["NFCI","ANFCI"],colors:["#38c9e5","#b88aff"],unit:"",note:"Federal Reserve Bank of Chicago vía FRED · índice semanal · cero = media."},
  inflation:{label:"Inflación de EE. UU.",frequency:"mensual",ids:["CPIAUCSL","CPILFESL","PCEPILFE"],names:["IPC general","IPC suby.","PCE suby."],colors:["#fb6571","#f4ba3c","#38c9e5"],unit:"%",note:"BLS / BEA vía FRED · interanual, índices desestacionalizados · fecha de referencia, no publicación."},
+ rates:{label:"Expectativa de tipos a 1 año · Kim–Wright",frequency:"diario",ids:["THREEFF1","THREEFFTP1","DFF"],names:["Tipo corto esperado 1A","Fed efectivo","Forward 1A"],colors:["#38c9e5","#f4ba3c","#b88aff"],unit:"%",note:"Fed Board · Kim–Wright vía FRED. Forward instantáneo 1A menos prima por plazo estimada. No FedWatch ni probabilidades de reuniones."},
+ credit:{label:"Riesgo crediticio · GZ y EBP",frequency:"mensual",names:["Spread GZ","Prima EBP"],colors:["#fb6571","#38c9e5"],unit:" pp",note:"Federal Reserve Board · Favara, Gilchrist, Lewis y Zakrajšek (2016), serie mensual revisable. No es el índice ICE High Yield."},
+ manufacturing:{label:"Confianza manufacturera · EE. UU. / China",frequency:"mensual",ids:["BSCICP02USM460S","CHNBSCICP02STSAM"],names:["EE. UU.","China"],colors:["#38c9e5","#fb6571"],unit:" pp",note:"OCDE, Main Economic Indicators, vía FRED · balances nacionales de confianza, ajustados estacionalmente. No son PMI; metodología nacional distinta."},
+ claims:{label:"Solicitudes iniciales de desempleo · EE. UU.",frequency:"semanal",ids:["ICSA","IC4WSA"],names:["Iniciales","Media 4 semanas"],colors:["#38c9e5","#f4ba3c"],unit:" mil",note:"U.S. Employment and Training Administration vía FRED · solicitudes semanales ajustadas estacionalmente, miles; no tasa de paro."},
+ rsi:{label:"RSI 14 · oro y plata",frequency:"diario",names:["Oro GC","Plata SI"],colors:["#f4ba3c","#a3c4e5"],unit:"",note:"RSI Wilder de 14 cierres diarios, calculado sobre los futuros continuos ya consultados; escala 0–100."},
+ sma:{label:"Medias móviles · futuros",frequency:"diario",names:["Cierre","SMA 50","SMA 200"],colors:["#f4ba3c","#38c9e5","#b88aff"],unit:"",note:"Cierre y medias simples de 50 y 200 observaciones diarias del mismo futuro continuo; no intradía."},
  comex:{label:"Inventarios físicos COMEX",frequency:"semanal",names:["Oro","Plata"],colors:["#f4ba3c","#a3c4e5"],unit:"%",note:"MetalCharts.org · informes CME, último disponible de cada semana ISO. No es stock mundial."}
 };
 const cachePrefix="metals-v5-data-v1-";
+const EBP="https://www.federalreserve.gov/econres/notes/feds-notes/ebp_csv.csv";
+const technical=id=>id==="rsi"||id==="sma";
+const rawCount=id=>id==="comex"||id==="credit"?1:META[id].ids.length;
 const datasets=new Map(),status=new Map();
 const el=id=>document.getElementById(id),day=()=>new Date().toISOString().slice(0,10);
 const validDay=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d+"T00:00:00Z"))&&new Date(d+"T00:00:00Z").toISOString().slice(0,10)===d&&d<=day();
@@ -25,17 +34,17 @@ const monthPrev=(date)=>{const y=Number(date.slice(0,4))-1;return y+date.slice(4
 function fredRows(raw,id){
  const lines=raw.trim().replace(/^\uFEFF/,"").split(/\r?\n/),head=lines.shift()?.split(",");
  if(head?.length!==2||!["observation_date","DATE"].includes(head[0])||head[1]!==id)throw Error(id+": identidad CSV incorrecta");
- const rows=[],seen=new Set(),monthly=["CPIAUCSL","CPILFESL","PCEPILFE"].includes(id),weekly=["NFCI","ANFCI"].includes(id);
+ const rows=[],seen=new Set(),inflation=["CPIAUCSL","CPILFESL","PCEPILFE"].includes(id),confidence=["BSCICP02USM460S","CHNBSCICP02STSAM"].includes(id),claims=["ICSA","IC4WSA"].includes(id),rates=["THREEFF1","THREEFFTP1","DFF"].includes(id),monthly=inflation||confidence,weekly=["NFCI","ANFCI"].includes(id)||claims;
  for(const line of lines){
   const [date,str]=line.split(","),value=num(str);
   if(!Number.isFinite(value))continue;
-  if(!validDay(date)||seen.has(date)||(monthly&&!date.endsWith("-01"))||(weekly?(value< -20||value>20):(value<=0||value>10000)))throw Error(id+": dato inválido o duplicado");
-  seen.add(date);rows.push({date,value});
+  if(!validDay(date)||seen.has(date)||(monthly&&!date.endsWith("-01"))||(confidence?Math.abs(value)>100:claims?(value<=0||value>15000000):rates?(value< -20||value>30):weekly?Math.abs(value)>20:(value<=0||value>10000)))throw Error(id+": dato inválido o duplicado");
+  seen.add(date);rows.push({date,value:claims?value/1000:value});
  }
  sortRows(rows);
  const min=monthly?125:weekly?500:2200;
  if(rows.length<min||rows[0].date>ago(day(),10,10))throw Error(id+": histórico insuficiente");
- if(!monthly)return rows;
+ if(!inflation)return rows;
  const m=new Map(rows.map(r=>[r.date,r.value]));
  return rows.filter(r=>m.has(monthPrev(r.date))).map(r=>({date:r.date,value:100*(r.value/m.get(monthPrev(r.date))-1)}));
 }
@@ -55,8 +64,24 @@ function comexRows(raw){
  for(const metal of ["gold","silver"]){sortRows(result[metal]);if(result[metal].length<12)throw Error("COMEX: histórico insuficiente "+metal);}
  return [result.gold,result.silver];
 }
+function creditRows(raw){
+ const lines=raw.trim().replace(/^\uFEFF/,"").split(/\r?\n/);
+ if(lines.shift()!=="date,gz_spread,ebp,est_prob")throw Error("GZ/EBP: cabecera incorrecta");
+ const rows=[[],[]],seen=new Set();
+ for(const line of lines){const [date,gz,ebp]=line.split(","),a=num(gz),b=num(ebp);
+  if(!Number.isFinite(a)||!Number.isFinite(b))continue;
+  if(!validDay(date)||!date.endsWith("-01")||seen.has(date)||Math.abs(a)>30||Math.abs(b)>30)throw Error("GZ/EBP: valor inválido");
+  seen.add(date);rows[0].push({date,value:a});rows[1].push({date,value:b});
+ }
+ rows.forEach(sortRows);if(rows[0].length<120||rows[0][0].date>ago(day(),10))throw Error("GZ/EBP: histórico insuficiente");
+ return rows;
+}
 function parse(id,raw){
- return id==="comex"?comexRows(raw[0]):META[id].ids.map((key,i)=>fredRows(raw[i],key));
+ if(id==="comex")return comexRows(raw[0]);
+ if(id==="credit")return creditRows(raw[0]);
+ const series=META[id].ids.map((key,i)=>fredRows(raw[i],key));
+ if(id==="rates"){const shared=commonRows(series);return [shared.map(r=>({date:r.date,value:r.values[0].value-r.values[1].value})),series[2],series[0]];}
+ return series;
 }
 function commonRows(series){
  if(!series?.length)return [];
@@ -66,7 +91,7 @@ function commonRows(series){
 function loadSaved(id){
  try{
   const saved=JSON.parse(localStorage.getItem(cachePrefix+id)||"null");
-  if(!saved||!Array.isArray(saved.raw)||saved.raw.length!==(id==="comex"?1:META[id].ids.length)||saved.raw.some(s=>typeof s!=="string"||s.length>600000))return;
+  if(!saved||!Array.isArray(saved.raw)||saved.raw.length!==rawCount(id)||saved.raw.some(s=>typeof s!=="string"||s.length>600000))return;
   const series=parse(id,saved.raw);if(commonRows(series).length<2)return;
   datasets.set(id,series);
  }catch(e){/* invalid or inaccessible local cache: keep no data */}
@@ -79,19 +104,20 @@ function accept(id,raw){
  if(old&&series.some((s,i)=>s.at(-1).date<old[i].at(-1).date))throw Error("La respuesta retrocede frente al respaldo");
  datasets.set(id,series);save(id,raw);
 }
-async function metalCSV(){
+async function metalCSV(url=METAL){
+ if(![METAL,EBP].includes(url))throw Error("CSV no autorizado");
  const request=url=>fetch(url,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(22000)});
  let res,via="direct";
- try{res=await request(METAL);}catch(e){res=await request("https://proxy.cors.dev/"+METAL);via="relay";}
- if(!res.ok)throw Error("MetalCharts HTTP "+res.status);
- const raw=await res.text();if(raw.length<100||raw.length>600000)throw Error("CSV COMEX incorrecto");
+ try{res=await request(url);}catch(e){res=await request("https://proxy.cors.dev/"+url);via="relay";}
+ if(!res.ok)throw Error("CSV público HTTP "+res.status);
+ const raw=await res.text();if(raw.length<100||raw.length>600000)throw Error("CSV público incorrecto");
  return {raw,via};
 }
 async function refresh(id){
  try{
-  const entries=id==="comex"?[await metalCSV()]:await Promise.all(META[id].ids.map(key=>fetchPublicOfficialCSV(FRED+"?"+new URLSearchParams({id:key,cosd:ago(day(),11,2)}))));
+  const entries=id==="comex"||id==="credit"?[await metalCSV(id==="credit"?EBP:METAL)]:await Promise.all(META[id].ids.map(key=>fetchPublicOfficialCSV(FRED+"?"+new URLSearchParams({id:key,cosd:ago(day(),11,2)}))));
   accept(id,entries.map(x=>x.raw));
-  status.set(id,{pending:false,blocked:false,mode:"Consulta "+(id==="comex"?"MetalCharts":"FRED")+(entries.some(x=>x.via==="relay")?" · vía CORS":" directa")});
+  status.set(id,{pending:false,blocked:false,mode:"Consulta "+(id==="comex"?"MetalCharts":id==="credit"?"Fed Board":"FRED")+(entries.some(x=>x.via==="relay")?" · vía CORS":" directa")});
  }catch(e){
   status.set(id,{pending:false,blocked:datasets.has(id),mode:datasets.has(id)?"Caché validada · fallo al renovar":"Consulta fallida",error:String(e?.message||e).slice(0,180)});
   console.warn("[V5] "+id,e);
@@ -99,16 +125,39 @@ async function refresh(id){
  renderOne(id);window.renderMetalsQuality?.();
  if(typeof detailKind==="string"&&detailKind==="v5-"+id&&!el("detail-overlay")?.hidden)drawDetail(detailKind,el("detail-chart"),el("detail-foot"));
 }
-let stock="registered";
+let stock="registered",maMetal="gold";
+const maName=()=>maMetal==="gold"?"Oro GC":"Plata SI";
 const stockLabel=()=>({registered:"Registrado",eligible:"Elegible",total:"Total"}[stock]);
 function describe(id,row){
  if(!row)return "Sin dato en el corte seleccionado";
  if(id==="comex")return "Oro "+fmtN(row.values[0][stock]/1e6,2)+" M oz · Plata "+fmtN(row.values[1][stock]/1e6,2)+" M oz · "+stockLabel();
  const m=META[id];
- return row.values.map((r,i)=>m.names[i]+" "+fmtN(r.value,id==="nfci"?3:2)+m.unit).join(" · ");
+ return (id==="sma"?maName()+" · ":"")+row.values.map((r,i)=>m.names[i]+" "+fmtN(r.value,id==="nfci"?3:id==="claims"?1:2)+m.unit+(id==="sma"?" USD/oz":"")).join(" · ");
+}
+function technicalRows(id){
+ const keys=id==="rsi"?["gold","silver"]:[maMetal],out=[];
+ for(const key of keys){
+  const rows=futuresCache[key]||[];
+  if(rows.length<200)return [];
+  let gain=0,loss=0,sum50=0,sum200=0;
+  const rsi=[],price=[],sma50=[],sma200=[];
+  for(let i=0;i<rows.length;i++){
+   const r=rows[i],c=r.c;
+   if(!validDay(r.date)||!Number.isFinite(c)||c<=0||(i&&r.date<=rows[i-1].date))return [];
+   sum50+=c;sum200+=c;if(i>=50)sum50-=rows[i-50].c;if(i>=200)sum200-=rows[i-200].c;
+   if(i>=199){price.push({date:r.date,value:c});sma50.push({date:r.date,value:sum50/50});sma200.push({date:r.date,value:sum200/200});}
+   if(i>0){
+    const delta=c-rows[i-1].c,up=Math.max(0,delta),down=Math.max(0,-delta);
+    if(i<=14){gain+=up/14;loss+=down/14;}else{gain=(gain*13+up)/14;loss=(loss*13+down)/14;}
+    if(i>=14){const v=loss===0?(gain===0?50:100):100-100/(1+gain/loss);rsi.push({date:r.date,value:v});}
+   }
+  }
+  if(id==="rsi")out.push(rsi);else out.push(price,sma50,sma200);
+ }
+ return commonRows(out);
 }
 function periodRows(id){
- const all=commonRows(datasets.get(id)),w=v4Window();
+ const all=technical(id)?technicalRows(id):commonRows(datasets.get(id)),w=v4Window();
  const available=all.filter(r=>r.date<=w.end),rows=available.filter(r=>r.date>=w.start),last=available.at(-1);
  return {all,rows,last,w};
 }
@@ -119,12 +168,12 @@ function buildPlot(id,rows){
   if(id==="comex"){const base=points[0];if(base<=0)throw Error("Base no positiva");points=points.map(v=>100*(v/base-1));}
   return {label:name,color:meta.colors[i],points};
  });
- const note=id==="comex"?"Variación desde la primera fecha común (base 0 %). <a href='"+CREDIT+"' target='_blank' rel='noopener noreferrer'>MetalCharts.org</a> · CME · semanal.":id==="vixterm"?"Cboe vía FRED (VIXCLS y VXVCLS), cierres diarios. © Cboe; cita requerida.":meta.note;
- return {lines,dates,unit:meta.unit,note,options:id==="nfci"||id==="comex"?{baseline:0}:{}};
+ const note=id==="sma"?maName()+" · USD/oz · SMA de 50 y 200 cierres disponibles. "+meta.note:id==="comex"?"Variación desde la primera fecha común (base 0 %). <a href='"+CREDIT+"' target='_blank' rel='noopener noreferrer'>MetalCharts.org</a> · CME · semanal.":id==="vixterm"?"Cboe vía FRED (VIXCLS y VXVCLS), cierres diarios. © Cboe; cita requerida.":meta.note;
+ return {lines,dates,unit:meta.unit,note,options:id==="rsi"?{baseline:50,referenceLines:[30,70],fixedRange:[0,100]}:["nfci","comex","credit","manufacturing"].includes(id)?{baseline:0}:{}};
 }
 function renderOne(id){
  const meta=META[id],h=el("v5-"+id+"-chart"),state=el("v5-"+id+"-state"),datesEl=el("v5-"+id+"-dates");if(!h||!state||!datesEl)return;
- const {all,rows,last,w}=periodRows(id),s=status.get(id)||{pending:true,mode:"Consultando"};
+ const {all,rows,last,w}=periodRows(id),s=technical(id)?{pending:futuresCheckState==="pending",blocked:futuresCheckState==="fallback",mode:futuresCheckState==="live"?"Consulta "+futuresProvenanceLabel()+" · cálculo local":futuresCheckState==="live-alternate"?"Consulta Aethereal · cálculo local":futuresCheckState==="fallback"?"Respaldo de futuros · cálculo local":"Comprobando futuros"}:status.get(id)||{pending:true,mode:"Consultando"};
  const first=all[0]?.date||null,end=all.at(-1)?.date||null;
  // A series starting well after the selected interval is partial, not full 10A.
  const tolerance=meta.frequency==="mensual"?40:meta.frequency==="semanal"?12:5;
@@ -150,7 +199,7 @@ function drawDetail(kind,host,foot){
  if(!plot||rows.length<2||nativePeriod==="1d"){
   host.innerHTML='<div class="native-error">'+escape(last?describe(id,last)+" · "+last.date+". No hay dos observaciones dentro del periodo.":"Sin datos validados.")+'</div>';
  }else nativeChart("detail-chart",plot.lines,plot.dates,plot.unit,plot.sub,plot.options||{});
- foot.textContent=meta.note+(id==="comex"?" · "+stockLabel()+" · "+(last?describe(id,last):""):"")+" · "+activePeriodLabel()+" · "+(last?last.date:"Sin fecha");
+ foot.textContent=meta.note+(id==="sma"?" · "+maName()+" · USD/oz":"")+(id==="comex"?" · "+stockLabel()+" · "+(last?describe(id,last):""):"")+" · "+activePeriodLabel()+" · "+(last?last.date:"Sin fecha");
 }
 window.metalsV5Audit={};
 window.metalsV5Titles=Object.fromEntries(Object.entries(META).map(([k,v])=>["v5-"+k,v.label]));
@@ -160,7 +209,8 @@ document.querySelectorAll("[data-v5-stock]").forEach(b=>b.addEventListener("clic
  stock=b.dataset.v5Stock;document.querySelectorAll("[data-v5-stock]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
  renderOne("comex");if(detailKind==="v5-comex"&&!el("detail-overlay")?.hidden)drawDetail(detailKind,el("detail-chart"),el("detail-foot"));
 }));
-for(const id of Object.keys(META)){loadSaved(id);status.set(id,{pending:true,mode:"Comprobando fuente"});}
+document.querySelectorAll("[data-v5-ma-metal]").forEach(b=>b.addEventListener("click",()=>{maMetal=b.dataset.v5MaMetal;document.querySelectorAll("[data-v5-ma-metal]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));renderOne("sma");if(detailKind==="v5-sma"&&!el("detail-overlay")?.hidden)drawDetail(detailKind,el("detail-chart"),el("detail-foot"));}));
+for(const id of Object.keys(META).filter(id=>!technical(id))){loadSaved(id);status.set(id,{pending:true,mode:"Comprobando fuente"});}
 window.renderMetalsV5();
-Promise.all(Object.keys(META).map(refresh)).finally(()=>{window.metalsQualitySignal?.("v5");window.renderMetalsQuality?.();});
+Promise.all(Object.keys(META).filter(id=>!technical(id)).map(refresh)).finally(()=>{window.metalsQualitySignal?.("v5");window.renderMetalsQuality?.();});
 })();

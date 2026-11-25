@@ -186,7 +186,7 @@
       ],
       [
         "Percentiles y opinión contraria",
-        "<p>P95 significa que aproximadamente el 95 % de los valores históricos usados son inferiores o iguales al actual; no una probabilidad del 95 % de caída. Un extremo alcista puede reflejar fuerza, pero también saturación y vulnerabilidad a liquidaciones. Un extremo bajista puede preceder una recuperación o persistir.</p>"
+        "<p>P95 significa que aproximadamente el 95 % de los valores históricos usados son inferiores o iguales al actual; no una probabilidad del 95 % de caída. Un extremo alcista puede reflejar fuerza, pero también saturación y vulnerabilidad a liquidaciones. Un extremo bajista puede preceder una recuperación o persistir.</p><p>El selector «Percentil 52 informes» dibuja, para cada fecha, la posición del neto/OI entre los últimos 52 informes del mismo metal. P90 representa un saldo superior o igual al 90 % de ese conjunto; 50 es la zona central. No usa datos posteriores. Las cifras superiores mantienen el percentil histórico de toda la muestra disponible, no el móvil. No equivale a la encuesta AAII.</p>"
       ],
       [
         "Cómo combinarlo y límites",
@@ -653,6 +653,202 @@
       [
         "FRED · depósito BCE",
         "https://fred.stlouisfed.org/series/ECBDFR"
+      ]
+    ]
+  },
+  "v5-rates": {
+    "title": "Expectativas de tipos a un año · modelo Kim–Wright",
+    "intro": "Estimación de la evolución esperada del tipo corto nominal estadounidense, obtenida del modelo de estructura temporal de la Reserva Federal (Kim–Wright). No es la probabilidad de una decisión del FOMC ni un futuro SOFR.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: fechas; eje Y: tipo anual en %. La línea de tipo corto esperado a un año resulta de restar la prima por plazo estimada (THREEFFTP1) al forward instantáneo a un año (THREEFF1). Se compara con el tipo efectivo actual de fondos federales (DFF) y con el forward sin ajustar. Las tres líneas usan fechas comunes.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>Si el tipo esperado sube, el modelo estima tipos cortos futuros mayores. Si cae por debajo del efectivo actual, el modelo sugiere un nivel futuro inferior, no una fecha concreta de recorte. Si queda plano, la estimación cambia poco. Una separación del forward y del tipo esperado refleja la prima estimada.</p>"
+      ],
+      [
+        "Lectura para los metales",
+        "<p>Un endurecimiento esperado puede elevar tipos reales o dólar y pesar en oro/plata, incluso antes de que cambie el tipo oficial. Contrasta Treasury 2Y, TIPS, DXY e inflación. El modelo y el tipo efectivo tienen convenciones distintas: la comparación es orientativa.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Datos diarios revisables de la Fed vía FRED. La prima es una estimación, no observable directamente. La curva no representa probabilidades por reunión, ni reproduce FedWatch. No se extrapolan datos ausentes.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "Fed Board · forward 1A",
+        "https://fred.stlouisfed.org/series/THREEFF1"
+      ],
+      [
+        "Fed Board · prima por plazo",
+        "https://fred.stlouisfed.org/series/THREEFFTP1"
+      ],
+      [
+        "Tipo efectivo DFF",
+        "https://fred.stlouisfed.org/series/DFF"
+      ]
+    ]
+  },
+  "v5-credit": {
+    "title": "Riesgo crediticio · GZ y EBP",
+    "intro": "La Reserva Federal publica el diferencial corporativo Gilchrist–Zakrajšek (GZ) y la prima de riesgo excesiva (EBP), una parte del diferencial que el modelo no atribuye a pérdidas esperadas por impago. Es una medida de tensión crediticia, no el índice ICE High Yield.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: meses de referencia. Eje Y: puntos porcentuales (pp). GZ compara rendimientos de bonos corporativos no financieros con Treasuries de flujos equivalentes. EBP estima cuánto del diferencial no se explica por riesgo de impago esperado. Un GZ de 2 pp equivale a 200 puntos básicos; EBP puede ser negativo.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>GZ al alza: mayor coste relativo de financiación corporativa. EBP al alza: el modelo identifica mayor precio del riesgo no atribuible al impago esperado. Si ambas bajan, el entorno crediticio puede relajarse; planas indican estabilidad. No existe una señal automática cuando se cruzan.</p>"
+      ],
+      [
+        "Relación con oro y plata",
+        "<p>Un repunte junto a NFCI y VIX puede indicar endurecimiento y menor apetito por riesgo, compatible con liquidaciones de plata o demanda de refugio en oro. Contrasta dólar, tipos reales y COT; una sola lectura no identifica causalidad.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Serie mensual de investigación de Favara, Gilchrist, Lewis y Zakrajšek (2016). La Fed puede revisar todo el histórico. EBP es estimación, no precio directamente negociado; no equivale a un spread de bonos especulativos ni a una probabilidad de recesión.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "Fed Board · metodología y CSV",
+        "https://www.federalreserve.gov/econres/notes/feds-notes/updating-the-recession-risk-and-the-excess-bond-premium-20161006.html"
+      ]
+    ]
+  },
+  "v5-manufacturing": {
+    "title": "Confianza manufacturera · EE. UU. y China",
+    "intro": "Balances nacionales de confianza del sector manufacturero, difundidos por la OCDE (Main Economic Indicators), ajustados estacionalmente. Recogen opiniones empresariales; no son el PMI de ISM, S&P Global ni el crecimiento real de la producción.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: meses; eje Y: balance en puntos porcentuales. La referencia cero separa balances positivos y negativos. Si EE. UU. marca +10 y China −5, los indicadores nacionales tienen signos opuestos. No significa que la producción estadounidense crezca un 10 % ni que la china caiga un 5 %.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>Una línea creciente indica mejora de la confianza medida por la encuesta, aunque siga negativa; decreciente, deterioro. Una línea plana muestra estabilidad de la opinión agregada. Un cruce iguala valores de los balances nacionales, no garantiza una confianza comparable en términos absolutos.</p>"
+      ],
+      [
+        "Relación con oro, plata y cobre",
+        "<p>Mejora simultánea en ambas economías puede acompañar expectativas de demanda industrial de plata y cobre; deterioro puede pesar en ellas. Contrasta precios de futuros, ratio oro/plata, dólar y empleo. La actividad efectiva puede divergir de las encuestas.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Datos mensuales de OCDE vía FRED; las metodologías nacionales difieren, pueden revisarse y tienen retrasos. No debe aplicarse el umbral PMI de 50. Fuente: OCDE (año de consulta), Main Economic Indicators, data-explorer.oecd.org; fecha de consulta en Fuentes.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "OCDE / FRED · EE. UU.",
+        "https://fred.stlouisfed.org/series/BSCICP02USM460S"
+      ],
+      [
+        "OCDE / FRED · China",
+        "https://fred.stlouisfed.org/series/CHNBSCICP02STSAM"
+      ],
+      [
+        "OCDE · datos",
+        "https://data-explorer.oecd.org/"
+      ]
+    ]
+  },
+  "v5-claims": {
+    "title": "Solicitudes iniciales de desempleo · EE. UU.",
+    "intro": "Número semanal de solicitudes iniciales de prestaciones por desempleo en Estados Unidos, ajustado estacionalmente. Las solicitudes reflejan nuevas peticiones de ayuda, no el número total de personas desempleadas ni la tasa de paro.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: semanas que terminan en sábado. Eje Y: miles de solicitudes. Una lectura de 220 significa 220.000 solicitudes. Se dibuja ICSA, el dato semanal, y la media oficial de cuatro semanas IC4WSA, que reduce el ruido de una semana aislada.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>Si suben las solicitudes y su media, puede haber deterioro del empleo. Si bajan, menos solicitudes iniciales; si quedan planas, el flujo cambia poco. Dato semanal por encima de la media indica que esa semana fue más alta que el promedio, no necesariamente un giro de tendencia.</p>"
+      ],
+      [
+        "Lectura para los metales",
+        "<p>Un repunte persistente puede favorecer expectativas de recortes y reducir tipos reales, pero también dañar la demanda industrial y aumentar el riesgo. La plata puede reaccionar distinto al oro. Contrasta Fed, Treasury, confianza manufacturera y VIX.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Datos semanales de U.S. Employment and Training Administration vía FRED, publicados después de la semana observada. Festivos, huelgas, ajustes estacionales y revisiones pueden provocar saltos. No son una encuesta de empleo ni una medición directa de recesión.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "DOL / FRED · ICSA",
+        "https://fred.stlouisfed.org/series/ICSA"
+      ],
+      [
+        "DOL / FRED · media 4 semanas",
+        "https://fred.stlouisfed.org/series/IC4WSA"
+      ]
+    ]
+  },
+  "v5-rsi": {
+    "title": "RSI 14 · oro y plata",
+    "intro": "El Relative Strength Index de Wilder compara las ganancias y pérdidas recientes de los futuros continuos GC y SI. Mide la fuerza relativa del movimiento reciente del precio de cada metal consigo mismo, no la ratio oro/plata.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: fechas de cierres diarios. Eje Y: escala fija de 0 a 100. Se calcula sobre 14 cambios de cierre con suavizado de Wilder. Un RSI de 50 indica equilibrio aproximado entre ganancias y pérdidas suavizadas. Las referencias de 30 y 70 son convenciones habituales, no límites del precio.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>RSI al alza: gana fuerza el movimiento alcista relativo; a la baja, el bajista. Un RSI plano indica equilibrio similar en su cálculo, no precio necesariamente plano. Sobre 70 suele llamarse sobrecompra, bajo 30 sobreventa; en tendencias fuertes puede permanecer extremo. Un cruce de las líneas iguala sus RSI, no rentabilidades.</p>"
+      ],
+      [
+        "Divergencias",
+        "<p>Si precio alcanza un máximo más alto y RSI un máximo menor, el impulso puede debilitarse; no predice una caída segura. Compara oro y plata con COT, interés abierto y tendencia de medias móviles.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Cálculo local sobre cierres ya verificados; no usa futuros datos ni intradía. El histórico incluye precalentamiento antes del intervalo cuando la fuente lo permite. Los saltos de rollover pueden afectar al RSI. No es señal automática de compra o venta.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "Fuente histórica GC",
+        "https://finance.yahoo.com/quote/GC%3DF/history/"
+      ],
+      [
+        "Fuente histórica SI",
+        "https://finance.yahoo.com/quote/SI%3DF/history/"
+      ]
+    ]
+  },
+  "v5-sma": {
+    "title": "Medias móviles · precio, SMA 50 y SMA 200",
+    "intro": "Las medias móviles simples (SMA) suavizan los cierres diarios del futuro seleccionado, oro GC o plata SI. La SMA 50 es la media de los últimos 50 cierres disponibles; la SMA 200, de los últimos 200.",
+    "blocks": [
+      [
+        "Cómo leer el gráfico",
+        "<p>Eje X: fechas de cierre; eje Y: precio en USD por onza troy. El selector Oro/Plata cambia el instrumento de las tres curvas: precio de cierre, SMA 50 y SMA 200. Ejemplo: cierre de 2.600 USD y SMA 200 de 2.400 significa que el precio está aproximadamente un 8,3 % por encima de esa media.</p>"
+      ],
+      [
+        "Subidas, bajadas y cruces",
+        "<p>Medias crecientes describen una tendencia histórica ascendente; decrecientes, descendente. Una media plana refleja estabilidad del promedio aunque el precio oscile. Un cruce de SMA 50 sobre SMA 200 suele denominarse cruce dorado; el inverso, cruce bajista. Son señales rezagadas, no predicciones.</p>"
+      ],
+      [
+        "Uso conjunto",
+        "<p>Precio por encima de ambas medias puede ser compatible con una tendencia positiva; por debajo, con debilidad. El RSI aporta información del impulso; COT y condiciones financieras ayudan a contextualizar. Los cruces pueden repetirse en mercados laterales.</p>"
+      ],
+      [
+        "Frecuencia y límites",
+        "<p>Cálculo local con observaciones reales anteriores al inicio de la ventana visible. No se rellenan cierres ausentes; se muestran solo puntos con 200 observaciones previas suficientes. Los futuros continuos pueden sufrir efectos de rollover; no equivale a una estrategia invertible.</p>"
+      ]
+    ],
+    "sources": [
+      [
+        "Fuente histórica GC",
+        "https://finance.yahoo.com/quote/GC%3DF/history/"
+      ],
+      [
+        "Fuente histórica SI",
+        "https://finance.yahoo.com/quote/SI%3DF/history/"
       ]
     ]
   }

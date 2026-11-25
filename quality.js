@@ -152,7 +152,7 @@
   putBadge(document.querySelector("#comparativa .main-title-extra"),byId.futures);
   putBadge(document.querySelector(".ratio-panel .main-title-extra"),byId.xaus);
   putBadge(document.querySelector(".indices-panel .indices-subtitle"),byId.indices);
-  for(const id of ["vixterm","nfci","inflation","comex"]){if(byId["v5-"+id])putBadge(document.getElementById("v5-"+id+"-dates"),byId["v5-"+id]);}
+  for(const id of ["vixterm","nfci","inflation","comex","rates","credit","manufacturing","claims","rsi","sma"]){if(byId["v5-"+id])putBadge(document.getElementById("v5-"+id+"-dates"),byId["v5-"+id]);}
   putBadge(document.getElementById("curve-caption"),byId.macro);
   putBadge(document.getElementById("real-dates"),byId.macro);
   putBadge(document.getElementById("policy-dates"),byId.macro);
