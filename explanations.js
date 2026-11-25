@@ -10,7 +10,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>El eje horizontal muestra las fechas del periodo seleccionado; el vertical, la variación acumulada en %. Las tres líneas nacen en 0 %. Si una marca +12 %, su precio es 12 % mayor que al inicio. El número de la leyenda corresponde al último punto. Al cambiar de periodo se recalcula la base.</p>"
+        "<p>El eje X (horizontal) muestra las fechas del periodo seleccionado; el eje Y (vertical), la variación acumulada en %. Las tres líneas nacen en 0 %. Si una marca +12 %, su precio es 12 % mayor que al inicio. El número de la leyenda corresponde al último punto. Al cambiar de periodo se recalcula la base.</p>"
       ],
       [
         "Cruces y separación de las curvas",
@@ -86,7 +86,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>El eje X muestra fechas y el Y el número de onzas de plata por onza de oro. Una ratio 80 significa que 80 onzas de plata cuestan lo mismo que una de oro. El botón «Vista: cambio %» transforma la ratio en variación desde el inicio (base 0 %), no en variación del precio de la plata.</p>"
+        "<p>El eje X muestra fechas y el eje Y el número de onzas de plata por onza de oro. Una ratio 80 significa que 80 onzas de plata cuestan lo mismo que una de oro. El botón «Vista: cambio %» transforma la ratio en variación desde el inicio (base 0 %), no en variación del precio de la plata.</p>"
       ],
       [
         "Subida, bajada y estabilidad",
@@ -114,7 +114,7 @@
     "blocks": [
       [
         "Cómo leer los dos modos",
-        "<p>En «Ver histórico», el eje X contiene fechas y el Y rendimientos anuales en %. Cada color representa un vencimiento; la cuarta línea, 10Y−2Y, está en puntos porcentuales (pp). En «Ver curva», el eje X contiene vencimientos 2Y, 10Y y 30Y, y se comparan inicio y último dato del periodo. La pendiente de ese modo es entre plazos, no entre fechas.</p>"
+        "<p>En «Ver histórico», el eje X contiene fechas y el eje Y rendimientos anuales en %. Cada color representa un vencimiento; la cuarta línea, 10Y−2Y, está en puntos porcentuales (pp). En «Ver curva», el eje X contiene vencimientos 2Y, 10Y y 30Y, y se comparan inicio y último dato del periodo. La pendiente de ese modo es entre plazos, no entre fechas.</p>"
       ],
       [
         "Qué explica cada plazo",
@@ -210,7 +210,7 @@
     "blocks": [
       [
         "Cómo leer la tarjeta y el gráfico",
-        "<p>Las cifras superiores son contratos abiertos de GC y SI. El eje X muestra fechas semanales comunes; el Y, la variación del OI desde el inicio del intervalo (base 0 %). Si oro pasa de 400.000 a 440.000 contratos, su línea marca +10 %. Un cruce iguala crecimiento relativo, no número de contratos.</p>"
+        "<p>Las cifras superiores son contratos abiertos de GC y SI. El eje X muestra fechas semanales comunes; el eje Y, la variación del OI desde el inicio del intervalo (base 0 %). Si oro pasa de 400.000 a 440.000 contratos, su línea marca +10 %. Un cruce iguala crecimiento relativo, no número de contratos.</p>"
       ],
       [
         "Qué indica el movimiento",
