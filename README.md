@@ -1,5 +1,9 @@
 # Metals Terminal V5.0 — fundamentos complementarios
 
+## V5.0 · revisión de guías (25/11/2026)
+
+Se revisan las trece guías originales y se incorporan ocho nuevas (21 paneles ampliables en total). Cada guía describe la magnitud, unidades, ejes, lectura de curvas, ejemplos hipotéticos, relaciones y límites. Las guías originales se mantienen por debajo del doble tanto en palabras como en caracteres de texto visible. El botón «Explicación» y la interfaz existente se conservan. Sin nuevos datos, llamadas, suscripciones ni cambios en los cálculos.
+
 ## V5.0 · 25/11/2026
 
 Dos nuevas filas de tarjetas nativas, sin widgets, de 300 px en escritorio (dos columnas; móvil una). VIX 30D/3M (Cboe vía FRED VIXCLS/VXVCLS, con atribución), NFCI/ANFCI, IPC general/subyacente y PCE subyacente interanuales, e inventarios semanales COMEX registrado/elegible/total (MetalCharts, crédito visible obligatorio, no espejo del CSV). Se consultan al abrir y al pulsar Actualizar todo; histórico local validado solo como respaldo por fallo. Periodos exactos y sin interpolación; fuente mensual o semanal puede tener menos de dos observaciones dentro del rango. Datos FRED revisados, no vintages de publicación. COMEX: cobertura común limitada desde febrero 2026; no se inventa 10A. VIX9D, AAII y comparativa PMI EE. UU./China quedan fuera: derechos/licencias o disponibilidad gratuita integral no acreditados. No se contratan servicios ni se crean tareas programadas. El diferencial Treasury 10Y−2Y se incorpora como cuarta línea histórica, en puntos porcentuales (no cambia la vista por vencimientos).

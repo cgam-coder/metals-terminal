@@ -18,13 +18,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Comprobar sintaxis de guías
-        run: node --check explanations.js
+      - name: Comprobar sintaxis, cobertura y extensión de guías
+        run: |
+          node --check explanations.js
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const src=fs.readFileSync('explanations.js','utf8');
+          const start=src.indexOf('const GUIDES=')+13,end=src.indexOf(';\n const toggle',start);
+          const guides=Function('return '+src.slice(start,end))();
+          const html=fs.readFileSync('index.html','utf8');
+          const keys=[...new Set([...html.matchAll(/data-inspect="([^"]+)"/g)].map(m=>m[1]).concat([...html.matchAll(/data-expand-macro="([^"]+)"/g)].map(m=>'macro-'+m[1])))];
+          const baseline={futures:[1803,298],indices:[2387,386],ratio:[1499,256],'macro-curve':[1692,293],'macro-reals':[1650,269],'v4-cot':[1750,283],'v4-oi':[1659,274],'v4-volatility':[1425,230],'v4-flows':[1787,296],'v5-vixterm':[568,94],'v5-nfci':[555,77],'v5-inflation':[665,102],'v5-comex':[880,134]};
+          if(Object.keys(guides).length!==21||keys.length!==21||keys.some(k=>!guides[k]))throw Error('Incomplete guide coverage');
+          for(const [k,g] of Object.entries(guides)){
+            const t=[g.title,g.intro,...g.blocks.flat(),...g.sources.map(s=>s[0])].join(' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+            const n=[t.length,t.split(/\s+/).length];
+            if(baseline[k]&&n.some((v,i)=>v>baseline[k][i]*2))throw Error('Length limit '+k);
+            if(g.blocks.length!==4||!g.sources.length||!(/eje\s+x/i.test(t)&&(/eje\s+y/i.test(t)||/\bY:/i.test(t))))throw Error('Guide content '+k);
+            console.log(k,JSON.stringify(n),baseline[k]||'new');
+          }
+          EOF
       - name: Preparar Chromium
         run: |
           npm install --no-save playwright@1.58.2
           npx playwright install chromium
-      - name: Verificar los ocho indicadores en la página pública
+      - name: Verificar las 21 guías en la página pública
         run: |
           mkdir -p evidence-explanations
           cat > verify-explanations.mjs <<'EOF'
@@ -38,7 +56,7 @@ jobs:
            {kind:'indices',selector:'[data-inspect="indices"]',heading:'Comparativa de índices',tokens:['Russell 2000','Nasdaq','Yahoo Finance','cors.dev','Bitcoin']},
            {kind:'ratio',selector:'[data-inspect="ratio"]',heading:'Ratio oro/plata',tokens:['85 a 75','reversión']},
            {kind:'macro-curve',selector:'[data-expand-macro="curve"]',heading:'Curva de rendimientos',tokens:['inversión','10Y','2Y']},
-           {kind:'macro-reals',selector:'[data-expand-macro="reals"]',heading:'Tipo real TIPS',tokens:['breakeven','cruzan']},
+           {kind:'macro-reals',selector:'[data-expand-macro="reals"]',heading:'Tipo real TIPS',tokens:['breakeven','cruzan','coste de oportunidad']},
            {kind:'v4-cot',selector:'[data-inspect="v4-cot"]',heading:'COT',tokens:['P95','Managed Money']},
            {kind:'v4-oi',selector:'[data-inspect="v4-oi"]',heading:'Interés abierto semanal',tokens:['Precio','OI','contratos']},
            {kind:'v4-volatility',selector:'[data-inspect="v4-volatility"]',heading:'Volatilidad implícita GVZ',tokens:['VXSLV','30 días']},
@@ -46,10 +64,18 @@ jobs:
            {kind:'v5-vixterm',selector:'[data-inspect="v5-vixterm"]',heading:'Estructura temporal VIX',tokens:['30 días','3 meses','Cboe']},
            {kind:'v5-nfci',selector:'[data-inspect="v5-nfci"]',heading:'Condiciones financieras',tokens:['NFCI','ANFCI','semanal']},
            {kind:'v5-inflation',selector:'[data-inspect="v5-inflation"]',heading:'Inflación estadounidense',tokens:['IPC','PCE','mensual']},
-           {kind:'v5-comex',selector:'[data-inspect="v5-comex"]',heading:'Inventarios físicos COMEX',tokens:['MetalCharts','elegible','registrado']}
+           {kind:'v5-comex',selector:'[data-inspect="v5-comex"]',heading:'Inventarios físicos COMEX',tokens:['MetalCharts','elegible','registrado']},
+           {kind:'gold',selector:'[data-inspect="gold"]',heading:'Oro · futuro GC',tokens:['onza troy','rollover','TIPS']},
+           {kind:'silver',selector:'[data-inspect="silver"]',heading:'Plata · futuro SI',tokens:['onza troy','industrial','inventarios']},
+           {kind:'copper',selector:'[data-inspect="copper"]',heading:'Cobre · futuro HG',tokens:['libra','industrial','China']},
+           {kind:'brent',selector:'[data-inspect="brent"]',heading:'Brent · futuro BZ',tokens:['barril','OPEP','inflación']},
+           {kind:'dxy',selector:'[data-inspect="dxy"]',heading:'DXY · índice dólar',tokens:['cesta','XAUS','TIPS']},
+           {kind:'eur',selector:'[data-inspect="eur"]',heading:'EUR/USD · euro',tokens:['1,10','divisa','XAUS']},
+           {kind:'vix',selector:'[data-inspect="vix"]',heading:'VIX · volatilidad',tokens:['30 días','anualizada','Cboe']},
+           {kind:'macro-policy',selector:'[data-expand-macro="policy"]',heading:'Tipos oficiales de interés',tokens:['límite superior','depósito','puntos básicos']}
           ];
           const expected=cases.map(c=>c.kind);
-          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&guideTest=20261121';
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&guideTest=20261125-guides2';
           const stat=async page=>page.evaluate(()=>{
            const modal=document.querySelector('#detail-overlay'),drawer=document.querySelector('#detail-explanation-pane');
            const button=document.querySelector('#detail-explanation-toggle');
@@ -74,9 +100,9 @@ jobs:
             page.on('pageerror',e=>report.errors.push({name,type:'pageerror',error:e.stack||e.message}));
             try{
              await page.goto(base,{waitUntil:'domcontentloaded',timeout:50000});
-             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===13,null,{timeout:15000});
+             await page.waitForFunction(()=>window.METALS_EXPLANATION_KEYS?.length===21,null,{timeout:15000});
              const actual=await page.evaluate(()=>window.METALS_EXPLANATION_KEYS);
-             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not thirteen specific panels');
+             must(JSON.stringify(actual)===JSON.stringify(expected),'guide keys not twenty-one specific panels');
              if(day){await page.locator('#theme-toggle').click();}
              const casesOut={};
              for(const c of cases){
@@ -91,15 +117,15 @@ jobs:
               must(!opened.drawerHidden&&opened.expanded==='true','cannot open guide '+c.kind);
               must(opened.heading.includes(c.heading),'guide heading mismatch '+c.kind);
               must(opened.sectionCount===4&&opened.sourceCount>=1,'guide missing sections/sources '+c.kind);
+              must(/eje\s+x/i.test(opened.text)&&(/eje\s+y/i.test(opened.text)||/\bY:/i.test(opened.text)),'axes not explained '+c.kind);
               must(c.tokens.every(token=>opened.text.toLocaleLowerCase('es-ES').includes(token.toLocaleLowerCase('es-ES'))),'guide missing key explanations '+c.kind);
               must(opened.chartHtml.trim().length>0&&chartBefore.trim().length>0,'chart lost while reading explanation '+c.kind);
               must(opened.scrollW<=width+1,'horizontal overflow '+name+' '+c.kind);
               must(opened.drawerBounds.left>=0&&opened.drawerBounds.right<=width+1,'guide off-screen '+name+' '+c.kind);
               must(opened.drawerBounds.height>=210,'unusable guide height '+c.kind);
               if(width<=390){
-               must(opened.contentScrollHeight>opened.contentClientHeight,'mobile guide not scrollable '+c.kind);
-               const scrolled=await page.locator('#detail-explanation-content').evaluate(el=>{el.scrollTop=el.scrollHeight;return el.scrollTop});
-               must(scrolled>0,'cannot read bottom of mobile guide '+c.kind);
+               const scrolled=await page.locator('#detail-explanation-content').evaluate(el=>{el.scrollTop=el.scrollHeight;return {top:el.scrollTop,remaining:el.scrollHeight-el.clientHeight-el.scrollTop};});
+               must(scrolled.remaining<=2,'cannot read bottom of mobile guide '+c.kind);
               }
               await page.keyboard.press('Escape');
               let closed=await stat(page);
@@ -114,12 +140,7 @@ jobs:
               must(final.modalHidden&&final.drawerHidden,'closing chart did not reset guide '+c.kind);
               casesOut[c.kind]={heading:opened.heading,sections:opened.sectionCount,sources:opened.sourceCount,canScroll:opened.contentScrollHeight>opened.contentClientHeight};
              }
-             // Ensure unsupported panels have no unexpected explanation.
-             for(const selector of ['[data-inspect="gold"]','[data-inspect="vix"]','[data-inspect="dxy"]','[data-expand-macro="policy"]']){
-               await page.locator(selector).click();
-               must((await stat(page)).buttonHidden,'guide should be absent for '+selector);
-               await page.locator('#detail-close').click();
-             }
+             // Every expandable panel now has an explanation.
              await page.locator('[data-inspect="v4-flows"]').click();
              await page.locator('#detail-explanation-toggle').click();
              await page.screenshot({path:'evidence-explanations/'+name+(day?'-day':'-night')+'.png',fullPage:false});
