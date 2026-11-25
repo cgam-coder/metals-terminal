@@ -28,13 +28,15 @@ jobs:
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           const ctx=await browser.newContext({viewport:{width:1440,height:900}});
           const page=await ctx.newPage();
-          const report={cases:[],checks:[],errors:[]};
+          const report={cases:[],checks:[],errors:[],warnings:[],responses:[]};
           const ids=['rates','credit','manufacturing','claims','rsi','sma'];
           const base='https://cgam-coder.github.io/metals-terminal/?period=10y&v51audit=1';
           const must=(ok,msg)=>{report.checks.push({ok:!!ok,msg});if(!ok)throw Error(msg);};
           let network=[];
           page.on('request',r=>{if(/fredgraph.csv|ebp_csv.csv|query1.finance.yahoo.com|publicreporting.cftc.gov/.test(r.url()))network.push(r.url());});
           page.on('pageerror',e=>report.errors.push(String(e)));
+          page.on('console',m=>{if(m.type()==='warning'||m.type()==='error')report.warnings.push(m.text().slice(0,600));});
+          page.on('response',r=>{if(r.url().includes('finance.yahoo.com'))report.responses.push({url:r.url(),status:r.status()});});
           await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
             const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
             if(rel.includes('..')||!fs.existsSync(rel)||!fs.statSync(rel).isFile())return route.continue();
@@ -49,7 +51,7 @@ jobs:
            const sma=p('v5-sma-chart'),rsi=p('v5-rsi-chart');
            const last=futuresCache.gold.length-1,avg=n=>futuresCache.gold.slice(-n).reduce((a,b)=>a+b.c,0)/n;
            const maError=sma?Math.max(Math.abs(sma.lines[1].points.at(-1)-avg(50)),Math.abs(sma.lines[2].points.at(-1)-avg(200))):null;
-           return {version:document.getElementById('version').textContent,period:nativePeriod,keys:window.METALS_EXPLANATION_KEYS,ready:[...window.metalsQualityDone],audit:window.metalsV5Audit,cards,futures:f,futuresCheck:futuresCheckState,cot:describe(p('v4-cot-chart')),cotDate:v4State.cot?.gold?.[0]?.date,maError,overflow:document.documentElement.scrollWidth-innerWidth,existing:document.querySelectorAll('#posicionamiento-expectativas .v4-card').length};
+           return {version:document.getElementById('version').textContent,period:nativePeriod,keys:window.METALS_EXPLANATION_KEYS,ready:[...window.metalsQualityDone],audit:window.metalsV5Audit,cards,futures:f,futuresCheck:futuresCheckState,futuresError:futuresCheckError,cot:describe(p('v4-cot-chart')),cotDate:v4State.cot?.gold?.[0]?.date,maError,overflow:document.documentElement.scrollWidth-innerWidth,existing:document.querySelectorAll('#posicionamiento-expectativas .v4-card').length};
           });
           async function settle(){await page.waitForFunction(()=>['v5','futures','v4','macro'].every(k=>window.metalsQualityDone?.has(k)),null,{timeout:120000});await page.waitForTimeout(500);}
           try{
