@@ -45,7 +45,8 @@ jobs:
               width:document.documentElement.scrollWidth,viewport:innerWidth,
               chartCount:document.querySelectorAll('svg[data-market-svg],svg[data-macro-svg],svg[data-market-tile-svg]').length,
               period:document.querySelector('#global-timeframes .active')?.textContent,
-              v4Cards:document.querySelectorAll('.v4-card').length,
+              v4Cards:document.querySelectorAll('#posicionamiento-expectativas .v4-card').length,
+              v5Cards:document.querySelectorAll('#fundamentos-complementarios .v5-card').length,
               url:location.href
             };
           });
@@ -77,7 +78,7 @@ jobs:
                 check(cssResponse.ok(),'day stylesheet not published '+cssResponse.status());
                 const first=await colors(page);
                 check(first.theme==='night'&&first.button.includes('Noche'),'night must be default');
-                check(first.v4Cards===4,'V4 cards missing');
+                check(first.v4Cards===4&&first.v5Cards===4,'positioning or complementary cards missing');
                 const header=await headerLayout(page);
                 result.screens[name]={header};
                 check(header.subtitle==='Oro · Plata · Cobre','obsolete subtitle '+header.subtitle);
