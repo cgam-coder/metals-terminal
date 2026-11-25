@@ -1,0 +1,111 @@
+name: V5.0 - comprobar gráficos nativos y fuentes reales
+on:
+  push:
+    branches: ['audit/v50-candidate']
+    paths: ['.github/workflows/audit-v50.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check fundamentals.js
+          node --check quality.js
+          node --check explanations.js
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Navegador real, recarga y temporalidades
+        run: |
+          mkdir -p evidence
+          cat > audit.mjs <<'EOF'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+          const page=await ctx.newPage(), report={checks:[],errors:[],cases:[]};
+          const must=(ok,msg)=>{report.checks.push({ok:!!ok,msg});if(!ok)throw Error(msg)};
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1y&v50test=1';
+          const ids=['vixterm','nfci','inflation','comex'];
+          let network=[];
+          page.on('request',r=>{if(r.url().includes('fredgraph.csv')||r.url().includes('comex-gold-silver-registered-eligible-weekly.csv'))network.push(r.url());});
+          page.on('pageerror',e=>report.errors.push(String(e)));
+          await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
+            const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
+            if(rel.includes('..')||!fs.existsSync(rel)||!fs.statSync(rel).isFile())return route.continue();
+            const type=rel.endsWith('.html')?'text/html':rel.endsWith('.js')?'application/javascript':rel.endsWith('.css')?'text/css':'application/json';
+            await route.fulfill({path:rel,contentType:type});
+          });
+          const collect=()=>page.evaluate(()=>{
+            const ids=['vixterm','nfci','inflation','comex'];
+            return {version:document.getElementById('version')?.innerText,period:nativePeriod,keys:window.METALS_EXPLANATION_KEYS,
+              audit:window.metalsV5Audit,panels:Object.fromEntries(ids.map(id=>{
+                const card=document.getElementById('v5-'+id),plot=marketChartCache.get('v5-'+id+'-chart');
+                const r=card.getBoundingClientRect();
+                return [id,{height:r.height,width:r.width,scrollHeight:card.scrollHeight,plot:plot?{dates:plot.dates.length,lines:plot.lines.map(s=>s.label),first:new Date(plot.dates[0]*1000).toISOString(),last:new Date(plot.dates.at(-1)*1000).toISOString(),baseline:plot.options?.baseline}:null,
+                  svg:card.querySelectorAll('svg[data-market-svg]').length,state:document.getElementById('v5-'+id+'-state').innerText,quality:card.querySelector('.source-quality')?.innerText}];
+              })),overflow:document.documentElement.scrollWidth-innerWidth,spread:macroPlotCache.get('curve-graph')?.series?.map(s=>s.name),table:document.getElementById('source-audit-content')?.innerText};
+          });
+          async function settled(){
+            await page.waitForFunction(()=>window.metalsQualityDone?.has('v5')&&window.metalsQualityDone?.has('macro'),null,{timeout:100000});
+            await page.waitForTimeout(300);
+          }
+          try{
+            await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});await settled();
+            let d=await collect();report.cases.push({name:'first',data:d,requests:network});
+            must(d.version.includes('V5.0'),'V5.0 exact version');
+            must(d.keys.length===13,'13 explanation keys');
+            must(ids.every(id=>d.audit['v5-'+id].ready&&!d.audit['v5-'+id].blocked&&d.audit['v5-'+id].mode.startsWith('Consulta ')),'all four sources live, not local');
+            must(ids.every(id=>d.panels[id].svg===1&&d.panels[id].plot.dates>=2),'four charts real in 1A');
+            must(d.panels.inflation.plot.lines.length===3&&d.panels.nfci.plot.lines.length===2&&d.panels.vixterm.plot.lines.length===2,'series counts');
+            must(d.panels.comex.plot.lines.length===2&&d.panels.comex.plot.baseline===0,'COMEX normalized');
+            must(d.spread.some(x=>x.includes('10Y−2Y')),'spread in Treasury');
+            must(d.overflow<=1&&ids.every(id=>Math.abs(d.panels[id].height-300)<2),'desktop layout');
+            must(ids.every(id=>d.panels[id].quality),'source badges');
+            await page.locator('#fundamentos-complementarios').screenshot({path:'evidence/desktop-dark.png'});
+            const registered=d.panels.comex.state;
+            await page.locator('[data-v5-stock="eligible"]').click();
+            must((await collect()).panels.comex.state!==registered,'COMEX toggle changes values');
+            await page.locator('[data-v5-stock="total"]').click();
+            must((await collect()).panels.comex.state.includes('Total'),'total category');
+            for(const id of ids){
+              await page.locator('[data-inspect="v5-'+id+'"]').click();
+              must(await page.locator('#detail-chart svg[data-market-svg]').count()===1,'modal '+id);
+              must(await page.locator('#detail-explanation-toggle').isVisible(),'guide '+id);
+              await page.locator('#detail-explanation-toggle').click();
+              must(await page.locator('#detail-explanation-pane').isVisible(),'guide opens '+id);
+              await page.keyboard.press('Escape');
+              await page.locator('#detail-close').click();
+            }
+            await page.locator('[data-global-period="10y"]').click();await page.waitForTimeout(700);
+            d=await collect();report.cases.push({name:'10A',data:d});
+            must(d.panels.comex.quality==='Cobertura parcial','COMEX 10A honest partial');
+            must(d.panels.inflation.plot.dates>=115&&d.panels.nfci.plot.dates>=480,'actual decade coverage');
+            await page.locator('[data-global-period="1d"]').click();await page.waitForTimeout(350);
+            d=await collect();must(ids.every(id=>d.panels[id].svg===0),'no invented intraday');
+            await page.locator('[data-global-period="1y"]').click();await page.waitForTimeout(350);
+            await page.locator('#theme-toggle').click();
+            await page.locator('#fundamentos-complementarios').screenshot({path:'evidence/desktop-day.png'});
+            await page.setViewportSize({width:390,height:844});await page.waitForTimeout(450);
+            d=await collect();report.cases.push({name:'mobile',data:d});
+            must(d.overflow<=1,'mobile no horizontal overflow');
+            must(ids.every(id=>d.panels[id].width<=390&&d.panels[id].height>=300),'mobile cards');
+            await page.locator('#fundamentos-complementarios').screenshot({path:'evidence/mobile.png'});
+            network=[];await page.reload({waitUntil:'domcontentloaded',timeout:45000});await settled();
+            d=await collect();report.cases.push({name:'reload',data:d,requests:network});
+            must(ids.every(id=>d.audit['v5-'+id].ready&&!d.audit['v5-'+id].blocked),'all four groups renewed on reload');
+            must(network.some(s=>s.includes('id=NFCI'))&&network.some(s=>s.includes('id=PCEPILFE'))&&network.some(s=>s.includes('comex-gold-silver-registered-eligible-weekly.csv')),'network rechecked, no cache-only refresh');
+          }catch(e){report.errors.push(String(e));}
+          finally{await browser.close();fs.writeFileSync('evidence/report.json',JSON.stringify(report,null,2));console.log('V50_EVIDENCE '+JSON.stringify(report));if(report.errors.length)process.exitCode=1;}
+          EOF
+          node audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v50-native-source-evidence
+          path: evidence/
+          retention-days: 7
