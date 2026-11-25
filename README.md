@@ -1,6 +1,18 @@
-# Metals Terminal V4.8 — Comparación bursátil con Bitcoin
+# Metals Terminal V4.9 — Renovación de fuentes al entrar
 
 Web: https://cgam-coder.github.io/metals-terminal/
+
+
+## V4.9 — Verificación de frescura (25/11/2026)
+
+Tras la auditoría del 25/11, que confirmó los bloqueos CORS de FRED y Cboe y el fallo DNS de Aethereal, la renovación de mercado se ejecuta en cada apertura, también si existe una caché local. Se mantiene el último conjunto verificado visible mientras se consulta una nueva serie, pero no se considera que mostrar un respaldo equivalga a renovar los datos.
+
+- Futuros: Yahoo Finance GC=F/SI=F/HG=F/BZ=F (futuros continuos en USD de COMEX/NYMEX); endpoint gráfico no oficial vía el relay público cors.dev. Validación de identidad, mercado, fechas, cobertura decenal y no regresión; promoción conjunta de las cuatro series, sin empalmar Aethereal, spot u otros proveedores. La vela del día de negociación en curso se excluye para no confundirla con un cierre. Peticiones Yahoo de futuros/índices/BTC escalonadas, un reintento acotado de HTTP 429 conforme a Retry-After. Si el proveedor falla se conserva el conjunto anterior con aviso, no se inventa el precio. No se publican sus cotizaciones en GitHub.
+- FRED Treasury/TIPS/Fed/BCE y GVZ, Cboe VIX: consulta del CSV público oficial y relay CORS solo si falla el transporte directo, sin cambiar el origen del dato. Se verifica la fecha, identidad y amplitud del histórico antes de sustituir un respaldo. CFTC y XAUS mantienen sus consultas.
+- Índices y BTC: los seis activos se comprueban al abrir, incluso en 1D para verificar sus últimos cierres (sin curva intradía). En el panel de fuentes se distinguen registros disponibles, retrasos, cobertura incompleta, consulta y respaldo por fallo.
+- ETF: el informe GLD 10-K del 24/11/2026 acredita 33.996.676,238 onzas troy (1.057,41 t) a 30/09/2026, incorporado al histórico junto a SLV del mismo trimestre (493,58 M oz). Fuente: https://www.sec.gov/Archives/edgar/data/1222333/000143774926038190/gld20260930_10k.htm. El hecho iShares del 24/11 (15.664,87 t; 503.637.213 oz) procede de https://www.ishares.com/us/products/239855/ishares-silver-trust-slv. El informe mensual WGC de octubre (publicado 05/11) sigue vigente: https://www.gold.org/goldhub/research/gold-etfs-holdings-and-flows/2026/11. Se leen los archivos publicados en cada apertura y se señala la revisión según la periodicidad, pero los cortes SEC/WGC/iShares **no se renuevan automáticamente**: SEC e iShares rechazaron las solicitudes automatizadas y no se sortea ese bloqueo. La validación y el mes WGC ya no están fijados a noviembre de 2026 en el código.
+- Sin cron, servicios de pago, credenciales ni nuevo coste incremental previsto. Ni Yahoo ni el relay son proveedores con SLA contractual. Las fuentes oficiales o los derechos de exhibición de datos de terceros no quedan garantizados por el relay. Se mantiene el carácter personal de la web.
+
 
 ## V4.8 — Bitcoin BTC/USD como sexta curva (21/11/2026)
 

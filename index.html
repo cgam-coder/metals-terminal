@@ -822,7 +822,7 @@
   </article>
  </div>
 </section>
-<footer class="footnote"><span></span><span id="version">METALS · V4.8</span></footer>
+<footer class="footnote"><span></span><span id="version">METALS · V4.9</span></footer>
 </div>
 <div id="detail-overlay" class="detail-overlay" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
   <div class="detail-box"><div class="detail-head"><h2 id="detail-title">Gráfico de mercado</h2><div class="detail-actions"><button type="button" class="outline-button detail-explanation-toggle" id="detail-explanation-toggle" aria-expanded="false" aria-controls="detail-explanation-pane" title="Cómo interpretar este indicador" hidden><span aria-hidden="true">ⓘ</span> Explicación</button><button type="button" class="v4-context-button" id="detail-context-toggle" aria-pressed="false" hidden>Contexto 2A</button><button class="outline-button" id="detail-close" aria-label="Cerrar gráfico">✕ Cerrar</button></div></div>
@@ -832,7 +832,7 @@
 </div>
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-card"><div class="modal-top"><h2 id="modal-title">Fuentes, periodicidad y metodología</h2><button id="close-modal" aria-label="Cerrar">✕</button></div><div class="method">
 <p>Los futuros GC, SI y HG se comparan mediante gráficos SVG propios de sus cierres publicados, no por widgets COMEX en directo. XAU/XAG spot se utiliza únicamente en la ratio inferior; DXY y EUR/USD usan XAUS y el VIX utiliza cierres diarios de Cboe. Todos los gráficos se dibujan de forma nativa; no dependen de widgets de TradingView. <strong>No garantizamos tiempo real:</strong> CME/COMEX puede suministrarse con retraso; consulte las etiquetas de cada widget.</p>
-<p>Los futuros históricos de hasta diez años proceden del conjunto <a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal Commodity Prices</a>, disponible gratuitamente para investigación y educación. Se consulta una vez al abrir y se validan las cuatro series juntas. Se diferencia del proveedor alternativo trading-commodity.com, cuyos cierres pueden diferir, y nunca se fusionan las series de ambos proveedores. Los cambios de contrato pueden introducir saltos en una serie continua. El gráfico comparativo principal utiliza los cierres de futuros GC, SI y HG con fechas coincidentes y base 0 %. La ratio inferior sigue calculándose con spot XAU/XAG y se etiqueta por separado. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los cuatro futuros se consultan con un histórico común de hasta diez años desde Aethereal Data, si su CSV está disponible. Si la consulta falla, el respaldo de trading-commodity.com ofrece solo unas 15 sesiones, con fecha y advertencia de cobertura. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
+<p>Los futuros históricos de hasta diez años proceden del conjunto <a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal Commodity Prices</a>, disponible gratuitamente para investigación y educación. Se consulta una vez al abrir y se validan las cuatro series juntas. Se diferencia del proveedor alternativo trading-commodity.com, cuyos cierres pueden diferir, y nunca se fusionan las series de ambos proveedores. Los cambios de contrato pueden introducir saltos en una serie continua. El gráfico comparativo principal utiliza los cierres de futuros GC, SI y HG con fechas coincidentes y base 0 %. La ratio inferior sigue calculándose con spot XAU/XAG y se etiqueta por separado. El selector principal sincroniza todos los recuadros de mercado y los tres gráficos macroeconómicos. Los cuatro futuros se consultan en Yahoo Finance como GC=F, SI=F, HG=F y BZ=F, en un conjunto coherente de hasta diez años. Se conserva el histórico local de respaldo cuando una consulta falla; no se mezclan proveedores ni se usa spot. Los gráficos de tipos utilizan fechas efectivas de FRED, no puntos temporalmente equidistantes.</p>
 <p><strong>Cómo interpretar los porcentajes:</strong> el comparativo GC/SI/HG representa la <strong>variación acumulada del precio de contratos próximos</strong>, normalizada al 0 % en el primer cierre común. No representa una rentabilidad realizable ni incluye el coste de renovar posiciones, financiación, garantías o ajustes por vencimiento; el proveedor no documenta por completo el método de rollover.</p>
 <p><strong>Actualización y caché:</strong> los cuatro históricos de futuros validados se conservan opcionalmente en IndexedDB del propio navegador durante tres horas para evitar repetir una descarga de unos 6,3 MB en cada visita. Los datos se vuelven a consultar cuando vence ese plazo o se pulsa «Actualizar todo». Si el almacenamiento local está deshabilitado, se utiliza la consulta normal. En las tarjetas solo se avisa de un retraso de publicación que supera varios días hábiles, con fecha visible; festivos y horarios de cierre pueden explicar retrasos puntuales.</p>
 <p><strong>Vista 1D:</strong> el proveedor de futuros y Cboe publica cierres diarios, por lo que no se genera una curva intradía artificial. Las referencias DXY y EUR/USD pueden mostrar datos intradía cuando el proveedor los facilita. Para moverse entre apartados en móvil usa la barra Mercados / Comparativa / Macroeconomía.</p>
@@ -843,11 +843,11 @@
 <p>El archivo <code>data/series.json</code> es una instantánea que se descarga al abrir la página; solo cambia cuando se ejecuta manualmente su actualización y se publica. No hay tareas programadas de GitHub. Sin conexión o sin publicación, el panel conserva la instantánea oficial integrada con fecha visible. El HTML no usa claves API, no ejecuta operaciones y no recopila datos personales.</p>
 <section class="historical-import" aria-labelledby="import-title">
  <h3 id="import-title">Histórico de futuros de hasta diez años</h3>
- <p>El terminal intenta obtener automáticamente diez años de cierres de futuros del conjunto Aethereal Data. Si la descarga falla, utiliza las últimas 15 sesiones verificadas como respaldo. Como alternativa voluntaria, puedes descargar una vez los CSV <strong>«Raw contract prices»</strong> en las páginas públicas <a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a>, <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a>, <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a> y <a href="https://trading-commodity.com/download/bz/" target="_blank" rel="noopener noreferrer">BZ</a>. Importa aquí esos cuatro CSV, juntos o por separado. El terminal conservará los cierres en el almacenamiento local de <strong>este navegador</strong>, sin subirlos a GitHub.</p>
+ <p>El terminal comprueba automáticamente los cuatro futuros continuos de Yahoo Finance al entrar, también con caché. Si falla el conjunto, conserva el último conjunto verificado o el respaldo fechado. El cierre de la sesión aún abierta no se presenta como definitivo. Como alternativa voluntaria, puedes descargar una vez los CSV <strong>«Raw contract prices»</strong> en las páginas públicas <a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a>, <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a>, <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a> y <a href="https://trading-commodity.com/download/bz/" target="_blank" rel="noopener noreferrer">BZ</a>. Importa aquí esos cuatro CSV, juntos o por separado. El terminal conservará los cierres en el almacenamiento local de <strong>este navegador</strong>, sin subirlos a GitHub.</p>
  <label for="futures-csv-upload">Importar CSV históricos GC / SI / HG / BZ</label>
  <input id="futures-csv-upload" type="file" accept=".csv,text/csv" multiple />
  <div id="futures-import-status" class="historical-import-status" aria-live="polite">No se ha importado ningún archivo en esta sesión.</div>
- <p class="import-note">La serie principal de hasta diez años es la de Aethereal Data; la importación manual es una alternativa si esa descarga deja de funcionar. No se fusionan series de proveedores distintos en el gráfico comparativo. Si el proveedor cambia sus condiciones, utiliza únicamente la descarga autorizada.</p>
+ <p class="import-note">La serie principal es Yahoo Finance (endpoint no oficial, vía cors.dev). Aethereal y la importación manual son respaldos separados; no se empalman proveedores. No se fusionan series de proveedores distintos en el gráfico comparativo. Si el proveedor cambia sus condiciones, utiliza únicamente la descarga autorizada.</p>
 </section>
 </div></div></div>
 <script type="application/json" id="initial-macro">{"source":"U.S. Department of the Treasury (CMT y TIPS), Fed, BCE vía FRED","updated":"2026-11-17","note":"Instantánea inicial verificada. Datos macro cargados de instantánea publicada; GitHub Actions desactivado para cron, ejecución manual si se requiere. Datos no intradía.","links":{"nominal":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value_month=202611","real":"https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_real_yield_curve&field_tdr_date_value_month=202611","fed":"https://fred.stlouisfed.org/series/DFEDTARU","ecb":"https://fred.stlouisfed.org/series/ECBDFR"},"series":{"DGS2":[{"date":"2026-11-02","value":4.59},{"date":"2026-11-03","value":4.61},{"date":"2026-11-04","value":4.58},{"date":"2026-11-05","value":4.46},{"date":"2026-11-06","value":4.51},{"date":"2026-11-09","value":4.56},{"date":"2026-11-10","value":4.73},{"date":"2026-11-12","value":4.86},{"date":"2026-11-13","value":4.88},{"date":"2026-11-16","value":4.83},{"date":"2026-11-17","value":4.8}],"DGS10":[{"date":"2026-11-02","value":4.91},{"date":"2026-11-03","value":4.95},{"date":"2026-11-04","value":4.9},{"date":"2026-11-05","value":4.84},{"date":"2026-11-06","value":4.86},{"date":"2026-11-09","value":4.88},{"date":"2026-11-10","value":4.98},{"date":"2026-11-12","value":5.1},{"date":"2026-11-13","value":5.15},{"date":"2026-11-16","value":5.12},{"date":"2026-11-17","value":5.1}],"DGS30":[{"date":"2026-11-02","value":5.28},{"date":"2026-11-03","value":5.32},{"date":"2026-11-04","value":5.28},{"date":"2026-11-05","value":5.25},{"date":"2026-11-06","value":5.26},{"date":"2026-11-09","value":5.26},{"date":"2026-11-10","value":5.35},{"date":"2026-11-12","value":5.43},{"date":"2026-11-13","value":5.47},{"date":"2026-11-16","value":5.46},{"date":"2026-11-17","value":5.46}],"DFII10":[{"date":"2026-11-02","value":2.62},{"date":"2026-11-03","value":2.65},{"date":"2026-11-04","value":2.64},{"date":"2026-11-05","value":2.6},{"date":"2026-11-06","value":2.63},{"date":"2026-11-09","value":2.66},{"date":"2026-11-10","value":2.78},{"date":"2026-11-12","value":2.86},{"date":"2026-11-13","value":2.91},{"date":"2026-11-16","value":2.92},{"date":"2026-11-17","value":2.89}],"DFEDTARU":[{"date":"2026-11-16","value":4.0},{"date":"2026-11-17","value":4.0}],"ECBDFR":[{"date":"2026-11-16","value":2.5},{"date":"2026-11-17","value":2.5}]}}</script>
@@ -1537,6 +1537,125 @@ function sourceCoverageLabel(all,source){
    On refresh/expiry the browser checks the provider again on-demand. */
 const FUTURES_CACHE_DB="MetalsTerminalVerified",FUTURES_CACHE_STORE="datasets";
 const FUTURES_CACHE_KEY="aethereal-GC-SI-HG-BZ-v1";
+/* V4.9: browser-side source reads. No stored third-party quotes on Pages.
+   The Yahoo chart endpoint is unofficial; enforce a shared paced request queue
+   and at most one bounded Retry-After-compliant retry. No provider switching
+   merely to evade a rate limit. Official CSVs use a disclosed CORS relay only
+   when the browser cannot reach the original public resource. */
+const METALS_CORS_RELAY="https://proxy.cors.dev/";
+const FUTURES_YAHOO={gold:{symbol:"GC=F",exchange:"CMX"},silver:{symbol:"SI=F",exchange:"CMX"},
+ copper:{symbol:"HG=F",exchange:"CMX"},brent:{symbol:"BZ=F",exchange:"NYM"}};
+const waitSource=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function sessionDay(timestamp,zone="America/New_York"){
+ const p=new Intl.DateTimeFormat("en-US",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(timestamp*1000));
+ const d=Object.fromEntries(p.map(x=>[x.type,x.value]));
+ return d.year+"-"+d.month+"-"+d.day;
+}
+let yahooQueue=Promise.resolve(),yahooLastRequest=0;
+async function yahooChartRequest(symbol,range){
+ const url=METALS_CORS_RELAY+"https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(symbol)+"?"+new URLSearchParams({range,interval:"1d"});
+ const work=async()=>{
+  for(let attempt=0;attempt<2;attempt++){
+   const pause=650-(Date.now()-yahooLastRequest);if(pause>0)await waitSource(pause);
+   yahooLastRequest=Date.now();
+   const response=await fetch(url,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(23000)});
+   if(response.status===429&&attempt===0){
+    const header=response.headers.get("Retry-After");
+    const delay=header?(Number.isFinite(Number(header))?Number(header)*1000:Date.parse(header)-Date.now()):3000;
+    if(!Number.isFinite(delay)||delay>10000)throw Error(symbol+" HTTP 429 · reintento aplazado por el proveedor");
+    await waitSource(Math.max(3000,delay));continue;
+   }
+   if(!response.ok)throw Error(symbol+" HTTP "+response.status);
+   const raw=await response.json();
+   if(raw?.chart?.error)throw Error(symbol+" · "+String(raw.chart.error.description||"error del proveedor"));
+   return raw;
+  }
+  throw Error(symbol+" · fuente no disponible");
+ };
+ const request=yahooQueue.then(work,work);
+ yahooQueue=request.catch(()=>{});
+ return request;
+}
+window.metalsYahooChart=yahooChartRequest;
+window.metalsSessionDay=sessionDay;
+async function fetchPublicOfficialCSV(url){
+ const u=new URL(url);
+ if(!(u.protocol==="https:"&&((u.hostname==="fred.stlouisfed.org"&&u.pathname==="/graph/fredgraph.csv")||
+   (u.hostname==="cdn.cboe.com"&&u.pathname==="/api/global/us_indices/daily_prices/VIX_History.csv"))))
+   throw Error("Ruta de CSV oficial no autorizada");
+ const request=address=>fetch(address,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(22000)});
+ let response,via="direct";
+ try{response=await request(url);}
+ catch(e){
+  // Direct requests to these publicly downloadable CSVs fail CORS in Chromium.
+  // Never relay SEC/issuer requests, private endpoints, credentials or cookies.
+  response=await request(METALS_CORS_RELAY+url);via="relay";
+ }
+ if(!response.ok)throw Error("CSV oficial HTTP "+response.status);
+ const raw=await response.text();
+ if(raw.length<20||raw.length>2_000_000)throw Error("CSV oficial de tamaño inesperado");
+ return {raw,via};
+}
+let futuresCheckState="pending",futuresCheckError="",futuresCheckedAt=null;
+function validateYahooFuture(raw,key){
+ const cfg=FUTURES_YAHOO[key],record=raw?.chart?.result?.[0],meta=record?.meta;
+ if(!meta||meta.symbol!==cfg.symbol||meta.instrumentType!=="FUTURE"||meta.currency!=="USD"||
+    meta.exchangeName!==cfg.exchange||meta.exchangeTimezoneName!=="America/New_York")
+  throw Error(key+": identidad, mercado, divisa o zona de futuro incorrectos");
+ const timestamps=record.timestamp,quotes=record.indicators?.quote?.[0],closes=quotes?.close;
+ if(!Array.isArray(timestamps)||!Array.isArray(closes)||timestamps.length!==closes.length)
+  throw Error(key+": respuesta de cierres incompleta");
+ const today=sessionDay(Date.now()/1000),floor=new Date();
+ floor.setUTCFullYear(floor.getUTCFullYear()-10);floor.setUTCDate(floor.getUTCDate()+60);
+ const earliest=floor.toISOString().slice(0,10),rows=[];
+ for(let i=0;i<timestamps.length;i++){
+  const t=Number(timestamps[i]),c=closes[i];
+  if(!Number.isFinite(t)||!Number.isFinite(c)||c<=0||t<946684800||t>Date.now()/1000+86400)continue;
+  const date=sessionDay(t);
+  // The newest Yahoo daily candle can still be forming; don't label it as a close.
+  if(date>=today)continue;
+  if(rows.length&&date<=rows.at(-1).date)throw Error(key+": fechas duplicadas o desordenadas");
+  rows.push({date,t:Date.parse(date+"T21:00:00Z")/1000,c});
+ }
+ if(rows.length<2200||rows[0].date>earliest)throw Error(key+": cobertura decenal insuficiente ("+rows.length+")");
+ if(businessDaysSince(rows.at(-1).date)>4)throw Error(key+": último cierre demasiado antiguo "+rows.at(-1).date);
+ return rows;
+}
+function futuresProvenanceLabel(){
+ return longFuturesProvenance==="yahoo"?"Yahoo Finance · futuros continuos":
+        longFuturesProvenance==="aethereal"?"Aethereal · históricos verificados":"Respaldo histórico fechado";
+}
+function yahooFutureLink(key){return "https://finance.yahoo.com/quote/"+encodeURIComponent(FUTURES_YAHOO[key].symbol)+"/history/";}
+function updateFuturesLinks(){
+ for(const key of FUTURE_KEYS){
+  const node=document.getElementById("q-"+key)?.closest(".ticker-card")?.querySelector(".metal-source-link");
+  if(!node)continue;
+  node.href=longFuturesProvenance==="yahoo"?yahooFutureLink(key):longFuturesProvenance==="aethereal"?
+   "https://dataset.aethereal.top/datasets/commodity-prices":FUTURES_PUBLIC[key].url;
+  node.title=futuresProvenanceLabel();
+ }
+}
+function applyFuturesSet(series,provider,source){
+ for(const key of FUTURE_KEYS){futuresCache[key]=series[key];futuresFreshness[key]=sourceCoverageLabel(series[key],source);}
+ longFuturesProvenance=provider;
+ updateFuturesLinks();renderFuturesCards();renderFuturesComparison();
+ if(typeof detailKind!=="undefined"&&["gold","silver","copper","brent","futures"].includes(detailKind))drawMarketDetail();
+}
+async function loadYahooFutures(previous){
+ const result=await Promise.allSettled(FUTURE_KEYS.map(async key=>[key,validateYahooFuture(await yahooChartRequest(FUTURES_YAHOO[key].symbol,"10y"),key)]));
+ const failed=result.map((item,i)=>item.status==="rejected"?FUTURE_KEYS[i]+": "+String(item.reason?.message||item.reason):null).filter(Boolean);
+ if(failed.length)throw Error("Conjunto incompleto: "+failed.join("; "));
+ const series=Object.fromEntries(result.map(item=>item.value));
+ // Cohort promotion is atomic; never splice Aethereal, alternate closes or Yahoo.
+ for(const key of FUTURE_KEYS){
+  const prev=previous?.series?.[key]?.at(-1)?.date||futuresCache[key]?.at(-1)?.date;
+  if(prev&&series[key].at(-1).date<prev)throw Error(key+": la nueva serie retrocede respecto al respaldo");
+ }
+ applyFuturesSet(series,"yahoo","Yahoo Finance · consultado al abrir");
+ await writeFuturesCache(series,"Yahoo Finance");
+ return series;
+}
+
 const FUTURES_CACHE_TTL_MS=3*60*60*1000;
 const FORCE_MARKET_RECHECK=(()=>{
  try{return new URLSearchParams(location.search).has("_refresh");}
@@ -1556,7 +1675,7 @@ function openFuturesCacheDb(){
  });
 }
 function validFiveYearCache(payload){
- if(!payload||payload.version!==1||payload.provider!=="Aethereal"||
+ if(!payload||payload.version!==1||!["Aethereal","Yahoo Finance"].includes(payload.provider)||
  !Number.isFinite(payload.fetchedAt)||!payload.series)return false;
  const future=new Date(Date.now()+86400000).toISOString().slice(0,10);
  const boundary=new Date();boundary.setUTCFullYear(boundary.getUTCFullYear()-5);
@@ -1589,11 +1708,11 @@ async function readFuturesCache(){
  }catch(e){console.warn("Caché histórica desactivada: se consulta proveedor",e);return null;}
  finally{try{db?.close();}catch(e){}}
 }
-async function writeFuturesCache(series){
+async function writeFuturesCache(series,provider="Aethereal"){
  let db;
  try{
   db=await openFuturesCacheDb();
-  const payload={version:1,provider:"Aethereal",fetchedAt:Date.now(),series};
+  const payload={version:1,provider,fetchedAt:Date.now(),series};
   await new Promise((resolve,reject)=>{
    const request=db.transaction(FUTURES_CACHE_STORE,"readwrite").objectStore(FUTURES_CACHE_STORE).put(payload,FUTURES_CACHE_KEY);
    request.onsuccess=()=>resolve();
@@ -1602,16 +1721,7 @@ async function writeFuturesCache(series){
  }catch(e){console.warn("Histórico disponible, pero no se ha podido guardar en este navegador",e);}
  finally{try{db?.close();}catch(e){}}
 }
-function applyAetherealFutures(series,source){
- for(const key of FUTURE_KEYS){
-  futuresCache[key]=series[key];
-  futuresFreshness[key]=sourceCoverageLabel(series[key],source);
- }
- longFuturesProvenance="aethereal";
- renderFuturesCards();
- renderFuturesComparison();
-}
-
+function applyAetherealFutures(series,source){applyFuturesSet(series,"aethereal",source);}
 async function loadAetherealFiveYears(previous=null){
  const response=await fetch(LONG_FUTURES_DATASET_URL,{
     mode:"cors",credentials:"omit",cache:"no-cache",signal:AbortSignal.timeout(35000)
@@ -1630,42 +1740,37 @@ async function loadAetherealFiveYears(previous=null){
  return data;
 }
 async function loadFuturesCards(){
- verifiedFallbackFutures(); // Immediate UI: the last dated, verified snapshot.
+ futuresCheckState="pending";
+ verifiedFallbackFutures();
+ longFuturesProvenance="recent-fallback";updateFuturesLinks();
  const saved=await readFuturesCache();
- if(saved){
-  applyAetherealFutures(saved.series,"Aethereal · guardado local");
-  // Avoid repeated ~6 MB transfers when the identical verified series is fresh.
-  // Only "Actualizar todo" forces a new check ahead of the 3h expiry.
-  const decade=new Date();decade.setUTCFullYear(decade.getUTCFullYear()-10);decade.setUTCDate(decade.getUTCDate()+60);
-   const tenYearsCached=FUTURE_KEYS.every(k=>saved.series[k]?.[0]?.date<=decade.toISOString().slice(0,10));
-   if(!FORCE_MARKET_RECHECK&&tenYearsCached&&Date.now()-saved.fetchedAt<FUTURES_CACHE_TTL_MS)return;
- }
+ if(saved)applyFuturesSet(saved.series,saved.provider==="Yahoo Finance"?"yahoo":"aethereal",saved.provider+" · guardado local · comprobando");
+ // A fresh entry ALWAYS attempts the provider, even if the local cache is young.
+ // The local set is immediately useful while the paced four-symbol query runs.
  try{
-   await loadAetherealFiveYears(saved);
-   return; // Do NOT splice two different continuous-contract providers.
- }catch(e){
-   console.warn("No fue posible renovar el histórico; se conserva el último verificado",e);
-   if(saved)return; // Keep the coherent cached four-series dataset, marked by date.
-   longFuturesProvenance="recent-fallback";
- }
- // Fall back only when the five-year dataset cannot be checked. Do not
- // replace the coherent five-year curves with an incompatible fifteen-day feed.
- await Promise.all(FUTURE_KEYS.map(async key=>{
-   const conf=FUTURES_PUBLIC[key];
+  await loadYahooFutures(saved);
+  futuresCheckState="live";futuresCheckError="";
+ }catch(error){
+  futuresCheckError=String(error?.message||error);
+  console.warn("Yahoo Finance no pudo renovar los cuatro futuros; no se mezclan orígenes",error);
+  if(saved){
+   applyFuturesSet(saved.series,saved.provider==="Yahoo Finance"?"yahoo":"aethereal",saved.provider+" · caché de respaldo · consulta fallida");
+   futuresCheckState="fallback";
+  }else{
    try{
-     const r=await fetch(conf.url,{mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(15000)});
-     if(!r.ok)throw Error("HTTP "+r.status);
-     const fresh=decodeFuturesCloseTable(await r.text(),conf.code);
-     const prev=futuresCache[key]?.at(-1)?.date;
-     if(prev&&fresh.at(-1).date<prev)throw Error("El cierre es más antiguo que la instantánea");
-     futuresCache[key]=mergeFuturesHistory(futuresCache[key],fresh);
-     futuresFreshness[key]="Histórico alternativo · "+fresh.at(-1).date;
-     drawFuturesCloseTile(key,futuresCache[key],futuresFreshness[key]);
-     if(key==="gold"||key==="silver"||key==="copper")renderFuturesComparison();
-   }catch(e){
-     console.warn("Tampoco se pudo verificar "+conf.code+"; se conserva su última instantánea",e);
+    await loadAetherealFiveYears(null);
+    futuresCheckState="live-alternate";
+   }catch(err){
+    console.warn("Aethereal no disponible; se conserva el respaldo fechado",err);
+    futuresCheckState="fallback";
+    for(const key of FUTURE_KEYS)futuresFreshness[key]="Respaldo · consulta de futuros fallida · "+(futuresCache[key]?.at(-1)?.date||"sin dato");
+    renderFuturesCards();renderFuturesComparison();updateFuturesLinks();
    }
- }));
+  }
+ }finally{
+  futuresCheckedAt=new Date().toISOString();
+  window.renderMetalsQuality?.();
+ }
 }
 function renderVixCard(){
  if(!cboeHistory.length)return;
@@ -1697,7 +1802,7 @@ function renderFuturesComparison(){
  if(!host)return;
  marketChartCache.delete("chart-main");
  const label=activePeriodLabel();
- const sourceLinks=longFuturesProvenance==="aethereal"?'<a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal (GC/SI/HG)</a>':'<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
+ const sourceLinks=longFuturesProvenance==="yahoo"?COMPARISON_FUTURES.map(m=>'<a href="'+yahooFutureLink(m.key)+'" target="_blank" rel="noopener noreferrer">'+FUTURES_PUBLIC[m.key].code+' · Yahoo</a>').join(' · '):longFuturesProvenance==="aethereal"?'<a href="https://dataset.aethereal.top/datasets/commodity-prices" target="_blank" rel="noopener noreferrer">Aethereal (GC/SI/HG)</a>':'<a href="https://trading-commodity.com/download/gc/" target="_blank" rel="noopener noreferrer">GC</a> · <a href="https://trading-commodity.com/download/si/" target="_blank" rel="noopener noreferrer">SI</a> · <a href="https://trading-commodity.com/download/hg/" target="_blank" rel="noopener noreferrer">HG</a>';
  if(COMPARISON_FUTURES.some(meta=>(futuresCache[meta.key]||[]).length<2)){
    host.innerHTML='<div class="native-error">No hay cierres de los tres contratos suficientes para calcular rendimientos comparables. No se utilizan precios spot ni curvas inventadas.<span>Fuentes: '+sourceLinks+'</span></div>';
    return;
@@ -1770,7 +1875,7 @@ async function fetchValidatedXaus(key,range,interval){
  const url=DATA_API+"?"+new URLSearchParams({symbol:DATA_SYMBOLS[key],range,interval}).toString();
  try{
    const request=(async()=>{
-     const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"default",signal:controller.signal});
+     const res=await fetch(url,{mode:"cors",credentials:"omit",cache:"no-store",signal:controller.signal});
      if(!res.ok)throw Error("HTTP "+res.status);
      return marketValidate(await res.json(),DATA_SYMBOLS[key]);
    })();
@@ -1911,7 +2016,7 @@ async function loadCboeVix(){
  // Dated same-origin Cboe-derived history. The recent embedded Cboe
  // snapshot covers September-November 2026 without estimating missing dates.
  try{
-  const r=await fetch("data/vix-history.json?v=vix10y-20261120",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  const r=await fetch("data/vix-history.json?v=vix10y-20261120",{credentials:"same-origin",cache:"no-store",signal:AbortSignal.timeout(16000)});
   if(!r.ok)throw Error("HTTP "+r.status);
   const archiveMetadata=await r.json();
   const archived=validateVixHistoryArchive(archiveMetadata);
@@ -1922,9 +2027,8 @@ async function loadCboeVix(){
  }catch(e){console.warn("Archivo histórico VIX no accesible, se indica cobertura limitada",e);}
  // Prefer fresh official direct updates if the browser's CORS policy allows.
  try{
-  const r=await fetch("https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",{mode:"cors",credentials:"omit",cache:"default",signal:AbortSignal.timeout(17000)});
-  if(!r.ok)throw Error("HTTP "+r.status);
-  const lines=(await r.text()).trim().split(/\r?\n/),head=lines[0].replace(/["\uFEFF]/g,"").split(",").map(z=>z.trim().toUpperCase());
+  const {raw,via}=await fetchPublicOfficialCSV("https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv");
+  const lines=raw.trim().split(/\r?\n/),head=lines[0].replace(/["\uFEFF]/g,"").split(",").map(z=>z.trim().toUpperCase());
   const iDate=head.indexOf("DATE"),iClose=head.indexOf("CLOSE");
   if(iDate<0||iClose<0)throw Error("CSV Cboe sin DATE y CLOSE");
   const points=[];
@@ -1940,7 +2044,7 @@ async function loadCboeVix(){
   if(points.length<30)throw Error("Menos de 30 cierres VIX");
   if(cboeHistory.length&&points.at(-1).date<cboeHistory.at(-1).date)throw Error("Serie Cboe anterior al respaldo");
   cboeHistory=mergeVixHistory(cboeHistory,points);
-  cboeHistorySource="Cboe directo"+(cboeArchiveJoined?" + archivo histórico Cboe":"");
+  cboeHistorySource=(via==="relay"?"Cboe oficial · vía CORS":"Cboe directo")+(cboeArchiveJoined?" + archivo histórico Cboe/FRED":"");
   refreshVixViews();
  }catch(e){
   console.warn("Cboe directo no disponible, se conserva el histórico fechado",e);
@@ -2108,11 +2212,12 @@ const MACRO_SERIES=["DGS2","DGS10","DGS30","DFII10","DFEDTARU","ECBDFR"];
 const macroOfficialKeys=new Set();
 const macroArchiveKeys=new Set();
 const macroLastError=new Map();
+const macroFetchRoutes=new Map();
 function macroSourceLabel(keys){
  const direct=keys.filter(k=>macroOfficialKeys.has(k)).length;
  const verified=keys.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
- if(direct===keys.length)return "FRED directo";
- if(verified===keys.length)return direct?"FRED directo + histórico publicado":"FRED · histórico publicado";
+ if(direct===keys.length)return keys.some(k=>macroFetchRoutes.get(k)==="relay")?"FRED oficial · vía CORS":"FRED directo";
+ if(verified===keys.length)return direct?"FRED consultado + histórico publicado":"FRED · histórico publicado";
  if(verified)return "FRED "+verified+"/"+keys.length+" · respaldo parcial";
  return "instantánea corta de emergencia";
 }
@@ -2371,7 +2476,7 @@ function renderMacro(){
  const lastDate=dates.at(-1),loaded=macroOfficialKeys.size;
  const archived=macroArchiveKeys.size;
  const verified=MACRO_SERIES.filter(k=>macroOfficialKeys.has(k)||macroArchiveKeys.has(k)).length;
- const source=loaded===6?"FRED directo":archived===6?(loaded?"FRED directo + archivo":"FRED archivo verificado"):verified?"FRED parcial "+verified+"/6":"respaldo corto";
+ const source=loaded===6?macroSourceLabel(MACRO_SERIES):archived===6?(loaded?"FRED consultado + archivo":"FRED archivo verificado"):verified?"FRED parcial "+verified+"/6":"respaldo corto";
  const lagging=MACRO_SERIES.filter(k=>businessDaysSince(v(macro,k).at(-1)?.date)>4);
  $("#stamp").textContent="Macro "+macroWindows.curve+" · "+source+" · "+prettyDate(lastDate||macro.updated)+
    (lagging.length?" · revisar "+lagging.length+" series retrasadas":"");
@@ -2400,9 +2505,11 @@ async function fetchMacroOfficial(){
  const start=from.toISOString().slice(0,10);
  const done=await Promise.allSettled(MACRO_SERIES.map(async key=>{
    const url="https://fred.stlouisfed.org/graph/fredgraph.csv?"+new URLSearchParams({id:key,cosd:start});
-   const response=await fetch(url,{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(22000)});
-   if(!response.ok)throw Error("FRED "+key+" HTTP "+response.status);
-   return {key,rows:parseFredCsv(key,await response.text())};
+   const {raw,via}=await fetchPublicOfficialCSV(url);
+   const rows=parseFredCsv(key,raw),old=macro?.series?.[key]||[];
+   if(rows.length<2200||rows[0].date>new Date(Date.parse(start+"T00:00:00Z")+70*86400000).toISOString().slice(0,10)||
+      (old.length&&rows.at(-1).date<old.at(-1).date))throw Error(key+": histórico corto o anterior al respaldo");
+   return {key,rows,via};
  }));
  let updated=0;
  done.forEach((item,i)=>{
@@ -2412,11 +2519,11 @@ async function fetchMacroOfficial(){
      console.warn("FRED no disponible, respaldo etiquetado: "+key,item.reason);
      return;
    }
-   const {rows}=item.value;
+   const {rows,via}=item.value;
    // IMPORTANT: replace, not merge. The older embedded snapshot can have later
    // values that have not yet been corroborated by the official CSV.
    macro.series[key]=rows;
-   macroOfficialKeys.add(key);
+   macroOfficialKeys.add(key);macroFetchRoutes.set(key,via);
    macroLastError.delete(key);
    updated++;
  });
@@ -2578,10 +2685,10 @@ function drawMarketDetail(){
    if(rows.length<2){
      host.innerHTML='<div class="native-error">'+(rows.length===1?cfg.code+" · "+(rows[0].date||isoDay(rows[0].t))+" · cierre "+fmt(rows[0].c,cfg.decimals)+". Una sola observación; no hay curva.":"No existen cierres diarios verificables de "+cfg.code+" dentro de "+detailWindow+".")+'</div>';
    }else{
-     const provenance=longFuturesProvenance==="aethereal"?"Aethereal Commodity Prices":"Cierres alternativos fechados";
+     const provenance=futuresProvenanceLabel();
      nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>'+provenance+' · futuros de contrato próximo · datos de cierre, no intradía.</span>');
    }
-   foot.textContent=cfg.code+" · "+rows.length+" cierres mostrados de "+all.length+" disponibles · "+detailWindow+" · "+(longFuturesProvenance==="aethereal"?"Aethereal":"Fuente alternativa")+" · sin fechas interpoladas.";
+   foot.textContent=cfg.code+" · "+rows.length+" cierres mostrados de "+all.length+" disponibles · "+detailWindow+" · "+futuresProvenanceLabel()+" · sin fechas interpoladas.";
  }else if(detailKind==="dxy"||detailKind==="eur"){
    const data=nativeData[detailKind],points=data?.points||[],cfg=FUTURES_PUBLIC[detailKind];
    if(points.length<2){
@@ -2768,7 +2875,7 @@ function toggleETFContext(){
 function v4ETFExtra(){
  const f=v4State.flows;if(!f)return '<div class="v4-placeholder">Datos WGC/SLV complementarios no disponibles.</div>';
  const end=v4Window().end,items=[];
- if(f.gold.publication_date<=end)items.push('<div><strong>WGC · ETF físicos globales de oro</strong><p>Entradas netas +'+fmt(f.gold.net_fund_flow_usd_billion,1)+' mil millones USD, octubre de 2026. Es un flujo global, no un cambio GLD. <a href="'+v4HtmlText(f.gold.source_url)+'" target="_blank" rel="noopener">WGC ↗</a></p></div>');
+ if(f.gold.publication_date<=end)items.push('<div><strong>WGC · ETF físicos globales de oro</strong><p>Flujo neto '+(f.gold.net_fund_flow_usd_billion>=0?"+":"")+fmt(f.gold.net_fund_flow_usd_billion,1)+' mil millones USD, '+v4HtmlText(f.gold.report_month)+'. Es un flujo global, no un cambio GLD. <a href="'+v4HtmlText(f.gold.source_url)+'" target="_blank" rel="noopener">WGC ↗</a></p></div>');
  if(f.silver.observation_date<=end)items.push('<div><strong>iShares SLV · dato reciente</strong><p>'+fmt(f.silver.trust_tonnes,2)+' toneladas el '+v4HtmlText(f.silver.observation_date)+'. No es un flujo global. <a href="'+v4HtmlText(f.silver.source_url)+'" target="_blank" rel="noopener">iShares ↗</a></p></div>');
  return items.length?'<div class="v4-etf-context">'+items.join("")+'</div>':'<div class="v4-placeholder">No hay publicaciones complementarias disponibles en la fecha final elegida.</div>';
 }
@@ -2805,8 +2912,12 @@ function v4RenderFlows(){
 }
 function v4ValidateFlows(json){
  if(json?.schema!=="metals-v4-flows-facts-v1"||json.no_comparable_flow_aggregation!==true||
-    json.gold?.source!=="World Gold Council"||json.gold.observation_date!=="2026-10-31"||
-    json.silver?.source!=="iShares SLV (BlackRock)"||json.silver.observation_date!=="2026-11-11"||
+    json.gold?.source!=="World Gold Council"||json.silver?.source!=="iShares SLV (BlackRock)"||
+    ![json.snapshot_at,json.gold.observation_date,json.gold.publication_date,json.silver.observation_date].every(d=>/^\d{4}-\d{2}-\d{2}$/.test(d||"")&&d<=new Date().toISOString().slice(0,10))||
+    json.gold.observation_date>json.gold.publication_date||json.gold.publication_date>json.snapshot_at||json.silver.observation_date>json.snapshot_at||
+    !/^\d{4}-\d{2}$/.test(json.gold.report_month)||!json.gold.observation_date.startsWith(json.gold.report_month)||
+    !/^https:\/\/www\.gold\.org\/goldhub\/research\/gold-etfs-holdings-and-flows\/\d{4}\/\d{2}$/.test(json.gold.source_url)||
+    json.silver.source_url!=="https://www.ishares.com/us/products/239855/ishares-silver-trust-slv"||
     !Number.isFinite(json.gold.net_fund_flow_usd_billion)||!Number.isFinite(json.silver.trust_tonnes)||json.silver.trust_tonnes<=0)throw Error("Flujos/SLV: evidencia no validada");
  return json;
 }
@@ -2816,20 +2927,20 @@ function renderV4(){
 }
 async function bootV4(){
  try{
-  const response=await fetch("data/v4-etf-sec-quarterly.json?v=sec-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  const response=await fetch("data/v4-etf-sec-quarterly.json?v=sec-20261119",{credentials:"same-origin",cache:"no-store",signal:AbortSignal.timeout(16000)});
   if(!response.ok)throw Error("Datos SEC HTTP "+response.status);
   v4State.secHoldings=v4ValidateSECHoldings(await response.json());renderV4();
  }catch(error){console.warn("Informes GLD/SLV no disponibles",error)}
  try{
-  const response=await fetch("data/v4-flows-facts.json?v=flows-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(12000)});
+  const response=await fetch("data/v4-flows-facts.json?v=flows-20261119",{credentials:"same-origin",cache:"no-store",signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error("Flujos HTTP "+response.status);
   v4State.flows=v4ValidateFlows(await response.json());
   renderV4();
  }catch(error){console.warn("Flujos WGC y SLV no disponibles",error)}
  try{
-  const response=await fetch("data/v4-cot-snapshot.json?v=cftc-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  const response=await fetch("data/v4-cot-snapshot.json?v=cftc-20261119",{credentials:"same-origin",cache:"no-store",signal:AbortSignal.timeout(16000)});
   if(!response.ok)throw Error("HTTP "+response.status);
-  v4State.cot=v4CotSnapshot(await response.json());v4State.cotSource="CFTC · corte 19/11/2026";
+  const snapshot=await response.json();v4State.cot=v4CotSnapshot(snapshot);v4State.cotSource="CFTC · archivo "+snapshot.snapshot_at;
   renderV4();
  }catch(error){console.warn("CFTC snapshot no disponible",error)}
  // Query the primary public government source at opening. A rejected CORS
@@ -2841,20 +2952,22 @@ async function bootV4(){
   if(!response.ok)throw Error("CFTC HTTP "+response.status);
   const fresh=v4CotRows(await response.json());
   if(fresh.gold.length<490||fresh.silver.length<490||fresh.gold[0].date>"2016-12-15"||fresh.silver[0].date>"2016-12-15")throw Error("CFTC directo sin diez años completos; conservar archivo 10A");
-  if(v4State.cot&&fresh.gold.at(-1).date<v4State.cot.gold.at(-1).date)throw Error("CFTC más antigua que respaldo");
+  if(v4State.cot&&["gold","silver"].some(key=>fresh[key].at(-1).date<v4State.cot[key].at(-1).date))throw Error("CFTC más antigua que respaldo");
   v4State.cot=fresh;v4State.cotSource="CFTC consulta directa";
   renderV4();
  }catch(error){console.warn("CFTC directo no disponible; respaldo etiquetado",error)}
  try{
-  const response=await fetch("data/v4-gvz-snapshot.json?v=gvz-20261119",{credentials:"same-origin",cache:"default",signal:AbortSignal.timeout(16000)});
+  const response=await fetch("data/v4-gvz-snapshot.json?v=gvz-20261119",{credentials:"same-origin",cache:"no-store",signal:AbortSignal.timeout(16000)});
   if(!response.ok)throw Error("GVZ respaldo HTTP "+response.status);
   v4State.gvz=v4GvzSnapshot(await response.json());v4State.gvzSource="Archivo local FRED/Cboe";
   renderV4();
  }catch(error){console.warn("Respaldo GVZ FRED no disponible",error)}
  try{
-  const response=await fetch(V4_FRED_GVZ+"&cosd=2016-10-01",{mode:"cors",credentials:"omit",cache:"no-store",signal:AbortSignal.timeout(18000)});
-  if(!response.ok)throw Error("FRED GVZ HTTP "+response.status);
-  v4State.gvz=v4ParseGvz(await response.text());v4State.gvzSource="Consulta directa FRED/Cboe";
+  const {raw,via}=await fetchPublicOfficialCSV(V4_FRED_GVZ+"&cosd=2016-10-01");
+  const fresh=v4ParseGvz(raw);
+  if(fresh.length<2200||fresh[0].date>"2016-12-15"||fresh.at(-1).date>new Date().toISOString().slice(0,10)||
+    (v4State.gvz?.length&&fresh.at(-1).date<v4State.gvz.at(-1).date))throw Error("GVZ corto o anterior al respaldo");
+  v4State.gvz=fresh;v4State.gvzSource=via==="relay"?"Consulta FRED/Cboe · vía CORS":"Consulta directa FRED/Cboe";
   renderV4();
  }catch(error){console.warn("FRED GVZ no disponible desde navegador",error)}
 }
@@ -2962,7 +3075,7 @@ init();
   syncTheme();
 })();
 </script>
-<script defer src="./quality.js"></script>
-<script defer src="./explanations.js"></script>
-<script defer src="./indices.js?v=20261121-v48-btc"></script>
+<script defer src="./quality.js?v=20261125-v49"></script>
+<script defer src="./explanations.js?v=20261125-v49"></script>
+<script defer src="./indices.js?v=20261125-v49"></script>
 </body></html>

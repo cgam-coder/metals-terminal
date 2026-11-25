@@ -1,1 +1,331 @@
-{"schema":"metals-v4-etf-holdings-sec-v1","compiled_on":"2026-11-19","data_class":"quarterly_reported_physical_bullion_holdings","source_authority":"U.S. Securities and Exchange Commission EDGAR (10-Q / 10-K)","discovery_crosscheck":"https://silverdominion.com/market-tools/gold-silver-etf-holdings-tracker/","validation":"Dates and accession numbers from official SEC submissions APIs. Latest holdings cross-checked to GLD June 2026 and SLV September 2026 SEC 10-Q. All holdings rounded to two decimals as reported by secondary compilation.","caveats":["Values relate to observation_date; first available publicly after filed_at.","The published facts are not the daily GLD/SLV holdings archive.","Trust holdings movements are not equivalent to cash ETF flows.","GLD and SLV use different physical units; comparative chart uses percentage change from same dated quarter.","No artificial interpolation or daily extrapolation."],"units":{"gld":"metric tonnes of gold","slv":"millions of troy ounces of silver"},"securities":{"gld":{"cik":"0001222333","name":"SPDR Gold Trust","ticker":"GLD"},"slv":{"cik":"0001330568","name":"iShares Silver Trust","ticker":"SLV"}},"series":{"gld":[{"observation_date":"2021-09-30","value":990.04,"filed_at":"2021-11-24","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000119312521340496/d121499d10k.htm"},{"observation_date":"2021-12-31","value":975.67,"filed_at":"2022-02-09","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000119312522032666/d274756d10q.htm"},{"observation_date":"2022-03-31","value":1091.44,"filed_at":"2022-05-09","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000119312522144987/d301885d10q.htm"},{"observation_date":"2022-06-30","value":1054.37,"filed_at":"2022-08-05","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000119312522213588/d370307d10q.htm"},{"observation_date":"2022-09-30","value":943.18,"filed_at":"2022-11-23","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000119312522291881/d760732d10k.htm"},{"observation_date":"2022-12-31","value":918.52,"filed_at":"2023-02-09","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774923002856/gld20221231_10q.htm"},{"observation_date":"2023-03-31","value":929.47,"filed_at":"2023-05-09","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774923013346/gld20230331_10q.htm"},{"observation_date":"2023-06-30","value":926.81,"filed_at":"2023-08-07","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774923022288/gld20230630_10q.htm"},{"observation_date":"2023-09-30","value":873.64,"filed_at":"2023-11-22","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774923032876/gld20230930_10k.htm"},{"observation_date":"2023-12-31","value":881.72,"filed_at":"2024-02-08","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774924003442/gld20231231_10q.htm"},{"observation_date":"2024-03-31","value":830.15,"filed_at":"2024-05-08","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774924015320/gld20240331_10q.htm"},{"observation_date":"2024-06-30","value":829.06,"filed_at":"2024-08-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774924024842/gld20240630_10q.htm"},{"observation_date":"2024-09-30","value":871.95,"filed_at":"2024-11-25","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774924036161/gld20240930_10k.htm"},{"observation_date":"2024-12-31","value":872.52,"filed_at":"2025-02-05","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774925002865/gld20241231_10q.htm"},{"observation_date":"2025-03-31","value":931.95,"filed_at":"2025-05-07","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774925015077/gld20250331_10q.htm"},{"observation_date":"2025-06-30","value":954.83,"filed_at":"2025-08-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774925024998/gld20250630_10q.htm"},{"observation_date":"2025-09-30","value":1011.74,"filed_at":"2025-11-25","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774925036305/gld20250930_10k.htm"},{"observation_date":"2025-12-31","value":1072,"filed_at":"2026-02-04","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774926002987/gld20251231_10q.htm"},{"observation_date":"2026-03-31","value":1046.14,"filed_at":"2026-05-05","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774926014926/gld20260331_10q.htm"},{"observation_date":"2026-06-30","value":1005.08,"filed_at":"2026-08-04","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1222333/000143774926025680/gld20260630_10q.htm"}],"slv":[{"observation_date":"2021-09-30","value":549.44,"filed_at":"2021-11-03","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774921025051/slv20210930_10q.htm"},{"observation_date":"2021-12-31","value":530.84,"filed_at":"2022-03-01","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774922004900/slv20211231_10k.htm"},{"observation_date":"2022-03-31","value":558.65,"filed_at":"2022-05-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774922011362/slv20220331_10q.htm"},{"observation_date":"2022-06-30","value":540.71,"filed_at":"2022-08-04","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774922018859/slv20220630_10q.htm"},{"observation_date":"2022-09-30","value":480.92,"filed_at":"2022-11-01","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774922025350/slv20220930_10q.htm"},{"observation_date":"2022-12-31","value":466.27,"filed_at":"2023-02-23","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774923004332/slv20221231_10k.htm"},{"observation_date":"2023-03-31","value":463.94,"filed_at":"2023-05-05","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774923012785/slv20230331_10q.htm"},{"observation_date":"2023-06-30","value":468.14,"filed_at":"2023-08-04","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774923022119/slv20230630c_10q.htm"},{"observation_date":"2023-09-30","value":441.88,"filed_at":"2023-11-03","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774923030198/slv20230930_10q.htm"},{"observation_date":"2023-12-31","value":436.89,"filed_at":"2024-02-20","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774924004672/slv20231231c_10k.htm"},{"observation_date":"2024-03-31","value":430.81,"filed_at":"2024-05-08","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774924015393/slv20240331c_10q.htm"},{"observation_date":"2024-06-30","value":437.45,"filed_at":"2024-08-08","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774924025404/slv20240630c_10q.htm"},{"observation_date":"2024-09-30","value":469.2,"filed_at":"2024-11-07","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774924033818/slv20240930c_10q.htm"},{"observation_date":"2024-12-31","value":463.84,"filed_at":"2025-02-19","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774925004259/slv20241231_10k.htm"},{"observation_date":"2025-03-31","value":447.97,"filed_at":"2025-05-07","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774925015169/slv20250331_10q.htm"},{"observation_date":"2025-06-30","value":478.05,"filed_at":"2025-08-05","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774925024885/slv20250630_10q.htm"},{"observation_date":"2025-09-30","value":502.93,"filed_at":"2025-11-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774925033436/slv20250930_10q.htm"},{"observation_date":"2025-12-31","value":528.69,"filed_at":"2026-02-27","form":"10-K","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774926006059/slv20251231_10k.htm"},{"observation_date":"2026-03-31","value":490.99,"filed_at":"2026-05-07","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774926015539/slv20260331_10q.htm"},{"observation_date":"2026-06-30","value":479.76,"filed_at":"2026-08-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774926026005/slv20260630_10q.htm"},{"observation_date":"2026-09-30","value":493.58,"filed_at":"2026-11-06","form":"10-Q","sec_filing_url":"https://www.sec.gov/Archives/edgar/data/1330568/000143774926035541/slv20260930_10q.htm"}]}}
+{
+  "schema": "metals-v4-etf-holdings-sec-v1",
+  "compiled_on": "2026-11-25",
+  "data_class": "quarterly_reported_physical_bullion_holdings",
+  "source_authority": "U.S. Securities and Exchange Commission EDGAR (10-Q / 10-K)",
+  "discovery_crosscheck": "https://silverdominion.com/market-tools/gold-silver-etf-holdings-tracker/",
+  "validation": "Dates and accession numbers from official SEC submissions APIs. Latest holdings cross-checked to GLD June 2026 and SLV September 2026 SEC 10-Q. All holdings rounded to two decimals as reported by secondary compilation. GLD 2026-09-30 validated against SEC Form 10-K filed 2026-11-24, 33,996,676.238 troy oz converted with 31.1034768 g/troy oz; SLV quarter matched to SEC Form 10-Q filed 2026-11-06 (493,578,376 oz).",
+  "caveats": [
+    "Values relate to observation_date; first available publicly after filed_at.",
+    "The published facts are not the daily GLD/SLV holdings archive.",
+    "Trust holdings movements are not equivalent to cash ETF flows.",
+    "GLD and SLV use different physical units; comparative chart uses percentage change from same dated quarter.",
+    "No artificial interpolation or daily extrapolation."
+  ],
+  "units": {
+    "gld": "metric tonnes of gold",
+    "slv": "millions of troy ounces of silver"
+  },
+  "securities": {
+    "gld": {
+      "cik": "0001222333",
+      "name": "SPDR Gold Trust",
+      "ticker": "GLD"
+    },
+    "slv": {
+      "cik": "0001330568",
+      "name": "iShares Silver Trust",
+      "ticker": "SLV"
+    }
+  },
+  "series": {
+    "gld": [
+      {
+        "observation_date": "2021-09-30",
+        "value": 990.04,
+        "filed_at": "2021-11-24",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000119312521340496/d121499d10k.htm"
+      },
+      {
+        "observation_date": "2021-12-31",
+        "value": 975.67,
+        "filed_at": "2022-02-09",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000119312522032666/d274756d10q.htm"
+      },
+      {
+        "observation_date": "2022-03-31",
+        "value": 1091.44,
+        "filed_at": "2022-05-09",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000119312522144987/d301885d10q.htm"
+      },
+      {
+        "observation_date": "2022-06-30",
+        "value": 1054.37,
+        "filed_at": "2022-08-05",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000119312522213588/d370307d10q.htm"
+      },
+      {
+        "observation_date": "2022-09-30",
+        "value": 943.18,
+        "filed_at": "2022-11-23",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000119312522291881/d760732d10k.htm"
+      },
+      {
+        "observation_date": "2022-12-31",
+        "value": 918.52,
+        "filed_at": "2023-02-09",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774923002856/gld20221231_10q.htm"
+      },
+      {
+        "observation_date": "2023-03-31",
+        "value": 929.47,
+        "filed_at": "2023-05-09",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774923013346/gld20230331_10q.htm"
+      },
+      {
+        "observation_date": "2023-06-30",
+        "value": 926.81,
+        "filed_at": "2023-08-07",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774923022288/gld20230630_10q.htm"
+      },
+      {
+        "observation_date": "2023-09-30",
+        "value": 873.64,
+        "filed_at": "2023-11-22",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774923032876/gld20230930_10k.htm"
+      },
+      {
+        "observation_date": "2023-12-31",
+        "value": 881.72,
+        "filed_at": "2024-02-08",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774924003442/gld20231231_10q.htm"
+      },
+      {
+        "observation_date": "2024-03-31",
+        "value": 830.15,
+        "filed_at": "2024-05-08",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774924015320/gld20240331_10q.htm"
+      },
+      {
+        "observation_date": "2024-06-30",
+        "value": 829.06,
+        "filed_at": "2024-08-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774924024842/gld20240630_10q.htm"
+      },
+      {
+        "observation_date": "2024-09-30",
+        "value": 871.95,
+        "filed_at": "2024-11-25",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774924036161/gld20240930_10k.htm"
+      },
+      {
+        "observation_date": "2024-12-31",
+        "value": 872.52,
+        "filed_at": "2025-02-05",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774925002865/gld20241231_10q.htm"
+      },
+      {
+        "observation_date": "2025-03-31",
+        "value": 931.95,
+        "filed_at": "2025-05-07",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774925015077/gld20250331_10q.htm"
+      },
+      {
+        "observation_date": "2025-06-30",
+        "value": 954.83,
+        "filed_at": "2025-08-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774925024998/gld20250630_10q.htm"
+      },
+      {
+        "observation_date": "2025-09-30",
+        "value": 1011.74,
+        "filed_at": "2025-11-25",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774925036305/gld20250930_10k.htm"
+      },
+      {
+        "observation_date": "2025-12-31",
+        "value": 1072,
+        "filed_at": "2026-02-04",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774926002987/gld20251231_10q.htm"
+      },
+      {
+        "observation_date": "2026-03-31",
+        "value": 1046.14,
+        "filed_at": "2026-05-05",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774926014926/gld20260331_10q.htm"
+      },
+      {
+        "observation_date": "2026-06-30",
+        "value": 1005.08,
+        "filed_at": "2026-08-04",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774926025680/gld20260630_10q.htm"
+      },
+      {
+        "observation_date": "2026-09-30",
+        "value": 1057.41,
+        "filed_at": "2026-11-24",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1222333/000143774926038190/gld20260930_10k.htm"
+      }
+    ],
+    "slv": [
+      {
+        "observation_date": "2021-09-30",
+        "value": 549.44,
+        "filed_at": "2021-11-03",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774921025051/slv20210930_10q.htm"
+      },
+      {
+        "observation_date": "2021-12-31",
+        "value": 530.84,
+        "filed_at": "2022-03-01",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774922004900/slv20211231_10k.htm"
+      },
+      {
+        "observation_date": "2022-03-31",
+        "value": 558.65,
+        "filed_at": "2022-05-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774922011362/slv20220331_10q.htm"
+      },
+      {
+        "observation_date": "2022-06-30",
+        "value": 540.71,
+        "filed_at": "2022-08-04",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774922018859/slv20220630_10q.htm"
+      },
+      {
+        "observation_date": "2022-09-30",
+        "value": 480.92,
+        "filed_at": "2022-11-01",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774922025350/slv20220930_10q.htm"
+      },
+      {
+        "observation_date": "2022-12-31",
+        "value": 466.27,
+        "filed_at": "2023-02-23",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774923004332/slv20221231_10k.htm"
+      },
+      {
+        "observation_date": "2023-03-31",
+        "value": 463.94,
+        "filed_at": "2023-05-05",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774923012785/slv20230331_10q.htm"
+      },
+      {
+        "observation_date": "2023-06-30",
+        "value": 468.14,
+        "filed_at": "2023-08-04",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774923022119/slv20230630c_10q.htm"
+      },
+      {
+        "observation_date": "2023-09-30",
+        "value": 441.88,
+        "filed_at": "2023-11-03",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774923030198/slv20230930_10q.htm"
+      },
+      {
+        "observation_date": "2023-12-31",
+        "value": 436.89,
+        "filed_at": "2024-02-20",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774924004672/slv20231231c_10k.htm"
+      },
+      {
+        "observation_date": "2024-03-31",
+        "value": 430.81,
+        "filed_at": "2024-05-08",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774924015393/slv20240331c_10q.htm"
+      },
+      {
+        "observation_date": "2024-06-30",
+        "value": 437.45,
+        "filed_at": "2024-08-08",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774924025404/slv20240630c_10q.htm"
+      },
+      {
+        "observation_date": "2024-09-30",
+        "value": 469.2,
+        "filed_at": "2024-11-07",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774924033818/slv20240930c_10q.htm"
+      },
+      {
+        "observation_date": "2024-12-31",
+        "value": 463.84,
+        "filed_at": "2025-02-19",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774925004259/slv20241231_10k.htm"
+      },
+      {
+        "observation_date": "2025-03-31",
+        "value": 447.97,
+        "filed_at": "2025-05-07",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774925015169/slv20250331_10q.htm"
+      },
+      {
+        "observation_date": "2025-06-30",
+        "value": 478.05,
+        "filed_at": "2025-08-05",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774925024885/slv20250630_10q.htm"
+      },
+      {
+        "observation_date": "2025-09-30",
+        "value": 502.93,
+        "filed_at": "2025-11-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774925033436/slv20250930_10q.htm"
+      },
+      {
+        "observation_date": "2025-12-31",
+        "value": 528.69,
+        "filed_at": "2026-02-27",
+        "form": "10-K",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774926006059/slv20251231_10k.htm"
+      },
+      {
+        "observation_date": "2026-03-31",
+        "value": 490.99,
+        "filed_at": "2026-05-07",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774926015539/slv20260331_10q.htm"
+      },
+      {
+        "observation_date": "2026-06-30",
+        "value": 479.76,
+        "filed_at": "2026-08-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774926026005/slv20260630_10q.htm"
+      },
+      {
+        "observation_date": "2026-09-30",
+        "value": 493.58,
+        "filed_at": "2026-11-06",
+        "form": "10-Q",
+        "sec_filing_url": "https://www.sec.gov/Archives/edgar/data/1330568/000143774926035541/slv20260930_10q.htm"
+      }
+    ]
+  }
+}

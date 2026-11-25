@@ -64,7 +64,7 @@ jobs:
               theme:document.documentElement.dataset.theme||'night'
             };
           });
-          const lastFull=first=>first&&first<='2016-12-15';
+          const lastFull=first=>{const cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-10);cutoff.setUTCDate(cutoff.getUTCDate()+60);return first&&first<=cutoff.toISOString().slice(0,10);};
           try{
             for(const [label,width,height] of [['desktop',1440,900],['mobile',390,840],['small',360,780]]){
               const ctx=await browser.newContext({viewport:{width,height}});
@@ -77,7 +77,7 @@ jobs:
                 await page.waitForTimeout(600);
                 let st=await read(page);
                 out.cases[label]=st;
-                check((st.version.includes('V4.5')||st.version.includes('V4.6')||st.version.includes('V4.7')||st.version.includes('V4.8')),'version not deployed');
+                check((st.version.includes('V4.5')||st.version.includes('V4.6')||st.version.includes('V4.7')||st.version.includes('V4.8')||st.version.includes('V4.9')),'version not deployed');
                 check(st.period==='10y'&&st.selectedMain==='10A','10A not activated');
                 check(st.mainButtons.at(-1)==='10A'&&st.modalButtons.at(-1)==='10A','10A missing in expanded controls');
                 check(st.mainButtons.length===11&&st.modalButtons.length===11,'changed previous intervals');
@@ -94,7 +94,7 @@ jobs:
                 check(st.partial,'ETF historical limit not flagged on 10A');
                 check(st.badgeCount>=12,'quality badges missing');
                 check(st.scrollWidth<=width+1,'horizontal overflow '+label);
-                if(st.futuresProvider==='aethereal'){
+                if(['aethereal','yahoo'].includes(st.futuresProvider)){
                   for(const [k,v] of Object.entries(st.futures))check(lastFull(v.first),'futures '+k+' lacks 10Y: '+JSON.stringify(v));
                   check(st.chartMain,'missing comparable futures chart');
                 }else{
@@ -117,7 +117,7 @@ jobs:
             const page=await browser.newPage({viewport:{width:1100,height:800}});
             page.on('pageerror',e=>out.errors.push({label:'custom',error:e.stack||e.message}));
             try{
-              await page.goto(start+'?period=custom&from=2016-11-21&to=2017-11-21',{waitUntil:'domcontentloaded',timeout:45000});
+              const from=new Date();from.setUTCFullYear(from.getUTCFullYear()-10);const to=new Date(from);to.setUTCFullYear(to.getUTCFullYear()+1);await page.goto(start+'?period=custom&from='+from.toISOString().slice(0,10)+'&to='+to.toISOString().slice(0,10),{waitUntil:'domcontentloaded',timeout:45000});
               await page.waitForFunction(()=>v4State.cot?.gold?.length>=480&&macro?.series?.DGS2?.length>=2000,null,{timeout:60000});
               const st=await read(page);out.cases.custom=st;
               check(st.period==='custom','historic custom range rejected');

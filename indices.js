@@ -1,4 +1,4 @@
-/* Metals Terminal V4.8 — five cash stock indices + spot BTC/USD. Native SVG, no embedded widgets.
+/* Metals Terminal V4.9 — five cash stock indices + spot BTC/USD. Native SVG, no embedded widgets.
    Yahoo chart API is unofficial; CORS relay is free and may fail or change.
    Fetch in each visitor's browser; no local price archives or paid subscriptions. */
 (function(){
@@ -44,7 +44,10 @@
    const timestamp=Number(t[i]),close=c[i]===null?NaN:Number(c[i]);
    if(!Number.isFinite(timestamp)||timestamp<946684800||timestamp>now+86400||
       !Number.isFinite(close)||close<=0||close>1000000)continue;
-   const date=dateString(timestamp);
+   const zone=item.symbol===BTC_SYMBOL?"UTC":item.symbol==="^STOXX50E"?"Europe/Paris":"America/New_York";
+   const date=typeof window.metalsSessionDay==="function"?window.metalsSessionDay(timestamp,zone):dateString(timestamp);
+   const today=typeof window.metalsSessionDay==="function"?window.metalsSessionDay(now,zone):dateString(now);
+   if(date>=today)continue; // Don't treat an open daily bar as a final close.
    if(map.has(date))throw Error("fecha de cierre duplicada");
    map.set(date,{date,t:timestamp,c:close});
   }
@@ -53,21 +56,29 @@
   return {item,points};
  }
  async function fetchIndex(item,range){
+  if(typeof window.metalsYahooChart==="function")return parseData(await window.metalsYahooChart(item.symbol,range),item);
   const query="https://query1.finance.yahoo.com/v8/finance/chart/"+
    encodeURIComponent(item.symbol)+"?"+new URLSearchParams({range,interval:"1d"});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),24000);
   try{
-   const response=await fetch(PROXY+query,{mode:"cors",credentials:"omit",cache:"default",signal:abort.signal});
+   const response=await fetch(PROXY+query,{mode:"cors",credentials:"omit",cache:"no-store",signal:abort.signal});
    if(!response.ok)throw Error("HTTP "+response.status);
    return parseData(await response.json(),item);
   }finally{clearTimeout(timer);}
  }
- function empty(message,failed){
+ function sourceAudit(data){
+  window.metalsIndicesAudit=data;
+  if(data.pending){window.metalsQualityDone?.delete("indices");window.renderMetalsQuality?.();}
+  else window.metalsQualitySignal?.("indices");
+ }
+ function empty(message,failed,pending=false){
   plot=null;
   marketChartCache.delete("indices-comparison");
   const host=el("indices-comparison");
   if(host){host.innerHTML='<div class="native-error" role="status">'+escapeHTML(message)+'</div>';
-   host.dataset.indicesState=failed?"unavailable":"insufficient";}
+   for(const key of ["indicesCount","bitcoinState","comparisonSeriesCount","indicesLast"])delete host.dataset[key];
+   host.dataset.indicesState=pending?"pending":failed?"unavailable":"insufficient";}
+  sourceAudit({pending,ready:false,partial:!pending,mode:pending?"Consulta Yahoo en curso":"Fuente o periodo sin datos",note:message,date:null,from:null});
  }
  function draw(results){
   const foot=el("indices-window"),host=el("indices-comparison");
@@ -89,7 +100,7 @@
   const p=currentPeriod(),range=dateWindow(),end=common.at(-1);
   const cutoff=p==="custom"&&range?Date.parse(range.from+"T00:00:00Z")/1000:
    periodCutoff(Date.parse(end+"T00:00:00Z")/1000,p);
-  let days=common.filter(d=>Date.parse(d+"T00:00:00Z")/1000>=cutoff&&(!range||d<=range.to));
+  let days=p==="1d"?common.slice(-2):common.filter(d=>Date.parse(d+"T00:00:00Z")/1000>=cutoff&&(!range||d<=range.to));
   if(days.length<2){
    empty("No hay dos cierres comunes en "+currentLabel()+". Selecciona un periodo mayor.",true);
    foot.textContent=currentLabel()+" · cobertura insuficiente";return;
@@ -114,7 +125,7 @@
   const requestedDays=Math.max(1,(Date.parse(end+"T00:00:00Z")-Date.parse(requestedStart+"T00:00:00Z"))/86400000);
   const uncoveredDays=Math.max(0,(Date.parse(days[0]+"T00:00:00Z")-Date.parse(requestedStart+"T00:00:00Z"))/86400000);
   const shortCoverage=uncoveredDays>Math.max(4,requestedDays*.28);
-  const stale=(Date.now()-Date.parse(days.at(-1)+"T00:00:00Z"))/86400000>14;
+  const stale=p!=="custom"&&typeof businessDaysSince==="function"&&businessDaysSince(days.at(-1))>3;
   const coverageNotice=(shortCoverage?" Histórico temporal incompleto para "+currentLabel()+".":"")+
    (stale?" Última observación antigua; comprobar frescura.":"");
   const dateTimes=days.map(d=>Date.parse(d+"T18:00:00Z")/1000);
@@ -138,7 +149,10 @@
   plot={lines,dates:dateTimes,note:methodology,count:days.length,first:days[0],last:days.at(-1),
    missing,missingStocks,stockCount:equities.length,bitcoin:includeBTC,bitcoinStatus,
    warning:shortCoverage,stale};
-  nativeChart("indices-comparison",lines,dateTimes,"%",methodology);
+  if(p==="1d"){
+   host.innerHTML='<div class="native-error">La vista 1D no dispone de intradía comparable; último cierre común ' + days.at(-1) + '. Selecciona 3D o superior.</div>';
+   marketChartCache.delete("indices-comparison");plot=null;
+  }else nativeChart("indices-comparison",lines,dateTimes,"%",methodology);
   host.dataset.indicesState=missing.length?"partial":"complete";
   host.dataset.indicesCount=String(equities.length);
   host.dataset.bitcoinState=bitcoinStatus;
@@ -147,6 +161,7 @@
   foot.textContent=currentLabel()+" · "+days.length+" cierres comunes · "+days[0]+" a "+days.at(-1)+
    " · "+equities.length+"/"+STOCK_COUNT+" índices · BTC "+(includeBTC?"incluido":"no disponible")+
    (shortCoverage?" · histórico parcial":"")+(stale?" · revisar frescura":"");
+  sourceAudit({pending:false,ready:true,partial:missing.length>0||shortCoverage,mode:"Consulta Yahoo Finance · vía CORS",date:days.at(-1),from:days[0],note:equities.length+"/5 índices · BTC "+(includeBTC?"incluido":"no disponible")+(p==="1d"?" · cierres consultados; sin gráfico intradía":"")+(shortCoverage?" · histórico parcial":""),checkedAt:new Date().toISOString()});
   if(typeof detailKind!=="undefined"&&detailKind==="indices"&&el("detail-overlay")&&!el("detail-overlay").hidden)
    drawMarketDetail();
  }
@@ -155,11 +170,6 @@
   if(!host||!foot)return;
   const p=currentPeriod(),r=dateWindow(),key=p+"|"+(r?r.from+"|"+r.to:"");
   foot.textContent="Periodo "+currentLabel()+" · cierres diarios";
-  if(p==="1d"){
-   activeKey=key;generation++;inflight=false;
-   empty("La vista 1D requiere datos intradía que no ofrece esta comparación de cierres diarios. Selecciona 3D o un periodo superior.");
-   return;
-  }
   if(key===activeKey&&plot){
    if(force){
     const saved=cache.get(providerRange());
@@ -171,11 +181,11 @@
   }
   if(key===activeKey&&inflight)return;
   activeKey=key;
-  const range=providerRange(),cached=cache.get(range);
-  if(cached&&Date.now()-cached.fetched<8*60000){draw(cached.values);return;}
   const token=++generation;
+  const range=providerRange(),cached=cache.get(range);
+  if(cached&&Date.now()-cached.fetched<8*60000){inflight=false;draw(cached.values);return;}
   inflight=true;
-  empty("Consultando cierres diarios de índices y Bitcoin…");
+  empty("Consultando cierres diarios de índices y Bitcoin…",false,true);
   const values=await Promise.all(LIST.map(item=>fetchIndex(item,range).catch(error=>{
    console.warn("[Índices] "+item.symbol+": "+String(error?.message||error));return null;
   })));
@@ -195,7 +205,7 @@
     " · variación porcentual base 0 % · BTC 24/7 frente a cierres bursátiles no simultáneos · sin conversión de moneda ni dividendos de índices.";
   }else{
    host.innerHTML='<div class="native-error">No hay comparación de índices contrastada para '+escapeHTML(currentLabel())+'.</div>';
-   if(foot)foot.textContent="Solo datos de cierre; no se muestran series ficticias.";
+   if(foot)foot.textContent="Solo datos de cierre; no se muestran series ficticias ni intradía no disponible.";
   }
  }
  window.renderIndicesPanel=render;

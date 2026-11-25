@@ -17,7 +17,7 @@
     ["Cambios de tendencia y límites",
      '<p>Una línea que pasa de subir a bajar indica un giro <em>en ese horizonte</em>; conviene contrastarlo con la ratio oro/plata, los tipos reales y el posicionamiento COT/OI. Los futuros continuos pueden presentar efectos de renovación de contratos: la curva <strong>no incluye financiación, costes ni una metodología de rollover suficiente para equipararla a un rendimiento de inversión</strong>. Se emplean cierres fechados, no cotizaciones intradía.</p>']
    ],
-   sources:[["Proveedor histórico de cierres de futuros","https://dataset.aethereal.top/datasets/commodity-prices"]]
+   sources:[["Yahoo Finance · GC","https://finance.yahoo.com/quote/GC%3DF/history/"],["Yahoo Finance · SI","https://finance.yahoo.com/quote/SI%3DF/history/"],["Yahoo Finance · HG","https://finance.yahoo.com/quote/HG%3DF/history/"],["Aethereal · respaldo histórico","https://dataset.aethereal.top/datasets/commodity-prices"]]
   },
   indices:{
    title:"Comparativa de índices bursátiles y Bitcoin · EE. UU. y Europa",
