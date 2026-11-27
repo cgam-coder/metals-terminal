@@ -1133,13 +1133,13 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
   return;
  }
  const n=dates.length;
- const indexes=marketSampleIndexes(dates);
+ const indexes=marketPlotIndexes(dates,options.provisionalLast===true);
  const plotDates=indexes.map(i=>dates[i]);
  const plotLines=lines.map(line=>({...line,points:indexes.map(i=>line.points[i])}));
  const legend='<div class="native-legend">'+lines.map(line=>{
-   const i=line.points.findLastIndex(Number.isFinite),value=i>=0?fmt(line.points[i],2)+unit:"sin dato";
+   const i=line.points.findLastIndex(Number.isFinite),value=i>=0?fmt(line.points[i],options.precision??2)+unit:"sin dato";
    const date=i>=0&&i!==dates.length-1?" · "+new Date(dates[i]*1000).toISOString().slice(0,10):"";
-   return '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+' <strong>'+value+'</strong>'+date+'</span>';
+   return '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+' <strong>'+value+'</strong>'+date+(options.provisionalLast&&i===dates.length-1?' · cot. indicativa':'')+'</span>';
  }).join("")+'</div>';
  const thinning=indexes.length<n?'<span>Trazado '+((dates.at(-1)-dates[0])>7*365*86400?"mensual":"semanal")+' con observaciones reales; '+n+' registros en el cálculo.</span>':'';
  // The two central dashboard charts preserve the full method but collapse it
@@ -1185,20 +1185,25 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
  const ticks=W<310?3:W<570?4:6;
  for(let j=0;j<ticks;j++){
    const fraction=j/(ticks-1),t=firstT+timeRange*fraction,cx=X(t);
+   const tickLabel=options.provisionalLast&&j===ticks-1?options.quote.date.slice(8,10)+" "+MACRO_SHORT_MONTHS[Number(options.quote.date.slice(5,7))-1]:marketAxisLabel(t,timeRange,nativePeriod);
    svg+='<line x1="'+cx.toFixed(1)+'" y1="'+T+'" x2="'+cx.toFixed(1)+'" y2="'+(H-B)+'" stroke="#416075" stroke-width=".8" stroke-opacity=".2"/>';
-   svg+='<text class="native-axis" x="'+cx.toFixed(1)+'" y="'+(H-10)+'" text-anchor="'+(j===0?"start":j===ticks-1?"end":"middle")+'">'+marketAxisLabel(t,timeRange,nativePeriod)+'</text>';
+   svg+='<text class="native-axis" x="'+cx.toFixed(1)+'" y="'+(H-10)+'" text-anchor="'+(j===0?"start":j===ticks-1?"end":"middle")+'">'+tickLabel+'</text>';
  }
  for(const line of plotLines){
    const points=line.points;
    let path="",on=false;
-   for(let i=0;i<points.length;i++){
+   for(let i=0;i<points.length-(options.provisionalLast?1:0);i++){
      if(!Number.isFinite(points[i])){on=false;continue;}
      path+=(on?" L":"M")+X(plotDates[i]).toFixed(2)+" "+Y(points[i]).toFixed(2);
      on=true;
    }
    svg+='<path d="'+path+'" fill="none" stroke="'+line.color+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
    const lastValid=points.findLastIndex(Number.isFinite);
-   if(lastValid>=0)svg+='<circle cx="'+X(plotDates[lastValid]).toFixed(1)+'" cy="'+Y(points[lastValid]).toFixed(1)+'" r="3.7" fill="'+line.color+'"/>';
+   if(options.provisionalLast&&lastValid===points.length-1){
+    const p=lastValid-1,q=options.quote;
+    if(p>=0&&Number.isFinite(points[p]))svg+='<path d="M'+X(plotDates[p]).toFixed(2)+' '+Y(points[p]).toFixed(2)+' L'+X(plotDates[lastValid]).toFixed(2)+' '+Y(points[lastValid]).toFixed(2)+'" fill="none" stroke="'+line.color+'" stroke-width="2.4" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" data-provisional-segment="true"/>';
+    svg+='<circle cx="'+X(plotDates[lastValid]).toFixed(1)+'" cy="'+Y(points[lastValid]).toFixed(1)+'" r="4.3" fill="var(--panel,#0b151f)" stroke="'+line.color+'" stroke-width="2" data-provisional-point="true" data-date="'+q.date+'" data-value="'+points[lastValid]+'"><title>Cotización indicativa '+futureQuoteTime(q)+'</title></circle>';
+   }else if(lastValid>=0)svg+='<circle cx="'+X(plotDates[lastValid]).toFixed(1)+'" cy="'+Y(points[lastValid]).toFixed(1)+'" r="3.7" fill="'+line.color+'"/>';
  }
  svg+='<line class="market-crosshair" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/></svg>';
  frame.insertAdjacentHTML("afterbegin",svg);
@@ -1215,7 +1220,7 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
    while(low<high){const mid=(low+high)>>1;if(plotDates[mid]<target)low=mid+1;else high=mid;}
    const i=low>0&&Math.abs(plotDates[low-1]-target)<Math.abs(plotDates[low]-target)?low-1:low;
    const date=new Date(plotDates[i]*1000).toLocaleString("es-ES",{year:"numeric",month:"short",day:"numeric",hour:timeRange<86400*5?"2-digit":undefined,minute:timeRange<86400*5?"2-digit":undefined,timeZone:"UTC"});
-   tip.textContent=date+" · "+plotLines.map(z=>z.label+": "+(Number.isFinite(z.points[i])?fmt(z.points[i],unit==="%"?2:4)+unit:"sin dato")).join(" · ");
+   tip.textContent=(options.provisionalLast&&i===plotDates.length-1?"Cot. "+futureQuoteTime(options.quote)+" (Madrid)":date)+" · "+plotLines.map(z=>z.label+": "+(Number.isFinite(z.points[i])?fmt(z.points[i],options.precision??(unit==="%"?2:4))+unit:"sin dato")).join(" · ");
    tip.classList.add("visible");
    tip.style.display="block";
    const xx=X(plotDates[i]).toFixed(2);
@@ -1392,7 +1397,7 @@ function drawFuturesCloseTile(key,rows,note){
    }else el.innerHTML='<div class="metal-error">Sin datos verificables de '+conf.code+'. <a href="'+conf.url+'" target="_blank" rel="noopener noreferrer">Consultar fuente ↗</a></div>';
    return;
  }
- const recent=pickPeriodRows(full,nativePeriod,conf.kind);
+ const recent=conf.kind==="futures"?futureDisplayRows(key,full,nativePeriod):pickPeriodRows(full,nativePeriod,conf.kind);
  if(nativePeriod==="custom"&&!recent.length){
   el.innerHTML='<div class="metal-error">Sin observaciones de '+conf.code+' entre '+customRange.from+' y '+customRange.to+'. No se muestran precios posteriores a la selección.</div>';
   return;
@@ -1402,6 +1407,7 @@ function drawFuturesCloseTile(key,rows,note){
  const dailyOnly=conf.kind==="futures"||conf.kind==="vix";
  const noIntraday=nativePeriod==="1d"&&dailyOnly;
  const plotReady=recent.length>=2&&!noIntraday;
+ const provisional=recent.at(-1)?.provisional===true;
  const quote=conf.kind==="futures"?visibleFutureQuote(key,last):null;
  const headline=quote?quote.c:last.c;
  const delta=quote?(futuresProviders[key]==="yahoo"?(headline/last.c-1)*100:NaN):nativePeriod==="custom"||conf.kind==="reference"?(recent.length>=2?(last.c/first.c-1)*100:NaN):prior?(last.c/prior.c-1)*100:NaN;
@@ -1429,15 +1435,16 @@ function drawFuturesCloseTile(key,rows,note){
  const H=Math.max(82,Math.min(140,Math.round(geometry.height||155)-48));
  const left=W>=260?46:8,right=W>=260?10:7,top=10,bottom=22;
  const availableWidth=Math.max(40,W-left-right),availableHeight=Math.max(35,H-top-bottom);
- const dates=recent.map(z=>z.t),indexes=marketSampleIndexes(dates),sampled=indexes.map(i=>recent[i]);
+ const dates=recent.map(z=>z.t),indexes=marketPlotIndexes(dates,provisional),sampled=indexes.map(i=>recent[i]);
  const values=recent.map(z=>z.c),min=Math.min(...values),max=Math.max(...values);
- const spread=Math.max(max-min,Math.abs(last.c)*.0005),lo=min-spread*.12,hi=max+spread*.12;
+ const spread=Math.max(max-min,Math.abs(headline)*.0005),lo=min-spread*.12,hi=max+spread*.12;
  const startT=sampled[0].t,endT=sampled.at(-1).t,span=Math.max(1,endT-startT);
  const X=z=>left+(z.t-startT)/span*availableWidth;
  const Y=z=>top+(hi-z)/(hi-lo)*availableHeight;
  const coords=sampled.map(z=>[X(z).toFixed(2),Y(z.c).toFixed(2)]);
- const path=coords.map(([x,y],i)=>(i?"L":"M")+x+" "+y).join(" ");
- const area=path+" L"+coords.at(-1)[0]+" "+(H-bottom)+" L"+coords[0][0]+" "+(H-bottom)+" Z";
+ const solid=provisional?coords.slice(0,-1):coords;
+ const path=solid.map(([x,y],i)=>(i?"L":"M")+x+" "+y).join(" ");
+ const area=path+" L"+solid.at(-1)[0]+" "+(H-bottom)+" L"+solid[0][0]+" "+(H-bottom)+" Z";
  const gradientId="market-gradient-"+key;
  let svg='<svg data-market-tile-svg="1" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" tabindex="0" role="img" aria-label="Cierres históricos de '+conf.code+' en '+activePeriodLabel()+'. Toca para inspeccionar las fechas.">';
  svg+='<defs><linearGradient id="'+gradientId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+conf.accent+'" stop-opacity=".26"/><stop offset="100%" stop-color="'+conf.accent+'" stop-opacity=".015"/></linearGradient></defs>';
@@ -1451,17 +1458,21 @@ function drawFuturesCloseTile(key,rows,note){
  const xTickCount=compact?2:W<340?3:4;
  for(let j=0;j<xTickCount;j++){
    const fraction=j/(xTickCount-1),ts=startT+dateSpan*fraction,x=left+availableWidth*fraction;
-   const lbl=marketAxisLabel(ts,dateSpan,nativePeriod);
+   const lbl=provisional&&j===xTickCount-1?recent.at(-1).date.slice(8,10)+" "+MACRO_SHORT_MONTHS[Number(recent.at(-1).date.slice(5,7))-1]:marketAxisLabel(ts,dateSpan,nativePeriod);
    svg+='<text class="market-axis" x="'+x.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(j===0?"start":j===xTickCount-1?"end":"middle")+'">'+lbl+'</text>';
  }
  svg+='<path d="'+area+'" fill="url(#'+gradientId+')"/>';
  svg+='<path d="'+path+'" stroke="'+conf.accent+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" fill="none"/>';
- svg+='<circle cx="'+coords.at(-1)[0]+'" cy="'+coords.at(-1)[1]+'" r="3.4" fill="'+conf.accent+'" stroke="#061622" stroke-width="1"/>';
+ if(provisional){
+  const [x0,y0]=solid.at(-1),[x1,y1]=coords.at(-1),q=recent.at(-1);
+  svg+='<path d="M'+x0+' '+y0+' L'+x1+' '+y1+'" stroke="'+conf.accent+'" stroke-width="2.4" stroke-dasharray="4 3" fill="none" vector-effect="non-scaling-stroke" data-provisional-segment="true"/>';
+  svg+='<circle cx="'+x1+'" cy="'+y1+'" r="4" fill="var(--panel,#0b151f)" stroke="'+conf.accent+'" stroke-width="2" data-provisional-point="true" data-date="'+q.date+'" data-value="'+q.c+'"><title>Cotización indicativa '+futureQuoteTime(q)+' · '+fmt(q.c,conf.decimals)+'</title></circle>';
+ }else svg+='<circle cx="'+coords.at(-1)[0]+'" cy="'+coords.at(-1)[1]+'" r="3.4" fill="'+conf.accent+'" stroke="#061622" stroke-width="1"/>';
  svg+='<line class="market-crosshair" data-crosshair x1="'+left+'" x2="'+left+'" y1="'+top+'" y2="'+(H-bottom)+'"/></svg>';
- const total=(last.c/first.c-1)*100;
+ const total=(recent.at(-1).c/first.c-1)*100;
  el.innerHTML='<div class="metal-content"><div class="metal-line1"><strong class="metal-main-price">'+fmt(headline,conf.decimals)+'</strong>'+change+'</div>'+timeMarkup+
  '<div class="metal-spark-outer">'+svg+'<div class="metal-hover" role="status" aria-live="polite"></div></div>'+
- '<div class="metal-scale"><span>Mín: '+fmt(min,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %</span><span>Máx: '+fmt(max,conf.decimals)+'</span></div></div>';
+ '<div class="metal-scale"><span>Mín: '+fmt(min,conf.decimals)+'</span><span>'+recent.length+' obs. '+sign(total)+fmt(total,1)+' %'+(provisional?'*':'')+'</span><span>Máx: '+fmt(max,conf.decimals)+'</span></div></div>';
  const plot=el.querySelector(".metal-spark-outer"),shape=plot.querySelector("svg[data-market-tile-svg]"),cross=plot.querySelector("[data-crosshair]"),tip=plot.querySelector(".metal-hover");
  const clearInspection=()=>{tip.classList.remove("visible");cross.style.opacity="0";};
  const inspect=(event)=>{
@@ -1473,7 +1484,7 @@ function drawFuturesCloseTile(key,rows,note){
    while(l<h){const m=(l+h)>>1;if(sampled[m].t<target)l=m+1;else h=m;}
    const j=l>0&&Math.abs(sampled[l-1].t-target)<Math.abs(sampled[l].t-target)?l-1:l;
    const value=sampled[j],x=X(value);
-   tip.textContent=dateLabel(displayDate(value))+" · "+fmt(value.c,conf.decimals);
+   tip.textContent=value.provisional?"Cot. "+futureQuoteTime(value)+" (Madrid) · "+fmt(value.c,conf.decimals):dateLabel(displayDate(value))+" · "+fmt(value.c,conf.decimals);
    tip.classList.add("visible");
    cross.setAttribute("x1",x.toFixed(2));cross.setAttribute("x2",x.toFixed(2));cross.style.opacity="1";
  };
@@ -1481,7 +1492,7 @@ function drawFuturesCloseTile(key,rows,note){
  shape.addEventListener("pointerdown",inspect,{passive:true});
  shape.addEventListener("pointerleave",ev=>{if(ev.pointerType==="mouse")clearChartInspector(shape);});
  shape.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();const r=shape.getBoundingClientRect();inspect({clientX:r.left+r.width*.7});}});
- el.title=conf.code+" · "+usedNote+" · última fecha histórica: "+asOf+" · "+quoteTitle;
+ el.title=conf.code+" · "+usedNote+" · última fecha histórica: "+asOf+" · "+quoteTitle+(provisional?" · Tramo discontinuo y círculo hueco: cotización indicativa. *Variación del periodo incluye esa cotización.":"");
 }
 function renderFuturesCards(){
  for(const key of FUTURE_KEYS){
@@ -1724,6 +1735,16 @@ function captureYahooFutureQuote(raw,key){
 function visibleFutureQuote(key,last){
  const q=futuresQuotes[key];
  return nativePeriod!=="custom"&&q&&(!last||q.date>last.date)?q:null;
+}
+// Display-only extension. Never mutate the verified close history or technical inputs.
+function futureDisplayRows(key,history,period){
+ const full=history||[],last=full.at(-1),quote=visibleFutureQuote(key,last);
+ const append=period!=="1d"&&period!=="custom"&&last&&quote&&futuresProviders[key]==="yahoo"&&quote.t>last.t;
+ return pickPeriodRows(append?[...full,{...quote,provisional:true}]:full,period,"futures");
+}
+function marketPlotIndexes(dates,provisional){
+ const indexes=marketSampleIndexes(dates);
+ return provisional&&dates.length>=2?[...new Set([...indexes,dates.length-2,dates.length-1])].sort((a,b)=>a-b):indexes;
 }
 function futureQuoteTime(q){return new Date(q.t*1000).toLocaleString("es-ES",{timeZone:"Europe/Madrid",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});}
 function futureQuoteNote(key,last){
@@ -2858,14 +2879,14 @@ function drawMarketDetail(){
    foot.textContent='Fuente XAUS · '+obs.length+' fechas XAU/XAG comparables · periodo '+detailWindow+' · cambia el intervalo en esta ventana o en la cabecera.';
  }else if(["gold","silver","copper","brent"].includes(detailKind)){
    const cfg=FUTURES_PUBLIC[detailKind],all=futuresCache[detailKind]||[];
-   const rows=pickPeriodRows(all,nativePeriod,"futures");
+   const rows=futureDisplayRows(detailKind,all,nativePeriod),provisional=rows.at(-1)?.provisional===true;
    if(rows.length<2){
      host.innerHTML='<div class="native-error">'+(rows.length===1?cfg.code+" · "+(rows[0].date||isoDay(rows[0].t))+" · cierre "+fmt(rows[0].c,cfg.decimals)+". Una sola observación; no hay curva.":"No existen cierres diarios verificables de "+cfg.code+" dentro de "+detailWindow+".")+'</div>';
    }else{
      const provenance=futuresProvenanceLabel(detailKind);
-     nativeChart("detail-chart",[{label:cfg.code+" · cierre",color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>'+provenance+' · futuros de contrato próximo · datos de cierre, no intradía.</span>');
+     nativeChart("detail-chart",[{label:cfg.code+(provisional?" · precio":" · cierre"),color:cfg.accent,points:rows.map(r=>r.c)}],rows.map(r=>r.t),"",'<span>'+provenance+' · cierres diarios'+(provisional?' + última cotización indicativa (tramo discontinuo y círculo hueco); no es un cierre definitivo':'')+'. No intradía.</span>',{precision:cfg.decimals,provisionalLast:provisional,quote:provisional?rows.at(-1):null});
    }
-   foot.textContent=cfg.code+" · "+rows.length+" cierres mostrados de "+all.length+" disponibles · "+detailWindow+" · "+futuresProvenanceLabel(detailKind)+" · sin fechas interpoladas. "+futureQuoteNote(detailKind,all.at(-1));
+   foot.textContent=cfg.code+" · "+rows.filter(r=>!r.provisional).length+" cierres mostrados"+(provisional?" + 1 cotización indicativa":"")+" de "+all.length+" cierres disponibles · "+detailWindow+" · "+futuresProvenanceLabel(detailKind)+" · sin fechas interpoladas. "+futureQuoteNote(detailKind,all.at(-1));
  }else if(detailKind==="dxy"||detailKind==="eur"){
    const data=nativeData[detailKind],points=data?.points||[],cfg=FUTURES_PUBLIC[detailKind];
    if(points.length<2){
@@ -3269,7 +3290,7 @@ init();
 })();
 </script>
 <script defer src="./quality.js?v=20261127-v52"></script>
-<script defer src="./explanations.js?v=20261127-v52"></script>
+<script defer src="./explanations.js?v=20261127-v52-quoteplot"></script>
 <script defer src="./indices.js?v=20261125-v49"></script>
 <script defer src="./fundamentals.js?v=20261127-v52"></script>
 </body></html>

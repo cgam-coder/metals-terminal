@@ -1,5 +1,9 @@
 # Metals Terminal V5.1 — expectativas, crédito, actividad y técnica
 
+## V5.1 · sincronización visual de cotizaciones (27/11/2026)
+
+Los cuatro gráficos individuales y sus ampliaciones incorporan la misma última cotización posterior al cierre que la cabecera, mediante una copia exclusiva de presentación. Tramo discontinuo y punto hueco, fecha y precio inspeccionables; mínimo, máximo y variación del periodo incluyen el punto indicativo. No se mezcla con otro proveedor, no se añade a la caché histórica, comparativa, RSI ni SMA. 1D no simula intradía y el rango personalizado sigue siendo de cierres. Sin nuevas peticiones ni coste.
+
 ## V5.1 · renovación de futuros (27/11/2026)
 
 La auditoría del 27/11 confirma que Yahoo entrega una cotización del día junto al histórico diario, que no contiene el 26/11 (festivo sin liquidación CME). Las tarjetas muestran la cotización indicativa validada con hora de Madrid cuando es posterior al cierre histórico, sin introducirla en los gráficos históricos ni en RSI/SMA. Las descargas de cada futuro se aceptan independientemente; un fallo no impide renovar las demás. Se preserva el respaldo Yahoo por símbolo y no se mezclan proveedores en la comparativa. «Fuentes» diferencia fecha de observación y consulta; XAUS actualiza su estado al cambiar temporalidad. No se crean puntos de festivos ni se contratan servicios. Inflación: fechas propias y huecos explícitos; el PCE de octubre de 2026 se conserva aunque falte el IPC interanual de octubre por la ausencia de base de octubre de 2025 (BLS: https://www.bls.gov/cpi/notices/2026/12m-changes-202610.htm). Las alertas mensuales cuentan desde fin del mes de referencia. La última consulta de cotizaciones depende del proveedor y del momento de apertura.

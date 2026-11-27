@@ -430,7 +430,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por onza troy, no cambio acumulado. De 2.500 a 2.600 USD/oz son +100 USD o +4 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha de la curva. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
+        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por onza troy, no cambio acumulado. De 2.500 a 2.600 USD/oz son +100 USD o +4 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha del último cierre. Si la cotización es posterior y procede de la misma fuente, aparece al final de la curva con tramo discontinuo y círculo hueco. Mínimo, máximo y cambio del periodo incluyen ese punto indicativo. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
       ],
       [
         "Subida, bajada y estabilidad",
@@ -458,7 +458,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por onza troy, no cambio acumulado. De 25 a 27 USD/oz son +2 USD o +8 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha de la curva. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
+        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por onza troy, no cambio acumulado. De 25 a 27 USD/oz son +2 USD o +8 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha del último cierre. Si la cotización es posterior y procede de la misma fuente, aparece al final de la curva con tramo discontinuo y círculo hueco. Mínimo, máximo y cambio del periodo incluyen ese punto indicativo. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
       ],
       [
         "Subida, bajada y estabilidad",
@@ -486,7 +486,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por libra, no cambio acumulado. De 4 a 4,40 USD/lb son +10 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha de la curva. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
+        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por libra, no cambio acumulado. De 4 a 4,40 USD/lb son +10 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha del último cierre. Si la cotización es posterior y procede de la misma fuente, aparece al final de la curva con tramo discontinuo y círculo hueco. Mínimo, máximo y cambio del periodo incluyen ese punto indicativo. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
       ],
       [
         "Subida, bajada y estabilidad",
@@ -514,7 +514,7 @@
     "blocks": [
       [
         "Cómo leer el gráfico",
-        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por barril, no cambio acumulado. De 70 a 77 USD/barril son +10 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha de la curva. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
+        "<p>Eje X: fechas. Eje Y: precio absoluto en USD por barril, no cambio acumulado. De 70 a 77 USD/barril son +10 %. La tarjeta muestra la última cotización Yahoo si es posterior al cierre histórico; «Cot.» indica hora de Madrid, «Hist.» la fecha del último cierre. Si la cotización es posterior y procede de la misma fuente, aparece al final de la curva con tramo discontinuo y círculo hueco. Mínimo, máximo y cambio del periodo incluyen ese punto indicativo. El porcentaje compara esa cotización con el último cierre del mismo proveedor. En fechas personalizadas se muestra solo histórico.</p>"
       ],
       [
         "Subida, bajada y estabilidad",
