@@ -1,0 +1,65 @@
+name: V5.2 · auditoría de frescura y sesión festiva
+on:
+  push:
+    branches: ['audit/v52-freshness']
+    paths: ['.github/workflows/audit-v52.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Auditoría de producción y respuestas Yahoo
+        run: |
+          mkdir -p evidence
+          cat > audit.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+          const page=await ctx.newPage(),out={at:new Date().toISOString(),cases:[],responses:[],errors:[],warnings:[]};
+          page.on('pageerror',e=>out.errors.push(String(e)));
+          page.on('console',m=>{if(m.type()==='warning')out.warnings.push(m.text().slice(0,600));});
+          page.on('response',async r=>{
+            const url=r.url();if(!/finance.yahoo.com|fredgraph.csv|VIX_History|publicreporting.cftc.gov|ebp_csv|metalcharts.org\/data\/|xaus.com\/api/.test(url))return;
+            const x={url,status:r.status(),age:r.headers().age||null,date:r.headers().date||null,cache:r.headers()['x-cache']||null};
+            try{if(url.includes('finance.yahoo.com')&&r.ok()){
+              const j=await r.json(),a=j.chart?.result?.[0],m=a?.meta;
+              x.meta=m?{symbol:m.symbol,exchange:m.exchangeName,zone:m.exchangeTimezoneName,granularity:m.dataGranularity,marketTime:m.regularMarketTime,period:m.currentTradingPeriod}:null;
+              x.rows=a?.timestamp?.slice(-7).map((t,i,ts)=>({t:new Date(t*1000).toISOString(),c:a.indicators.quote[0].close[a.timestamp.length-ts.length+i],volume:a.indicators.quote[0].volume?.[a.timestamp.length-ts.length+i]}));
+            }}catch(e){x.error=String(e)}
+            out.responses.push(x);
+          });
+          const snap=()=>page.evaluate(()=>{
+            const k=['gold','silver','copper','brent'],last=a=>a?.at(-1)?.date||null;
+            return {at:new Date().toISOString(),version:document.querySelector('#version')?.textContent,period:nativePeriod,done:[...window.metalsQualityDone],futuresState:futuresCheckState,futuresError:futuresCheckError,provider:longFuturesProvenance,
+              futures:Object.fromEntries(k.map(key=>[key,{n:futuresCache[key]?.length,last:futuresCache[key]?.slice(-5),freshness:futuresFreshness[key],card:document.querySelector('#q-'+key)?.innerText}])),
+              macro:Object.fromEntries(MACRO_SERIES.map(k=>[k,{last:last(macro?.series?.[k]),route:macroFetchRoutes.get(k),error:macroLastError.get(k)}])),
+              vix:{last:last(cboeHistory),source:cboeHistorySource},cot:{gold:last(v4State.cot?.gold),silver:last(v4State.cot?.silver),source:v4State.cotSource},gvz:{last:last(v4State.gvz),source:v4State.gvzSource},
+              indices:window.metalsIndicesAudit,complement:window.metalsV5Audit,xa:Object.fromEntries(Object.entries(nativeData).map(([k,v])=>[k,{asOf:v.asOf,last:v.points?.at(-1)}])),quality:document.querySelector('#source-audit-content')?.innerText};
+          });
+          try{
+            for(const name of ['new','reload','forced']){
+              const url='https://cgam-coder.github.io/metals-terminal/?period=1mo'+(name==='forced'?'&_refresh='+Date.now():'');
+              await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+              await page.waitForFunction(()=>['futures','macro','v4','v5','xaus','vix','indices'].every(k=>window.metalsQualityDone?.has(k))||(['futures','macro','v4','v5','xaus','vix'].every(k=>window.metalsQualityDone?.has(k))&&!window.metalsIndicesAudit?.pending),null,{timeout:150000}).catch(()=>{});
+              await page.waitForTimeout(500);
+              out.cases.push({name,data:await snap()});
+            }
+          }catch(e){out.errors.push(String(e));}
+          finally{await browser.close();fs.writeFileSync('evidence/report.json',JSON.stringify(out,null,2));console.log('V52_AUDIT '+JSON.stringify(out));}
+          EOF
+          node audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v52-freshness-evidence
+          path: evidence/
+          retention-days: 7
