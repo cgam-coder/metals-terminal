@@ -374,7 +374,7 @@
       ],
       [
         "Frecuencia y límites",
-        "<p>Meses comunes publicados, sin interpolación. Son series revisadas, no el dato conocido en cada fecha histórica.</p>"
+        "<p>Meses de referencia; sin interpolación. Cada serie llega a su último dato. Huecos por base ausente (IPC octubre 2025). Series revisadas, no vintages.</p>"
       ]
     ],
     "sources": [

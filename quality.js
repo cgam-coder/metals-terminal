@@ -15,7 +15,11 @@
    if(frequency==="macro")return typeof businessDaysSince==="function"&&businessDaysSince(date)>4;
    if(frequency==="semanal")return d>15;
    if(frequency==="trimestral")return d>140;
-   if(frequency==="mensual")return d>42;
+   if(frequency==="mensual"){
+    const ref=new Date(date+"T12:00:00Z");
+    const end=ref.getUTCDate()===1?Date.UTC(ref.getUTCFullYear(),ref.getUTCMonth()+1,0,12):ref.getTime();
+    return Math.max(0,Math.floor((Date.now()-end)/86400000))>42;
+   }
    return false;
  };
  const earliest=dates=>dates.filter(noFuture).sort()[0]||null;

@@ -1136,10 +1136,11 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
  const indexes=marketSampleIndexes(dates);
  const plotDates=indexes.map(i=>dates[i]);
  const plotLines=lines.map(line=>({...line,points:indexes.map(i=>line.points[i])}));
- const legend='<div class="native-legend">'+lines.map(line=>
-   '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+
-   ' <strong>'+fmt(line.points.at(-1),2)+unit+'</strong></span>'
- ).join("")+'</div>';
+ const legend='<div class="native-legend">'+lines.map(line=>{
+   const i=line.points.findLastIndex(Number.isFinite),value=i>=0?fmt(line.points[i],2)+unit:"sin dato";
+   const date=i>=0&&i!==dates.length-1?" · "+new Date(dates[i]*1000).toISOString().slice(0,10):"";
+   return '<span><i class="native-dot" style="background:'+line.color+'"></i>'+line.label+' <strong>'+value+'</strong>'+date+'</span>';
+ }).join("")+'</div>';
  const thinning=indexes.length<n?'<span>Trazado '+((dates.at(-1)-dates[0])>7*365*86400?"mensual":"semanal")+' con observaciones reales; '+n+' registros en el cálculo.</span>':'';
  // The two central dashboard charts preserve the full method but collapse it
  // on desktop: their plotted area, not a long footnote, gets priority.
@@ -1196,7 +1197,8 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
      on=true;
    }
    svg+='<path d="'+path+'" fill="none" stroke="'+line.color+'" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
-   svg+='<circle cx="'+X(lastT).toFixed(1)+'" cy="'+Y(points.at(-1)).toFixed(1)+'" r="3.7" fill="'+line.color+'"/>';
+   const lastValid=points.findLastIndex(Number.isFinite);
+   if(lastValid>=0)svg+='<circle cx="'+X(plotDates[lastValid]).toFixed(1)+'" cy="'+Y(points[lastValid]).toFixed(1)+'" r="3.7" fill="'+line.color+'"/>';
  }
  svg+='<line class="market-crosshair" x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'"/></svg>';
  frame.insertAdjacentHTML("afterbegin",svg);
@@ -1213,7 +1215,7 @@ function nativeChart(id,lines,dates,unit,sub,options={}){
    while(low<high){const mid=(low+high)>>1;if(plotDates[mid]<target)low=mid+1;else high=mid;}
    const i=low>0&&Math.abs(plotDates[low-1]-target)<Math.abs(plotDates[low]-target)?low-1:low;
    const date=new Date(plotDates[i]*1000).toLocaleString("es-ES",{year:"numeric",month:"short",day:"numeric",hour:timeRange<86400*5?"2-digit":undefined,minute:timeRange<86400*5?"2-digit":undefined,timeZone:"UTC"});
-   tip.textContent=date+" · "+plotLines.map(z=>z.label+": "+fmt(z.points[i],unit==="%"?2:4)+unit).join(" · ");
+   tip.textContent=date+" · "+plotLines.map(z=>z.label+": "+(Number.isFinite(z.points[i])?fmt(z.points[i],unit==="%"?2:4)+unit:"sin dato")).join(" · ");
    tip.classList.add("visible");
    tip.style.display="block";
    const xx=X(plotDates[i]).toFixed(2);

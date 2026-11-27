@@ -9,7 +9,7 @@ const CREDIT="https://metalcharts.org/data#comex-gold-silver-registered-eligible
 const META={
  vixterm:{label:"Estructura temporal VIX",frequency:"diario",ids:["VIXCLS","VXVCLS"],names:["VIX 30D","VIX 3M"],colors:["#fb6571","#38c9e5"],unit:"%",note:"Cboe vía FRED · cierres diarios comunes · no futuros VIX."},
  nfci:{label:"Condiciones financieras NFCI / ANFCI",frequency:"semanal",ids:["NFCI","ANFCI"],names:["NFCI","ANFCI"],colors:["#38c9e5","#b88aff"],unit:"",note:"Federal Reserve Bank of Chicago vía FRED · índice semanal · cero = media."},
- inflation:{label:"Inflación de EE. UU.",frequency:"mensual",ids:["CPIAUCSL","CPILFESL","PCEPILFE"],names:["IPC general","IPC suby.","PCE suby."],colors:["#fb6571","#f4ba3c","#38c9e5"],unit:"%",note:"BLS / BEA vía FRED · interanual, índices desestacionalizados · fecha de referencia, no publicación."},
+ inflation:{label:"Inflación de EE. UU.",frequency:"mensual",ids:["CPIAUCSL","CPILFESL","PCEPILFE"],names:["IPC general","IPC suby.","PCE suby."],colors:["#fb6571","#f4ba3c","#38c9e5"],unit:"%",note:"BLS / BEA vía FRED · interanual, índices desestacionalizados · fecha de referencia, no publicación; series con fechas propias."},
  rates:{label:"Expectativa de tipos a 1 año · Kim–Wright",frequency:"diario",ids:["THREEFF1","THREEFFTP1","DFF"],names:["Tipo corto esperado 1A","Fed efectivo","Forward 1A"],colors:["#38c9e5","#f4ba3c","#b88aff"],unit:"%",note:"Fed Board · Kim–Wright vía FRED. Forward instantáneo 1A menos prima por plazo estimada. No FedWatch ni probabilidades de reuniones."},
  credit:{label:"Riesgo crediticio · GZ y EBP",frequency:"mensual",names:["Spread GZ","Prima EBP"],colors:["#fb6571","#38c9e5"],unit:" pp",note:"Federal Reserve Board · Favara, Gilchrist, Lewis y Zakrajšek (2016), serie mensual revisable. No es el índice ICE High Yield."},
  manufacturing:{label:"Confianza manufacturera · EE. UU. / China",frequency:"mensual",ids:["BSCICP02USM460S","CHNBSCICP02STSAM"],names:["EE. UU.","China"],colors:["#38c9e5","#fb6571"],unit:" pp",note:"OCDE, Main Economic Indicators, vía FRED · balances nacionales de confianza, ajustados estacionalmente. No son PMI; metodología nacional distinta."},
@@ -157,19 +157,36 @@ function technicalRows(id){
  }
  return commonRows(out);
 }
+function inflationRows(series){
+ if(!series?.length||series.some(s=>!s.length))return [];
+ const maps=series.map(a=>new Map(a.map(r=>[r.date,r]))),first=series.map(a=>a[0].date).sort()[0],last=series.map(a=>a.at(-1).date).sort().at(-1);
+ const result=[];
+ for(let d=new Date(first+"T12:00:00Z");d.toISOString().slice(0,10)<=last;d.setUTCMonth(d.getUTCMonth()+1)){
+  const date=d.toISOString().slice(0,10);
+  result.push({date,values:maps.map(m=>m.get(date)||null)});
+ }
+ return result;
+}
+function inflationLatest(end){
+ const series=datasets.get("inflation")||[],meta=META.inflation;
+ return meta.names.map((name,i)=>{
+  const row=series[i]?.filter(r=>r.date<=end).at(-1);
+  return row?name+" "+fmtN(row.value,2)+"% ("+row.date.slice(0,7)+")":name+" sin dato";
+ }).join(" · ");
+}
 function periodRows(id){
- const all=technical(id)?technicalRows(id):commonRows(datasets.get(id)),w=v4Window();
- const available=all.filter(r=>r.date<=w.end),rows=available.filter(r=>r.date>=w.start),last=available.at(-1);
+ const all=technical(id)?technicalRows(id):id==="inflation"?inflationRows(datasets.get(id)):commonRows(datasets.get(id)),w=v4Window();
+ const available=all.filter(r=>r.date<=w.end),rows=available.filter(r=>r.date>=w.start),last=available.filter(r=>id!=="inflation"||r.values.some(Boolean)).at(-1);
  return {all,rows,last,w};
 }
 function buildPlot(id,rows){
  const meta=META[id],dates=rows.map(r=>Date.parse(r.date+"T12:00:00Z")/1000);
  const lines=meta.names.map((name,i)=>{
-  let points=rows.map(r=>id==="comex"?r.values[i][stock]:r.values[i].value);
+  let points=rows.map(r=>id==="comex"?r.values[i][stock]:r.values[i]?.value??NaN);
   if(id==="comex"){const base=points[0];if(base<=0)throw Error("Base no positiva");points=points.map(v=>100*(v/base-1));}
   return {label:name,color:meta.colors[i],points};
  });
- const note=id==="sma"?maName()+" · USD/oz · SMA de 50 y 200 cierres disponibles. "+meta.note:id==="comex"?"Variación desde la primera fecha común (base 0 %). <a href='"+CREDIT+"' target='_blank' rel='noopener noreferrer'>MetalCharts.org</a> · CME · semanal.":id==="vixterm"?"Cboe vía FRED (VIXCLS y VXVCLS), cierres diarios. © Cboe; cita requerida.":meta.note;
+ const note=id==="inflation"?"BLS / BEA vía FRED · interanual; cada serie conserva sus propias fechas. Huecos = dato o base interanual ausente.":id==="sma"?maName()+" · USD/oz · SMA de 50 y 200 cierres disponibles. "+meta.note:id==="comex"?"Variación desde la primera fecha común (base 0 %). <a href='"+CREDIT+"' target='_blank' rel='noopener noreferrer'>MetalCharts.org</a> · CME · semanal.":id==="vixterm"?"Cboe vía FRED (VIXCLS y VXVCLS), cierres diarios. © Cboe; cita requerida.":meta.note;
  return {lines,dates,unit:meta.unit,note,options:id==="rsi"?{baseline:50,referenceLines:[30,70],fixedRange:[0,100]}:["nfci","comex","credit","manufacturing"].includes(id)?{baseline:0}:{}};
 }
 function renderOne(id){
@@ -179,11 +196,12 @@ function renderOne(id){
  // A series starting well after the selected interval is partial, not full 10A.
  const tolerance=meta.frequency==="mensual"?40:meta.frequency==="semanal"?12:5;
  const partial=!!(first&&Date.parse(first)-Date.parse(w.start)>tolerance*86400000);
- const stateCopy=last?(rows.length?describe(id,last):"Anterior al periodo · "+describe(id,last)):(s.pending?"Consultando fuente…":"Sin observaciones validadas");
+ const summary=id==="inflation"?inflationLatest(w.end):last?describe(id,last):"";
+ const stateCopy=last?(rows.some(r=>id!=="inflation"||r.values.some(Boolean))?summary:"Anterior al periodo · "+summary):(s.pending?"Consultando fuente…":"Sin observaciones validadas");
  state.textContent=stateCopy+(s.blocked?" · respaldo":s.pending&&last?" · comprobando":"");
  datesEl.textContent=(last?(rows.length?"Último ":"Anterior ")+last.date:"Sin fecha")+(partial?" · cobertura parcial desde "+first:"")+(id==="comex"?" · semanal":"");
- datesEl.title=meta.note+" "+(s.error||"")+(first&&end?" · cobertura "+first+" a "+end:"")+(technical(id)?" · Las cotizaciones indicativas posteriores no entran en el cálculo.":"");
- window.metalsV5Audit["v5-"+id]={id:"v5-"+id,label:meta.label,frequency:meta.frequency,ready:all.length>=2,pending:!!s.pending,blocked:!!s.blocked,partial,date:end,from:first,mode:s.mode,note:meta.note+(s.error?" · "+s.error:"")};
+ datesEl.title=meta.note+" "+(id==="inflation"?inflationLatest(w.end)+" · El BLS no publica tasas interanuales de octubre 2026 cuando falta la base de octubre 2025. ":"")+(s.error||"")+(first&&end?" · cobertura "+first+" a "+end:"")+(technical(id)?" · Las cotizaciones indicativas posteriores no entran en el cálculo.":"");
+ window.metalsV5Audit["v5-"+id]={id:"v5-"+id,label:meta.label,frequency:meta.frequency,ready:all.length>=2,pending:!!s.pending,blocked:!!s.blocked,partial,date:end,from:first,mode:s.mode,note:meta.note+(id==="inflation"?" · "+inflationLatest(day())+" · Oct. 2026: sin IPC interanual si falta la base de Oct. 2025 (BLS).":"")+(s.error?" · "+s.error:"")};
  marketChartCache.delete("v5-"+id+"-chart");
  if(rows.length<2||nativePeriod==="1d"){
   h.innerHTML='<div class="native-error">'+escape(s.pending&&!last?"Consultando…":nativePeriod==="1d"?"No hay datos intradía de esta serie; consulta un intervalo mayor.":rows.length===1?"Una observación real en el periodo. Selecciona un intervalo más amplio.":last?"No hay observaciones dentro del intervalo. Se muestra la última referencia anterior.":"Sin datos contrastados para este intervalo.")+'</div>';
@@ -198,7 +216,7 @@ function drawDetail(kind,host,foot){
  host.classList.remove("macro-focus-chart","v4-etf-detail","indices-detail-chart");
  const {rows,last}=periodRows(id),plot=marketChartCache.get("v5-"+id+"-chart");
  if(!plot||rows.length<2||nativePeriod==="1d"){
-  host.innerHTML='<div class="native-error">'+escape(last?describe(id,last)+" · "+last.date+". No hay dos observaciones dentro del periodo.":"Sin datos validados.")+'</div>';
+  host.innerHTML='<div class="native-error">'+escape(last?(id==="inflation"?inflationLatest(v4Window().end):describe(id,last))+" · "+last.date+". No hay dos observaciones dentro del periodo.":"Sin datos validados.")+'</div>';
  }else nativeChart("detail-chart",plot.lines,plot.dates,plot.unit,plot.sub,plot.options||{});
  foot.textContent=meta.note+(id==="sma"?" · "+maName()+" · USD/oz":"")+(id==="comex"?" · "+stockLabel()+" · "+(last?describe(id,last):""):"")+" · "+activePeriodLabel()+" · "+(last?last.date:"Sin fecha");
 }
