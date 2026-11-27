@@ -1,0 +1,101 @@
+name: V5.1 · corrección de actualización y cotización
+on:
+  push:
+    branches: ['audit/v52-candidate']
+    paths: ['.github/workflows/test-refresh.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check fundamentals.js
+          node --check quality.js
+          node --check explanations.js
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Validar cotización, histórico y fallo aislado
+        run: |
+          mkdir -p evidence
+          cat > test.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+          const page=await ctx.newPage(),out={checks:[],cases:[],errors:[],warnings:[]},keys=['gold','silver','brent','copper'];
+          let inject=false,requests=[];
+          const must=(v,m)=>{out.checks.push({ok:!!v,msg:m});if(!v)throw Error(m)};
+          page.on('pageerror',e=>out.errors.push(String(e)));
+          page.on('console',m=>{if(m.type()==='warning')out.warnings.push(m.text().slice(0,400));});
+          page.on('request',r=>{if(/finance.yahoo.com|fredgraph.csv|publicreporting.cftc.gov|metalcharts.org\/data\/|ebp_csv|xaus.com\/api/.test(r.url()))requests.push(r.url())});
+          await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
+            const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
+            if(rel.includes('..')||!fs.existsSync(rel)||!fs.statSync(rel).isFile())return route.continue();
+            const type=rel.endsWith('.html')?'text/html':rel.endsWith('.js')?'application/javascript':rel.endsWith('.css')?'text/css':'application/json';
+            await route.fulfill({path:rel,contentType:type});
+          });
+          await page.route(/proxy\.cors\.dev\/https:\/\/query1\.finance\.yahoo\.com\/v8\/finance\/chart\/BZ%3DF/i,async route=>{
+            if(inject)return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'test single-provider failure'});
+            return route.continue();
+          });
+          const base='https://cgam-coder.github.io/metals-terminal/?period=1mo&refreshAudit=20261127';
+          const snap=()=>page.evaluate(()=>{
+            const k=['gold','silver','brent','copper'];
+            return {at:new Date().toISOString(),done:[...window.metalsQualityDone],futuresState:futuresCheckState,error:futuresCheckError,provider:longFuturesProvenance,
+              symbols:Object.fromEntries(k.map(key=>{const el=document.querySelector('#q-'+key),hist=futuresCache[key],quote=futuresQuotes[key];return [key,{state:futuresSymbolState[key],provider:futuresProviders[key],quote,first:hist?.[0]?.date,last:hist?.at(-1)?.date,n:hist?.length,quoteDate:el.querySelector('[data-futures-quote-date]')?.dataset.futuresQuoteDate,closeDate:el.querySelector('[data-futures-close-date]')?.dataset.futuresCloseDate,price:el.querySelector('.metal-main-price')?.textContent,expected:quote&&quote.date>hist?.at(-1)?.date?fmt(quote.c,FUTURES_PUBLIC[key].decimals):fmt(hist?.at(-1)?.c,FUTURES_PUBLIC[key].decimals),contains26:hist?.some(r=>r.date==='2026-11-26')}] })),
+              compare:document.querySelector('#chart-main')?.dataset.coveredTo,rsi:window.metalsV5Audit?.['v5-rsi'],sma:window.metalsV5Audit?.['v5-sma'],allAudit:window.metalsV5Audit,indices:window.metalsIndicesAudit,quality:document.querySelector('#source-audit-content')?.innerText,macro:macroOfficialKeys.size,gvz:v4State.gvzSource,cot:v4State.cotSource,vix:cboeHistorySource,xaus:Object.keys(nativeData),overflow:document.documentElement.scrollWidth-innerWidth};
+          });
+          async function settle(){await page.waitForFunction(()=>['futures','macro','v4','v5','xaus','vix','indices'].every(k=>window.metalsQualityDone?.has(k)),null,{timeout:150000});await page.waitForTimeout(300)}
+          try{
+            await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});await settle();
+            let d=await snap();out.cases.push({name:'new',data:d,requests});
+            must(d.futuresState==='live'&&d.provider==='yahoo','four independent Yahoo histories refreshed');
+            must(keys.every(k=>d.symbols[k].quote&&d.symbols[k].price===d.symbols[k].expected),'last price corresponds to validated provider quote or history');
+            must(keys.every(k=>d.symbols[k].quote.date>d.symbols[k].last?d.symbols[k].quoteDate===d.symbols[k].quote.date&&d.symbols[k].closeDate===d.symbols[k].last:!d.symbols[k].quoteDate),'quote and closed history clearly separated');
+            must(keys.every(k=>!d.symbols[k].contains26),'no fabricated Thanksgiving row');
+            must(d.compare<=d.symbols.gold.last&&d.rsi.date<=d.symbols.gold.last&&d.sma.date<=d.symbols.gold.last,'no provisional quotes in historical charts');
+            must(d.macro===6&&d.xaus.length===4&&d.allAudit['v5-rates'].ready&&d.allAudit['v5-comex'].ready&&d.indices.ready,'other data sources responding');
+            must(d.overflow<=1,'desktop layout');
+            await page.locator('#mercados').screenshot({path:'evidence/quotes.png'});
+            await page.locator('[data-inspect="gold"]').click();
+            must((await page.locator('#detail-foot').innerText()).includes('cotización Yahoo')||d.symbols.gold.quote.date<=d.symbols.gold.last,'expanded quote note');
+            await page.locator('#detail-close').click();
+            await page.locator('[data-global-period="1d"]').click();
+            await page.waitForFunction(()=>window.metalsQualityDone.has('xaus')&&window.metalsQualityDone.has('indices'),null,{timeout:120000});
+            must((await page.locator('#q-gold .metal-main-price').innerText())===d.symbols.gold.price,'quote survives timeframe change');
+            must((await page.locator('#q-gold .metal-spark-outer').innerText()).includes('Sin gráfico intradía'),'no fake 1D curve');
+            await page.locator('[data-global-period="1mo"]').click();
+            await page.waitForFunction(()=>window.metalsQualityDone.has('xaus')&&window.metalsQualityDone.has('indices'),null,{timeout:120000});
+            await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);
+            must((await snap()).overflow<=1,'mobile no overflow');
+            await page.locator('#mercados').screenshot({path:'evidence/mobile.png'});
+            // Simulate one failed asset with a valid cache. Other futures must
+            // still be renewed, and the failed asset must keep its own cache.
+            const old=d.symbols.brent.last;inject=true;requests=[];
+            await page.goto(base+'&_refresh='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});await settle();
+            d=await snap();out.cases.push({name:'one failed',data:d,requests});
+            must(d.futuresState==='partial'&&d.symbols.brent.state.state==='fallback','partial status after one controlled HTTP 503');
+            must(['gold','silver','copper'].every(k=>d.symbols[k].state.state==='live'),'three good futures renewed despite Brent failure');
+            must(d.symbols.brent.last===old&&d.symbols.brent.provider==='yahoo'&&!d.symbols.brent.quote,'Brent only uses own validated historical fallback');
+            must(d.compare&&d.rsi.ready&&d.sma.ready,'same-provider comparatives not blocked by Brent');
+            inject=false;requests=[];
+            await page.reload({waitUntil:'domcontentloaded',timeout:45000});await settle();
+            d=await snap();out.cases.push({name:'recovered',data:d,requests});
+            must(d.futuresState==='live'&&keys.every(k=>d.symbols[k].state.state==='live'),'refresh recovers all four');
+            must(keys.every(k=>d.symbols[k].quote),'fresh quotes rechecked on reload');
+            must(d.overflow<=1,'mobile reload layout');
+          }catch(e){out.errors.push(String(e));}
+          finally{await browser.close();fs.writeFileSync('evidence/report.json',JSON.stringify(out,null,2));console.log('REFRESH_CHECK '+JSON.stringify(out));if(out.errors.length)process.exitCode=1;}
+          EOF
+          node test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v52-refresh-evidence
+          path: evidence/
+          retention-days: 7
