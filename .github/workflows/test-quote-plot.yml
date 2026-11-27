@@ -1,0 +1,91 @@
+name: Validar sincronización de cotizaciones y gráficos
+on:
+  push:
+    branches: ['audit/quote-plot-20261127']
+    paths: ['.github/workflows/test-quote-plot.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verificar cuatro tarjetas, ampliaciones y límites
+        run: |
+          mkdir -p evidence
+          cat > audit.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const ctx=await browser.newContext({viewport:{width:1440,height:900}});
+          const page=await ctx.newPage(),out={checks:[],errors:[],cases:[]},keys=['gold','silver','copper','brent'];
+          const must=(v,m)=>{out.checks.push({ok:!!v,msg:m});if(!v)throw Error(m)};
+          page.on('pageerror',e=>out.errors.push(String(e)));
+          await page.route('https://cgam-coder.github.io/metals-terminal/**',async route=>{
+            const u=new URL(route.request().url()),rel=u.pathname.replace('/metals-terminal/','')||'index.html';
+            if(rel.includes('..')||!fs.existsSync(rel)||!fs.statSync(rel).isFile())return route.continue();
+            const type=rel.endsWith('.html')?'text/html':rel.endsWith('.js')?'application/javascript':rel.endsWith('.css')?'text/css':'application/json';
+            await route.fulfill({path:rel,contentType:type});
+          });
+          const snap=()=>page.evaluate(()=>{
+            const k=['gold','silver','copper','brent'];
+            return {state:futuresCheckState,period:nativePeriod,quote:Object.fromEntries(k.map(key=>{
+              const el=document.querySelector('#q-'+key),hist=futuresCache[key],q=futuresQuotes[key],dot=el.querySelector('[data-provisional-point]');
+              return [key,{provider:futuresProviders[key],quote:q,historyDate:hist?.at(-1)?.date,n:hist?.length,price:el.querySelector('.metal-main-price')?.textContent,expected:q?fmt(q.c,FUTURES_PUBLIC[key].decimals):null,point:dot?{date:dot.dataset.date,value:Number(dot.dataset.value)}:null,segment:!!el.querySelector('[data-provisional-segment]'),scale:el.querySelector('.metal-scale')?.textContent,invalid:el.querySelector('svg')?.outerHTML.includes('NaN')}];
+            })),compare:document.querySelector('#chart-main')?.dataset.coveredTo,rsi:window.metalsV5Audit?.['v5-rsi']?.date,sma:window.metalsV5Audit?.['v5-sma']?.date,overflow:document.documentElement.scrollWidth-innerWidth};
+          });
+          const verify=async name=>{
+            const d=await snap();out.cases.push({name,data:d});
+            must(d.state==='live',name+' live data');
+            const eligible=keys.filter(k=>d.quote[k].quote?.date>d.quote[k].historyDate);
+            must(eligible.length===4,name+' four later quotes');
+            for(const k of eligible){const q=d.quote[k];must(q.point?.date===q.quote.date&&q.point?.value===q.quote.c&&q.price===q.expected&&q.segment&&!q.invalid,name+' '+k+' exact endpoint');}
+            must(d.compare<=d.quote.gold.historyDate&&d.rsi<=d.quote.gold.historyDate&&d.sma<=d.quote.gold.historyDate,name+' historical calculations unchanged');
+            must(d.overflow<=1,name+' no overflow');
+            return d;
+          };
+          try{
+            await page.goto('https://cgam-coder.github.io/metals-terminal/?period=1mo&quoteplot=20261127',{waitUntil:'domcontentloaded'});
+            await page.waitForFunction(()=>['futures','v5'].every(k=>window.metalsQualityDone.has(k)),null,{timeout:120000});
+            await page.waitForTimeout(300);
+            const first=await verify('1M');
+            await page.locator('#mercados').screenshot({path:'evidence/desktop.png'});
+            for(const k of keys){
+              await page.locator('[data-inspect="'+k+'"]').click();
+              const dot=page.locator('#detail-chart [data-provisional-point]');
+              must(await dot.count()===1,'expanded '+k+' quote point');
+              must(Number(await dot.getAttribute('data-value'))===first.quote[k].quote.c,'expanded '+k+' exact value');
+              must(await page.locator('#detail-chart [data-provisional-segment]').count()===1,'expanded '+k+' dashed segment');
+              await page.locator('#detail-close').click();
+            }
+            await page.locator('[data-global-period="10y"]').click();
+            await verify('10A');
+            await page.locator('[data-global-period="1d"]').click();
+            must(await page.locator('#mercados [data-provisional-point]').count()===0,'1D no invented intraday');
+            await page.locator('[data-global-period="1mo"]').click();
+            await page.setViewportSize({width:390,height:844});await page.waitForTimeout(400);
+            await verify('mobile');
+            await page.locator('#mercados').screenshot({path:'evidence/mobile.png'});
+            // Historical range must exclude all indicative quotes.
+            const custom=await page.evaluate(()=>{
+              const from='2026-10-28',to='2026-11-25';
+              nativePeriod='custom';customRange={from,to};renderFuturesCards();
+              return {dots:document.querySelectorAll('#mercados [data-provisional-point]').length,leak:document.querySelectorAll('#mercados [data-futures-quote-date]').length};
+            });
+            must(custom.dots===0&&custom.leak===0,'historical range excludes provisional quotes');
+          }catch(e){out.errors.push(String(e))}
+          finally{await browser.close();fs.writeFileSync('evidence/report.json',JSON.stringify(out,null,2));console.log('QUOTE_PLOT '+JSON.stringify(out));if(out.errors.length)process.exitCode=1}
+          EOF
+          node audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quote-plot-evidence
+          path: evidence/
+          retention-days: 7
