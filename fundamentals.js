@@ -136,6 +136,7 @@ function describe(id,row){
 }
 function technicalRows(id){
  const keys=id==="rsi"?["gold","silver"]:[maMetal],out=[];
+ if(!comparableFutureProviders(keys))return [];
  for(const key of keys){
   const rows=futuresCache[key]||[];
   if(rows.length<200)return [];
@@ -173,7 +174,7 @@ function buildPlot(id,rows){
 }
 function renderOne(id){
  const meta=META[id],h=el("v5-"+id+"-chart"),state=el("v5-"+id+"-state"),datesEl=el("v5-"+id+"-dates");if(!h||!state||!datesEl)return;
- const {all,rows,last,w}=periodRows(id),s=technical(id)?{pending:futuresCheckState==="pending",blocked:futuresCheckState==="fallback",mode:futuresCheckState==="live"?"Consulta "+futuresProvenanceLabel()+" · cálculo local":futuresCheckState==="live-alternate"?"Consulta Aethereal · cálculo local":futuresCheckState==="fallback"?"Respaldo de futuros · cálculo local":"Comprobando futuros"}:status.get(id)||{pending:true,mode:"Consultando"};
+ const {all,rows,last,w}=periodRows(id),keys=id==="rsi"?["gold","silver"]:[maMetal],states=keys.map(k=>futuresSymbolState[k]?.state),s=technical(id)?{pending:futuresCheckState==="pending",blocked:futuresCheckState!=="pending"&&states.some(x=>x==="fallback"),mode:states.every(x=>x==="live")?"Consulta Yahoo Finance · cálculo local":states.every(x=>x==="alternate")?"Consulta Aethereal · cálculo local":futuresCheckState==="pending"?"Comprobando futuros":"Respaldo o consulta parcial · cálculo local"}:status.get(id)||{pending:true,mode:"Consultando"};
  const first=all[0]?.date||null,end=all.at(-1)?.date||null;
  // A series starting well after the selected interval is partial, not full 10A.
  const tolerance=meta.frequency==="mensual"?40:meta.frequency==="semanal"?12:5;
@@ -181,7 +182,7 @@ function renderOne(id){
  const stateCopy=last?(rows.length?describe(id,last):"Anterior al periodo · "+describe(id,last)):(s.pending?"Consultando fuente…":"Sin observaciones validadas");
  state.textContent=stateCopy+(s.blocked?" · respaldo":s.pending&&last?" · comprobando":"");
  datesEl.textContent=(last?(rows.length?"Último ":"Anterior ")+last.date:"Sin fecha")+(partial?" · cobertura parcial desde "+first:"")+(id==="comex"?" · semanal":"");
- datesEl.title=meta.note+" "+(s.error||"")+(first&&end?" · cobertura "+first+" a "+end:"");
+ datesEl.title=meta.note+" "+(s.error||"")+(first&&end?" · cobertura "+first+" a "+end:"")+(technical(id)?" · Las cotizaciones indicativas posteriores no entran en el cálculo.":"");
  window.metalsV5Audit["v5-"+id]={id:"v5-"+id,label:meta.label,frequency:meta.frequency,ready:all.length>=2,pending:!!s.pending,blocked:!!s.blocked,partial,date:end,from:first,mode:s.mode,note:meta.note+(s.error?" · "+s.error:"")};
  marketChartCache.delete("v5-"+id+"-chart");
  if(rows.length<2||nativePeriod==="1d"){

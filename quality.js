@@ -24,7 +24,7 @@
    const lastFuture=rawFutures.every(Boolean)?earliest(rawFutures):null;
    const sourceText=FUTURE_KEYS.map(k=>futuresFreshness[k]||"").find(Boolean)||"";
    const futuresState=typeof futuresCheckState==="string"?futuresCheckState:"pending";
-   const futureMethod=futuresState==="live"?"Consulta Yahoo Finance · vía CORS":futuresState==="live-alternate"?"Consulta Aethereal":
+   const futureMethod=futuresState==="live"?"Consulta Yahoo Finance · 4/4":futuresState==="partial"?"Consulta Yahoo Finance · "+futureRefreshCount()+"/4 · respaldo individual":futuresState==="live-alternate"?"Consulta Aethereal":
     futuresState==="fallback"?(longFuturesProvenance==="yahoo"?"Caché Yahoo · fallo al renovar":longFuturesProvenance==="aethereal"?"Caché Aethereal · fallo al renovar":"Respaldo local · fallo al renovar"):
     sourceText.includes("guardado local")?"Caché validada · comprobando":"Comprobando futuros";
    const markets=["gold","silver","dxy","eur"].map(k=>nativeData[k]?.points?.at?.(-1)?.t);
@@ -48,11 +48,11 @@
      return {id,label,date,mode,frequency,note,ready,pending,stale:stale(date,frequency)};
    };
    const groups=[
-     group("futures","Futuros GC/SI/HG/BZ",lastFuture,futureMethod,"diario","Cierres diarios de futuros continuos; sesión en curso excluida, sin empalmar proveedores."+(futuresState==="fallback"?" Error: "+String(futuresCheckError||"fuente no disponible").slice(0,300):""),!!lastFuture),
+     group("futures","Futuros GC/SI/HG/BZ",lastFuture,futureMethod,"diario","Histórico y cotizaciones indicativas separados. "+FUTURE_KEYS.map(k=>FUTURES_PUBLIC[k].code+": histórico "+(getLast(futuresCache[k])||"—")+(futuresQuotes[k]?" · cot. "+futureQuoteTime(futuresQuotes[k])+" (Madrid)":" · sin cotización nueva")+(futuresSymbolState[k]?.state==="fallback"?" · respaldo":"")).join("; ")+(futuresCheckedAt?" · consulta "+futuresCheckedAt:"")+(futuresCheckError?" · "+String(futuresCheckError).slice(0,300):""),!!lastFuture),
      group("indices","Índices bursátiles + Bitcoin",indexAudit.date||null,indexAudit.mode||"Sin datos","diario",indexAudit.note||"Se consultan los cinco índices y BTC al abrir.",!!indexAudit.ready),
      group("xaus","DXY · EUR/USD · XAU/XAG",allXaus?earliest(marketDates):null,allXaus?"Consulta XAUS del periodo":"Consulta XAUS parcial o no disponible","diario","Referencias indicativas; la ratio se calcula con XAU y XAG en fechas comunes.",allXaus),
      group("vix","VIX",latestVix,cboeHistorySource||"Respaldo reciente","diario","Cierres Cboe; el archivo puede tener lagunas reconocidas.",!!latestVix),
-     group("macro","Treasury · TIPS · Fed/BCE",fullMacro?earliest(macroDates):null,macroDirect===6?(macroRelay?"FRED oficial vía CORS 6/6":"FRED directo 6/6"):macroDirect?"FRED mixto "+macroDirect+"/6":"Archivo FRED / respaldo","macro","El dato mostrado puede tener distinta fecha para cada serie; archivos GitHub solo cambian por actualización manual.",fullMacro),
+     group("macro","Treasury · TIPS · Fed/BCE",fullMacro?earliest(macroDates):null,macroDirect===6?(macroRelay?"FRED oficial vía CORS 6/6":"FRED directo 6/6"):macroDirect?"FRED mixto "+macroDirect+"/6":"Archivo FRED / respaldo","macro","Últimas observaciones: "+MACRO_SERIES.map((k,i)=>k+" "+(macroDates[i]||"—")).join(" · ")+". Fecha de grupo = más antigua; los archivos GitHub solo cambian por actualización manual.",fullMacro),
      group("cot","COT · interés abierto",cotDate,v4State.cotSource||"CFTC pendiente","semanal","Informe CFTC semanal; el volumen diario CME no está integrado.",!!cotDate),
      group("gvz","GVZ oro",gvzDate,v4State.gvzSource||"GVZ pendiente","diario","La serie VXSLV no se reutiliza sin permiso de redistribución acreditado.",!!gvzDate),
      group("sec","ETF GLD/SLV",secLast?.date||null,"Archivo trimestral SEC, actualización manual","trimestral",secPublished?"Último informe conjunto publicado desde "+secPublished+"; tenencias, no flujos.":"Informes SEC aún no validados.",!!secLast),
@@ -82,7 +82,7 @@
     g.blocked=!g.pending&&((g.id==="futures"&&futuresState==="fallback")||
      (g.id==="macro"&&macroDirect<6)||(g.id==="vix"&&!/Cboe (directo|oficial)/.test(g.mode))||
      (g.id==="gvz"&&!/Consulta/.test(g.mode))||(g.id==="cot"&&!/consulta directa/i.test(g.mode)));
-    g.partial=(g.id==="indices"&&!!indexAudit.partial)||(extended&&g.ready&&!g.singleFact&&(!g.from||Date.parse(g.from+"T00:00:00Z")>deadline));
+    g.partial=(g.id==="futures"&&futuresState==="partial")||(g.id==="indices"&&!!indexAudit.partial)||(extended&&g.ready&&!g.singleFact&&(!g.from||Date.parse(g.from+"T00:00:00Z")>deadline));
    }
    for(const r of Object.values(window.metalsV5Audit||{})){
      groups.push({id:r.id,label:r.label,date:r.date||null,from:r.from||null,mode:r.mode||"Consultando",frequency:r.frequency,note:r.note||"",ready:!!r.ready,pending:!!r.pending,stale:stale(r.date,r.frequency),partial:!!r.partial,blocked:!!r.blocked,manual:false,singleFact:false});
@@ -132,6 +132,7 @@
     }
     putBadge(caption,byId[key]);
   };
+  const firstFuture=key=>futuresCache[key]?.[0]?.date||null;
   const putCard=(key,source)=>{
     const card=document.getElementById("q-"+key)?.closest(".ticker-card");
     const caption=card?.querySelector(".card-caption");
@@ -143,7 +144,9 @@
     putBadge(caption,source);
   };
   for(const key of ["gold","silver","copper","brent"]){
-    putCard(key,byId.futures);
+    const st=futuresSymbolState[key],date=getLast(futuresCache[key]);
+    const provider=futuresProviders[key]||longFuturesProvenance;
+    putCard(key,{...byId.futures,id:"futures-"+key,label:FUTURES_PUBLIC[key].code,date,from:firstFuture(key),ready:!!date,pending:futuresCheckState==="pending",blocked:st?.state==="fallback",partial:!date,stale:stale(date,"diario"),mode:st?.state==="live"?"Consulta Yahoo Finance":st?.state==="alternate"?"Consulta Aethereal":"Respaldo · "+provider,note:(futuresQuotes[key]?"Cot. "+futureQuoteTime(futuresQuotes[key])+" (Madrid) · ":"")+(st?.error||"Histórico y última cotización separados.")});
   }
   for(const key of ["dxy","eur"]){
     putCard(key,byId.xaus);
@@ -165,7 +168,7 @@
  function rowTable(groups){
    return '<div class="source-audit-table" role="table" aria-label="Fuentes, modo de consulta y antigüedad">'+groups.map(r=>{
      const text=r.pending?"Consulta en curso":!r.ready?"Sin datos validados":r.blocked?"Fallo · respaldo":r.partial?"Cobertura parcial":r.stale?"Revisar publicación":r.manual?"Revisión manual":r.singleFact?"Hecho puntual":"Consultado";
-     return '<div class="source-audit-row" role="row"><div class="source-audit-name">'+htmlEscape(r.label)+'</div><div class="source-audit-method">'+htmlEscape(r.mode)+'</div><div class="source-audit-date">'+htmlEscape((r.from?dateText(r.from)+" → ":"")+dateText(r.date))+'</div><div class="source-audit-state">'+htmlEscape(text)+'</div></div>';
+     return '<div class="source-audit-row" role="row" title="'+htmlEscape(r.note)+'"><div class="source-audit-name">'+htmlEscape(r.label)+'</div><div class="source-audit-method">'+htmlEscape(r.mode)+'</div><div class="source-audit-date">'+htmlEscape((r.from?dateText(r.from)+" → ":"")+dateText(r.date))+'</div><div class="source-audit-state">'+htmlEscape(text)+'</div></div>';
    }).join("")+'</div>';
  }
  function paintReport(groups){
@@ -189,7 +192,7 @@
  const method=document.querySelector("#modal .method");
  if(method){
   const section=document.createElement("section");section.className="source-audit-method";
-  section.innerHTML='<h3>Estado de las fuentes en esta consulta</h3><p>Fecha efectiva, resultado de la consulta y periodicidad. Se intenta renovar las fuentes de mercado y oficiales al abrir; «Consultado» no significa tiempo real. SEC, WGC e iShares son archivos revisados manualmente con enlace a su publicación. Las consultas fallidas conservan su respaldo, explícitamente etiquetado.</p><div id="source-audit-content"></div>';
+  section.innerHTML='<h3>Estado de las fuentes en esta consulta</h3><p>Fecha efectiva, resultado de la consulta y periodicidad. Se intenta renovar las fuentes de mercado y oficiales al abrir; «Consultado» significa respuesta validada, no necesariamente dato nuevo. Las fechas del cuadro son observaciones, no horas de descarga. En futuros se distingue la cotización indicativa con hora de Madrid del histórico de cierres. SEC, WGC e iShares son archivos revisados manualmente con enlace a su publicación. Las consultas fallidas conservan su respaldo, explícitamente etiquetado.</p><div id="source-audit-content"></div>';
   method.prepend(section);
  }
  if(typeof FORCE_MARKET_RECHECK!=="undefined"&&FORCE_MARKET_RECHECK){

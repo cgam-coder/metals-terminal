@@ -1,5 +1,9 @@
 # Metals Terminal V5.1 — expectativas, crédito, actividad y técnica
 
+## V5.1 · renovación de futuros (27/11/2026)
+
+La auditoría del 27/11 confirma que Yahoo entrega una cotización del día junto al histórico diario, que no contiene el 26/11 (festivo sin liquidación CME). Las tarjetas muestran la cotización indicativa validada con hora de Madrid cuando es posterior al cierre histórico, sin introducirla en los gráficos históricos ni en RSI/SMA. Las descargas de cada futuro se aceptan independientemente; un fallo no impide renovar las demás. Se preserva el respaldo Yahoo por símbolo y no se mezclan proveedores en la comparativa. «Fuentes» diferencia fecha de observación y consulta; XAUS actualiza su estado al cambiar temporalidad. No se crean puntos de festivos ni se contratan servicios. La última consulta de cotizaciones depende del proveedor y del momento de apertura.
+
 ## V5.1 · ajuste de distribución
 
 El bloque de análisis técnico (RSI 14 y SMA 50/200) se sitúa entre el dashboard principal y Posicionamiento y expectativas. Se conservan las tarjetas, los cálculos, la temporalidad, las guías y las fuentes. El bloque de fundamentos complementarios mantiene las ocho tarjetas restantes.
